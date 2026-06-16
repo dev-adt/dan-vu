@@ -73,22 +73,22 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="flex flex-col h-screen bg-dark-obsidian text-light-alabaster overflow-hidden">
+    <div className="flex flex-col h-screen bg-transparent text-dark-obsidian overflow-hidden">
       {/* Top Header bar */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-dark-slate/40 shrink-0 z-10">
+      <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 bg-white/80 backdrop-blur-md shrink-0 z-10">
         <div className="flex items-center gap-4">
           <Link
             href="/judge"
-            className="flex items-center gap-1.5 text-xs text-light-alabaster/60 hover:text-secondary uppercase font-bold tracking-wider"
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-accent uppercase font-bold tracking-wider"
           >
             <ChevronLeft className="w-4 h-4" /> Quay lại Portal
           </Link>
-          <span className="h-4 w-px bg-white/10" />
+          <span className="h-4 w-px bg-slate-200" />
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-dark-obsidian bg-accent px-2 py-0.5 rounded uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded uppercase tracking-wider">
               Phiếu Chấm Điểm
             </span>
-            <span className="text-xs text-light-cream font-heading font-semibold">
+            <span className="text-xs text-slate-800 font-heading font-semibold">
               Mã số tiết mục: {unwrappedParams.id.toUpperCase()}
             </span>
           </div>
@@ -97,7 +97,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
         <div className="flex items-center gap-3">
           <button
             onClick={handleSaveDraft}
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-white/10 rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors text-light-cream"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors text-slate-700"
           >
             <Save className="w-4 h-4" /> Lưu Bản Nháp
           </button>
@@ -113,7 +113,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
       {/* Main Dual-pane layout */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left Pane: Video Player (60% width on large screens) */}
-        <div className="w-full lg:w-[60%] flex flex-col bg-black relative min-h-0 border-r border-white/10">
+        <div className="w-full lg:w-[60%] flex flex-col bg-black relative min-h-0 border-r border-slate-200">
           <div className="flex-1 relative flex items-center justify-center min-h-0">
             {/* Aspect box inside flexbox wrapper */}
             <div className="w-full max-h-full aspect-video relative bg-dark-slate/40 flex items-center justify-center border-y border-white/5">
@@ -132,7 +132,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
           </div>
 
           {/* Left panel video control controls */}
-          <div className="h-14 bg-dark-slate/20 border-t border-white/5 flex items-center px-4 justify-between text-xs text-light-alabaster/60 shrink-0">
+          <div className="h-14 bg-slate-900 border-t border-white/10 flex items-center px-4 justify-between text-xs text-slate-300 shrink-0">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
@@ -152,18 +152,18 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
         </div>
 
         {/* Right Pane: Evaluation Rubric Form (40% width) */}
-        <div className="hidden lg:block w-[40%] flex flex-col bg-dark-slate/40 overflow-y-auto min-h-0 p-6 space-y-8">
+        <div className="hidden lg:block w-[40%] flex flex-col bg-white overflow-y-auto min-h-0 p-6 space-y-8 border-l border-slate-200">
           <div>
-            <h3 className="font-heading font-bold text-xl text-light-cream">Hệ thống Tiêu chí đánh giá</h3>
-            <p className="text-xs text-light-alabaster/40 mt-1">Sử dụng thanh trượt để cho điểm. Điểm tổng tự động tính toán.</p>
+            <h3 className="font-heading font-bold text-xl text-slate-900">Hệ thống Tiêu chí đánh giá</h3>
+            <p className="text-xs text-slate-500 mt-1">Sử dụng thanh trượt để cho điểm. Điểm tổng tự động tính toán.</p>
           </div>
 
           <div className="space-y-6">
             {/* Criteria 1 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold uppercase tracking-wider text-light-cream">1. Nội dung & Ý tưởng (Tối đa 30)</span>
-                <span className="font-bold text-secondary text-sm">{scores.concept} / 30 đ</span>
+                <span className="font-semibold uppercase tracking-wider text-slate-800">1. Nội dung & Ý tưởng (Tối đa 30)</span>
+                <span className="font-bold text-accent text-sm">{scores.concept} / 30 đ</span>
               </div>
               <input
                 type="range"
@@ -171,16 +171,16 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 max={rubricMax.concept}
                 value={scores.concept}
                 onChange={(e) => handleSliderChange('concept', parseInt(e.target.value))}
-                className="w-full h-1 bg-dark-obsidian rounded-lg appearance-none cursor-pointer accent-accent"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
-              <p className="text-[10px] text-light-alabaster/40 italic">Đúng chủ đề văn hóa, giữ gìn bản sắc vùng miền, có tính sáng tạo phù hợp.</p>
+              <p className="text-[10px] text-slate-500 italic">Đúng chủ đề văn hóa, giữ gìn bản sắc vùng miền, có tính sáng tạo phù hợp.</p>
             </div>
 
             {/* Criteria 2 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold uppercase tracking-wider text-light-cream">2. Kỹ thuật biểu diễn (Tối đa 40)</span>
-                <span className="font-bold text-secondary text-sm">{scores.technique} / 40 đ</span>
+                <span className="font-semibold uppercase tracking-wider text-slate-800">2. Kỹ thuật biểu diễn (Tối đa 40)</span>
+                <span className="font-bold text-accent text-sm">{scores.technique} / 40 đ</span>
               </div>
               <input
                 type="range"
@@ -188,16 +188,16 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 max={rubricMax.technique}
                 value={scores.technique}
                 onChange={(e) => handleSliderChange('technique', parseInt(e.target.value))}
-                className="w-full h-1 bg-dark-obsidian rounded-lg appearance-none cursor-pointer accent-accent"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
-              <p className="text-[10px] text-light-alabaster/40 italic">Động tác múa đều, đẹp, đúng nhịp phách, kỹ thuật thanh nhạc dân ca chuẩn.</p>
+              <p className="text-[10px] text-slate-500 italic">Động tác múa đều, đẹp, đúng nhịp phách, kỹ thuật thanh nhạc dân ca chuẩn.</p>
             </div>
 
             {/* Criteria 3 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold uppercase tracking-wider text-light-cream">3. Trang phục & Đạo cụ (Tối đa 20)</span>
-                <span className="font-bold text-secondary text-sm">{scores.costume} / 20 đ</span>
+                <span className="font-semibold uppercase tracking-wider text-slate-800">3. Trang phục & Đạo cụ (Tối đa 20)</span>
+                <span className="font-bold text-accent text-sm">{scores.costume} / 20 đ</span>
               </div>
               <input
                 type="range"
@@ -205,16 +205,16 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 max={rubricMax.costume}
                 value={scores.costume}
                 onChange={(e) => handleSliderChange('costume', parseInt(e.target.value))}
-                className="w-full h-1 bg-dark-obsidian rounded-lg appearance-none cursor-pointer accent-accent"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
-              <p className="text-[10px] text-light-alabaster/40 italic">Đẹp mắt, hài hòa sắc màu truyền thống và phù hợp tuyệt đối với văn hóa bản địa.</p>
+              <p className="text-[10px] text-slate-500 italic">Đẹp mắt, hài hòa sắc màu truyền thống và phù hợp tuyệt đối với văn hóa bản địa.</p>
             </div>
 
             {/* Criteria 4 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold uppercase tracking-wider text-light-cream">4. Hiệu ứng sân khấu (Tối đa 10)</span>
-                <span className="font-bold text-secondary text-sm">{scores.stage} / 10 đ</span>
+                <span className="font-semibold uppercase tracking-wider text-slate-800">4. Hiệu ứng sân khấu (Tối đa 10)</span>
+                <span className="font-bold text-accent text-sm">{scores.stage} / 10 đ</span>
               </div>
               <input
                 type="range"
@@ -222,32 +222,32 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 max={rubricMax.stage}
                 value={scores.stage}
                 onChange={(e) => handleSliderChange('stage', parseInt(e.target.value))}
-                className="w-full h-1 bg-dark-obsidian rounded-lg appearance-none cursor-pointer accent-accent"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
-              <p className="text-[10px] text-light-alabaster/40 italic">Biểu cảm gương mặt, cuốn hút, sự tự tin và khả năng làm chủ không gian.</p>
+              <p className="text-[10px] text-slate-500 italic">Biểu cảm gương mặt, cuốn hút, sự tự tin và khả năng làm chủ không gian.</p>
             </div>
           </div>
 
           {/* Sum details */}
-          <div className="bg-dark-obsidian rounded-xl border border-white/5 p-4 flex justify-between items-center">
+          <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 flex justify-between items-center">
             <div>
-              <span className="text-[10px] font-semibold text-light-alabaster/40 uppercase tracking-wider">Tổng điểm tích lũy</span>
-              <span className="block text-xs text-light-cream mt-0.5">Tự động tính</span>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tổng điểm tích lũy</span>
+              <span className="block text-xs text-slate-400 mt-0.5">Tự động tính</span>
             </div>
-            <div className="text-3xl font-extrabold text-secondary">
-              {totalScore} <span className="text-sm font-semibold text-light-alabaster/40">/ 100 đ</span>
+            <div className="text-3xl font-extrabold text-accent">
+              {totalScore} <span className="text-sm font-semibold text-slate-500">/ 100 đ</span>
             </div>
           </div>
 
           {/* Comment inputs */}
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-light-alabaster/40">Nhận xét & Góp ý của Giám khảo</label>
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Nhận xét & Góp ý của Giám khảo</label>
             <textarea
               rows={4}
               value={scores.comments}
               onChange={(e) => setScores((prev) => ({ ...prev, comments: e.target.value }))}
               placeholder="Nhập ý kiến chuyên môn gửi về cho BTC và phản hồi đội thi..."
-              className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none resize-none transition-colors"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none resize-none transition-colors"
             />
           </div>
         </div>
@@ -256,12 +256,12 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
       {/* Confirmation Lock Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="glass-panel border border-white/10 rounded-2xl p-6 max-w-sm w-full space-y-6">
+          <div className="glass-panel border border-slate-200 rounded-2xl p-6 max-w-sm w-full space-y-6">
             <div className="text-center space-y-2">
-              <AlertTriangle className="w-10 h-10 text-secondary mx-auto" />
-              <h3 className="font-heading font-bold text-xl text-light-cream">Khóa & Gửi điểm?</h3>
-              <p className="text-xs text-light-alabaster/60 leading-relaxed">
-                Sau khi gửi điểm, toàn bộ số điểm <strong className="text-secondary">{totalScore} điểm</strong> của tiết mục sẽ được khóa lại vĩnh viễn và đồng bộ về máy chủ của BTC. Bạn không thể tự ý sửa đổi nếu không có sự phê duyệt của trưởng BTC.
+              <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+              <h3 className="font-heading font-bold text-xl text-slate-900">Khóa & Gửi điểm?</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Sau khi gửi điểm, toàn bộ số điểm <strong className="text-accent">{totalScore} điểm</strong> của tiết mục sẽ được khóa lại vĩnh viễn và đồng bộ về máy chủ của BTC. Bạn không thể tự ý sửa đổi nếu không có sự phê duyệt của trưởng BTC.
               </p>
             </div>
 
@@ -269,7 +269,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="w-1/2 py-2.5 border border-white/10 rounded-xl text-xs font-semibold text-light-cream hover:bg-white/5 transition-colors"
+                className="w-1/2 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Hủy bỏ
               </button>

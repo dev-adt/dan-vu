@@ -75,59 +75,59 @@ export default function JudgePortal() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-obsidian text-light-alabaster relative">
+    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative selection:bg-accent selection:text-white">
       <Navbar />
 
-      <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+      <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full z-10">
         {!isAuthenticated ? (
           /* Login Panel */
-          <div className="max-w-md mx-auto bg-dark-slate/40 border border-white/10 rounded-2xl p-8 shadow-xl space-y-6">
+          <div className="max-w-md mx-auto glass-panel rounded-2xl p-8 shadow-xl space-y-6">
             <div className="text-center space-y-2">
-              <span className="inline-block p-3.5 bg-accent/20 border border-accent/30 text-accent rounded-full mb-2">
+              <span className="inline-block p-3.5 bg-accent/10 border border-accent/20 text-accent rounded-full mb-2">
                 <UserCheck className="w-8 h-8" />
               </span>
-              <h1 className="font-heading font-bold text-2xl text-light-cream">Cổng Giám Khảo Bảo Mật</h1>
-              <p className="text-xs text-light-alabaster/60">Vui lòng nhập tài khoản và mã xác thực 2FA được BTC cung cấp.</p>
+              <h1 className="font-heading font-bold text-2xl text-slate-900">Cổng Giám Khảo Bảo Mật</h1>
+              <p className="text-xs text-slate-600">Vui lòng nhập tài khoản và mã xác thực 2FA được BTC cung cấp.</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               {!showOtpField ? (
                 <>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-light-alabaster/40">Email tài khoản *</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Email tài khoản *</label>
                     <input
                       type="email"
                       required
                       placeholder="giamkhao@nhipbuocvietnam.gov.vn"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-light-alabaster/40">Mật khẩu *</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Mật khẩu *</label>
                     <input
                       type="password"
                       required
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                     />
                   </div>
                 </>
               ) : (
                 <div className="space-y-1 animate-fadeIn">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-secondary">Mã bảo mật 2FA OTP *</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-accent">Mã bảo mật 2FA OTP *</label>
                   <input
                     type="text"
                     required
                     placeholder="Nhập 6 số từ Google Authenticator"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="w-full bg-dark-obsidian border border-secondary/40 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none text-center font-bold tracking-[0.5em] text-secondary transition-colors"
+                    className="w-full bg-white border border-secondary rounded-xl px-4 py-3 text-sm focus:border-accent focus:outline-none text-center font-bold tracking-[0.5em] text-accent transition-colors"
                   />
-                  <p className="text-[10px] text-light-alabaster/40 mt-1.5 text-center">Mã OTP làm mới mỗi 30 giây.</p>
+                  <p className="text-[10px] text-slate-500 mt-1.5 text-center">Mã OTP làm mới mỗi 30 giây.</p>
                 </div>
               )}
 
@@ -143,45 +143,45 @@ export default function JudgePortal() {
         ) : (
           /* Dashboard Panel */
           <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/10 pb-6 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-6 gap-4">
               <div>
                 <span className="text-xs uppercase tracking-widest text-accent font-semibold">Bảng điều khiển Giám khảo</span>
-                <h1 className="font-heading font-bold text-3xl text-light-cream mt-1">Danh sách Tiết mục chấm sơ khảo</h1>
+                <h1 className="font-heading font-bold text-3xl text-slate-900 mt-1">Danh sách Tiết mục chấm sơ khảo</h1>
               </div>
-              <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs text-light-cream">
+              <div className="flex items-center gap-3 bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs text-slate-800 shadow-sm">
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
                 <span>Giám khảo: <strong>GS. NSND Lê Văn Minh</strong></span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-dark-slate/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-white border border-slate-200/60 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-semibold text-light-alabaster/40 uppercase tracking-wider">Đã hoàn thành</span>
-                  <span className="block text-2xl font-bold text-light-cream mt-1">2 / 4</span>
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Đã hoàn thành</span>
+                  <span className="block text-2xl font-bold text-slate-900 mt-1">2 / 4</span>
                 </div>
-                <CheckCircle className="w-8 h-8 text-accent opacity-60" />
+                <CheckCircle className="w-8 h-8 text-accent opacity-80" />
               </div>
-              <div className="bg-dark-slate/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-white border border-slate-200/60 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-semibold text-light-alabaster/40 uppercase tracking-wider">Bản nháp lưu</span>
-                  <span className="block text-2xl font-bold text-secondary mt-1">1 / 4</span>
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Bản nháp lưu</span>
+                  <span className="block text-2xl font-bold text-amber-600 mt-1">1 / 4</span>
                 </div>
-                <Clock className="w-8 h-8 text-secondary opacity-60" />
+                <Clock className="w-8 h-8 text-amber-500 opacity-80" />
               </div>
-              <div className="bg-dark-slate/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-white border border-slate-200/60 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-semibold text-light-alabaster/40 uppercase tracking-wider">Chưa đánh giá</span>
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Chưa đánh giá</span>
                   <span className="block text-2xl font-bold text-primary mt-1">1 / 4</span>
                 </div>
-                <FileText className="w-8 h-8 text-primary opacity-60" />
+                <FileText className="w-8 h-8 text-primary opacity-80" />
               </div>
             </div>
 
-            <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+            <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-white/5 border-b border-white/10 text-[10px] uppercase tracking-wider text-light-alabaster/40">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
                     <tr>
                       <th className="px-6 py-4">Mã số</th>
                       <th className="px-6 py-4">Tên Tiết Mục</th>
@@ -191,21 +191,21 @@ export default function JudgePortal() {
                       <th className="px-6 py-4 text-right">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-xs">
+                  <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                     {mockGradingList.map((perf) => {
                       const isSubmitted = perf.status === 'submitted';
                       const isDraft = perf.status === 'draft';
                       const isPending = perf.status === 'pending';
 
                       return (
-                        <tr key={perf.id} className="hover:bg-white/5 transition-colors">
+                        <tr key={perf.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold uppercase text-accent">
                             {perf.id}
                           </td>
-                          <td className="px-6 py-4 font-heading font-semibold text-light-cream">
+                          <td className="px-6 py-4 font-heading font-semibold text-slate-950">
                             {perf.performanceTitle}
                           </td>
-                          <td className="px-6 py-4 text-light-alabaster/60">
+                          <td className="px-6 py-4 text-slate-600">
                             {perf.teamName}
                           </td>
                           <td className="px-6 py-4">
@@ -214,23 +214,23 @@ export default function JudgePortal() {
                                 <CheckCircle className="w-3.5 h-3.5" /> Đã gửi điểm
                               </span>
                             ) : isDraft ? (
-                              <span className="inline-flex items-center gap-1.5 text-secondary font-semibold">
+                              <span className="inline-flex items-center gap-1.5 text-amber-600 font-semibold">
                                 <Clock className="w-3.5 h-3.5" /> Đang chấm nháp
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 text-light-alabaster/40">
+                              <span className="inline-flex items-center gap-1.5 text-slate-400">
                                 <Lock className="w-3.5 h-3.5" /> Chưa chấm
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-center font-bold text-light-cream">
+                          <td className="px-6 py-4 text-center font-bold text-slate-900">
                             {perf.score ? `${perf.score} / 100` : '--'}
                           </td>
                           <td className="px-6 py-4 text-right">
                             {isSubmitted ? (
                               <button
                                 disabled
-                                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[10px] text-light-alabaster/30 font-bold uppercase tracking-wider"
+                                className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-[10px] text-slate-400 font-bold uppercase tracking-wider"
                               >
                                 Đã Khóa
                               </button>
@@ -239,7 +239,7 @@ export default function JudgePortal() {
                                 href={`/judge/score/${perf.id}`}
                                 className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all ${
                                   isDraft
-                                    ? 'bg-secondary text-dark-obsidian hover:bg-opacity-90'
+                                    ? 'bg-secondary text-slate-900 hover:bg-opacity-90'
                                     : 'bg-accent text-white hover:bg-opacity-90 glow-gold-hover'
                                 }`}
                               >

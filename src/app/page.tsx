@@ -88,16 +88,19 @@ export default function Home() {
 
       {/* Hero Banner Section */}
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden bg-transparent border-b border-slate-200/20">
-        {/* Soft elegant background gradient & abstract decorative glow */}
-        <div className="absolute inset-0 bg-gradient-to-t from-light-alabaster via-light-alabaster/70 to-light-alabaster/30 z-10" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-[100px] animate-pulse pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full filter blur-[100px] animate-pulse pointer-events-none" />
-        
-        {/* Subtle geometric pattern placeholder */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#C62828_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+        {/* Background elements wrapper to prevent absolute-flex rendering shift */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {/* Soft elegant background gradient & abstract decorative glow */}
+          <div className="absolute inset-0 bg-gradient-to-t from-light-alabaster via-light-alabaster/70 to-light-alabaster/30 z-10" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-[100px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full filter blur-[100px] animate-pulse" />
+          
+          {/* Subtle geometric pattern placeholder */}
+          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#C62828_1px,transparent_1px)] [background-size:24px_24px]" />
 
-        {/* Clean background gradient (removes conflicting center text/music note overlay) */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
+          {/* Clean background gradient */}
+          <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
+        </div>
 
         {/* Hero Content */}
         <div className="relative z-20 text-center px-4 max-w-4xl mx-auto space-y-6">
