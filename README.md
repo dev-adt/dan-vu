@@ -95,8 +95,8 @@ Biên dịch dự án Next.js sang bản tối ưu cho Production, sau đó dùn
 # Biên dịch dự án
 npm run build
 
-# Khởi chạy ngầm với PM2
-pm2 start npm --name "nhip-buoc-viet-nam" -- run start
+# Khởi chạy ngầm với PM2 (ở đây chỉ định chạy trên cổng 3008)
+pm2 start npm --name "nhip-buoc-viet-nam" -- run start -- -p 3008
 
 # Thiết lập PM2 tự động khởi chạy lại ứng dụng khi VPS khởi động lại
 pm2 startup
