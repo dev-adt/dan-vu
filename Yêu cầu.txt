@@ -1,0 +1,168 @@
+1. Tiêu đề Trang (Banner chính)
+Tên cuộc thi: [TÊN CUỘC THI VIẾT HOA] (Ví dụ: Hội diễn Dân ca, Dân vũ các CLB Tỉnh/Thành phố Lần thứ I)
+
+Chủ đề cuộc thi (nếu có): (Ví dụ: Giai điệu quê hương - Vũ điệu gắn kết)
+
+Slogan truyền cảm hứng: "Nơi tôn vinh bản sắc bản địa và nhịp điệu hiện đại."
+
+2. Thông tin Tổng quan (Tóm tắt Thể lệ)
+Trước khi bấm đăng ký, các đội cần nắm nhanh thông tin cốt lõi để chuẩn bị bài.
+
+Đối tượng tham gia: Các câu lạc bộ, tổ đội, nhóm dân vũ, trường học, cơ quan đoàn thể trên địa bàn... (Không giới hạn độ tuổi hoặc có quy định cụ thể).
+
+Nội dung dự thi (Chọn 1 trong 2 hoặc cả hai):
+
+Dân ca: Đơn ca, song ca, tốp ca, hợp xướng các bài dân ca truyền thống, cải biên, hòa tấu nhạc cụ dân tộc...
+
+Dân vũ: Các điệu nhảy dân gian, dân vũ thể thao, dân vũ hiện đại trên nền nhạc truyền thống hoặc nhạc vui tươi, lành mạnh.
+
+Thời gian quan trọng:
+
+Hạn chót nhận đăng ký: 23h59 ngày [Ngày/Tháng/Năm]
+
+Thời gian chấm sơ loại/Vòng loại: [Ngày/Tháng/Năm]
+
+Đêm Chung kết & Trao giải: [Ngày/Tháng/Năm]
+
+📥 Nút bấm: [Tải Thể Lệ Chi Tiết (File PDF)] (Nên có để các đội tải về nghiên cứu kỹ tiêu chí chấm điểm, trang phục, bản quyền âm nhạc).
+
+3. Biểu mẫu Đăng ký (Form điền thông tin)
+Đây là phần quan trọng nhất. Form nên chia thành các nhóm thông tin để người điền không bị ngợp.
+
+Phần A: Thông tin Đội dự thi
+Tên Đội/Nhóm/CLB: (Bắt buộc)
+
+Đơn vị đại diện: (Trường học, Phường/Xã, Doanh nghiệp... nếu có)
+
+Số lượng thành viên tham gia: (Ví dụ: Tối thiểu 5 người, tối đa 30 người)
+
+Họ và tên Trưởng đoàn/Người đại diện: (Bắt buộc)
+
+Số điện thoại liên hệ (Có Zalo): (Bắt buộc)
+
+Email liên hệ: (Bắt buộc)
+
+Phần B: Thông tin Tiết mục dự thi
+Thể loại đăng ký: * [ ] Dân ca
+
+[ ] Dân vũ
+
+[ ] Cả hai (Tùy quy chế cuộc thi)
+
+Tên bài dự thi (Tiết mục): (Ví dụ: Liên khúc Dân ca Ba miền, Vũ điệu Thổi tai...)
+
+Thời lượng dự kiến: (Ví dụ: Không quá 7 phút)
+
+Tóm tắt ý tưởng/Nội dung tiết mục (Nếu có): (Giúp MC giới thiệu và BGK hiểu rõ thông điệp).
+
+Yêu cầu kỹ thuật từ BTC (nếu có): (Số lượng micro không dây, đạo cụ đặc biệt, bục bệ...)
+
+Phần C: File đính kèm (Rất quan trọng)
+Nhạc nền (Beat/Audio): Tải lên file .mp3 hoặc gửi link Drive (Mở quyền truy cập).
+
+Video chạy thử/Tập luyện (Nếu vòng sơ loại chấm qua video): Nơi tải lên hoặc dán link YouTube/Drive.
+
+Ảnh đại diện của đội: (Để làm tư liệu truyền thông trên Fanpage).
+
+4. Cơ cấu Giải thưởng (Tạo động lực)
+Liệt kê rõ ràng để thu hút các đội mạnh dạn đăng ký.
+
+01 Giải Nhất: [Giá trị tiền mặt] VNĐ + Cờ lưu niệm + Cúp vô địch.
+
+02 Giải Nhì: [Giá trị tiền mặt] VNĐ + Cờ lưu niệm.
+
+03 Giải Ba: [Giá trị tiền mặt] VNĐ + Cờ lưu niệm.
+
+Các giải phụ: Đội có trang phục đẹp nhất, Đội được yêu thích nhất (bình chọn online), Biên đạo xuất sắc nhất...
+
+5. Chân trang (Footer) & Hỗ trợ kỹ thuật
+Nơi giải đáp thắc mắc khi các đội gặp sự cố không gửi được form.
+
+Mọi thắc mắc xin liên hệ Ban Tổ Chức:
+
+Hotline: [Số điện thoại] (Mr./Ms. [Tên])
+
+Fanpage: [Link Fanpage cuộc thi]
+
+Email: [Email BTC]
+
+Lưu ý: Sau khi bấm "Đăng ký", hệ thống sẽ gửi một email xác nhận tự động. Nếu không nhận được sau 15 phút, vui lòng liên hệ hotline để kiểm tra.
+
+💡 Một vài mẹo nhỏ cho bạn khi làm web:
+Giao diện: Nên dùng các tone màu tươi sáng, mang âm hưởng truyền thống nhưng năng động (như đỏ, vàng, xanh lá cây đậm hoặc xanh dương).
+
+Thân thiện với điện thoại: Đại đa số người dùng sẽ đăng ký bằng điện thoại, hãy đảm bảo form dễ bấm, không bị lỗi font chữ trên di động.
+
+1. Cổng Bình Chọn Trực Tuyến (Dành cho Khán giả)
+Phần này dùng để thu hút tương tác, tăng hiệu ứng truyền thông cho cuộc thi.
+
+📌 Thanh Tìm Kiếm & Bộ Lọc nhanh
+Thanh tìm kiếm: "Nhập tên đội thi hoặc mã số tiết mục..."
+
+Bộ lọc theo thể loại: [Tất cả] [Dân ca] [Dân vũ]
+
+Bộ lọc theo trạng thái: [Bình chọn nhiều nhất] [Tiết mục mới nhất]
+
+🎬 Danh Sách Hiển Thị Các Đội Thi (Dạng lưới/Card)
+Mỗi đội thi sẽ có một "Thẻ thông tin" (Card) bao gồm:
+
+Ảnh đại diện/Video clip bài dự thi (Bấm vào để xem video trực tuyến).
+
+Mã số dự thi (MSDT): Ví dụ: DC-01, DV-05...
+
+Tên đội thi & Tên tiết mục: (Ví dụ: CLB Hoa Sen - Vũ điệu giã gạo).
+
+Số lượt bình chọn hiện tại: ❤️ 1,245 lượt bình chọn
+
+Nút hành động: [VOTE / BÌNH CHỌN]
+
+📑 Thể Lệ & Hướng Dẫn Bình Chọn
+💡 Quy định bình chọn:
+
+Thời gian bình chọn: Từ [Giờ/Ngày] đến [Giờ/Ngày].
+
+Cách thức: Mỗi tài khoản (Facebook/Gmail/Số điện thoại) được bình chọn tối đa 01 lần/ngày cho mỗi tiết mục.
+
+Tiêu chí tính giải: Tiết mục có tổng số lượt vote cao nhất sẽ nhận giải "Đội thi được yêu thích nhất". mọi hành vi gian lận (hack vote) nếu bị phát hiện sẽ bị hủy kết quả.
+
+2. Cổng Chấm Sơ Khảo (Dành riêng cho Ban Giám Khảo)
+Phần này cần được bảo mật bằng tài khoản đăng nhập và chỉ hiển thị cho các thành viên BGK.
+
+🔐 Giao diện Đăng nhập của Giám khảo
+Tiêu đề: "Hệ thống chấm điểm Sơ khảo - Cuộc thi Dân ca Dân vũ 2026"
+
+Trường thông tin: Tên đăng nhập (Email) và Mật khẩu.
+
+📊 Bảng Điều Hướng Chấm Điểm (Dashboard)
+Sau khi đăng nhập, Giám khảo sẽ thấy danh sách các đội cần chấm:
+
+Trạng thái tiết mục: [Chưa chấm] [Đang chấm/Lưu nháp] [Đã gửi điểm]
+
+Nút thao tác: [Vào chấm điểm]
+
+📝 Phiếu Chấm Điểm Điện Tử (Form Chấm Điểm)
+Khi BGK bấm vào một tiết mục, màn hình sẽ chia làm 2 bên:
+
+Bên trái: Video bài dự thi của đội đó để xem lại.
+
+Bên phải: Biểu mẫu nhập điểm theo tiêu chí:
+
+Tiêu chí chấm điểm Thang điểm Điểm số BGK nhập
+1. Nội dung & Ý tưởng: (Đúng chủ đề, giữ gìn bản sắc, có tính sáng tạo) /30 điểm [ Nhập điểm ]
+2. Kỹ thuật biểu diễn: (Hát đúng nhạc/Động tác đều, đẹp, đúng nhịp) /40 điểm [ Nhập điểm ]
+3. Trang phục & Đạo cụ: (Đẹp, phù hợp với văn hóa vùng miền) /20 điểm [ Nhập điểm ]
+4. Hiệu ứng sân khấu: (Sự tự tin, biểu cảm, cuốn hút) /10 điểm [ Nhập điểm ]
+TỔNG ĐIỂM: /100 điểm Tự động cộng tổng
+
+Ô nhập liệu: [Nhận xét/Góp ý của Giám khảo cho đội thi...]
+
+Nút bấm cuối trang: * [Lưu nháp] (Để chỉnh sửa lại sau).
+
+[Xác nhận & Gửi điểm] (Sau khi bấm nút này, điểm số sẽ khóa lại và gửi thẳng về hệ thống của BTC).
+
+🛠️ Lưu ý kỹ thuật cho Lập trình viên (Developer):
+Chống spam vote: Nên tích hợp Google ReCAPTCHA hoặc xác thực OTP/Social Login (Đăng nhập bằng Facebook/Gmail mới được vote) để tránh tình trạng các đội dùng phần mềm hack lượt bình chọn.
+
+Bảo mật dữ liệu điểm: Điểm số của BGK phải được mã hóa và chỉ có tài khoản Admin tối cao (Trưởng BTC) mới có quyền xuất file tổng hợp cuối cùng.
+
+Festival dân ca dân vũ quốc tế “ nhịp bước Việt Nam” 2026
