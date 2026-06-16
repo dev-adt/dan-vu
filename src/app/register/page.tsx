@@ -127,7 +127,7 @@ export default function RegisterWizard() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-obsidian text-light-alabaster relative">
+    <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
       <Navbar />
 
       <main className="flex-grow py-16 px-4 max-w-4xl mx-auto w-full">
@@ -136,10 +136,10 @@ export default function RegisterWizard() {
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
             Đăng Ký Trực Tuyến
           </span>
-          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-light-cream mt-2">
+          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900 mt-2">
             Hồ Sơ Đăng Ký Dự Thi
           </h1>
-          <p className="text-xs text-light-alabaster/50 mt-2">
+          <p className="text-xs text-slate-500 mt-2">
             Hoàn tất biểu mẫu trong vòng 5 phút. Bản nháp tự động lưu.
           </p>
         </div>
@@ -154,10 +154,10 @@ export default function RegisterWizard() {
             return (
               <div key={title} className="flex flex-col items-center space-y-2">
                 <div className={`h-1.5 w-full rounded-full transition-all duration-500 ${
-                  isCompleted ? 'bg-accent' : isActive ? 'bg-secondary' : 'bg-white/10'
+                  isCompleted ? 'bg-accent' : isActive ? 'bg-secondary' : 'bg-slate-200'
                 }`} />
-                <span className={`text-[10px] text-center font-semibold tracking-wider uppercase transition-colors hidden sm:block ${
-                  isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-light-alabaster/40'
+                <span className={`text-[10px] text-center font-bold tracking-wider uppercase transition-colors hidden sm:block ${
+                  isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-slate-400'
                 }`}>
                   Bước {stepNum}
                 </span>
@@ -167,7 +167,7 @@ export default function RegisterWizard() {
         </div>
 
         {/* Wizard Panel */}
-        <div className="glass-panel rounded-2xl border border-white/10 p-6 sm:p-10 relative overflow-hidden">
+        <div className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden shadow-sm">
           <AnimatePresence mode="wait">
             {isSubmitted ? (
               <motion.div
@@ -175,12 +175,12 @@ export default function RegisterWizard() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-10 space-y-6"
               >
-                <div className="w-20 h-20 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center mx-auto text-accent shadow-[0_0_20px_rgba(0,105,92,0.3)]">
+                <div className="w-20 h-20 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto text-accent shadow-sm">
                   <CheckCircle className="w-10 h-10" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="font-heading font-bold text-2xl text-light-cream">Gửi Hồ Sơ Thành Công!</h2>
-                  <p className="text-sm text-light-alabaster/60 max-w-md mx-auto">
+                  <h2 className="font-heading font-bold text-2xl text-slate-900">Gửi Hồ Sơ Thành Công!</h2>
+                  <p className="text-sm text-slate-600 max-w-md mx-auto">
                     Mã số hồ sơ của bạn là <strong className="text-secondary">DC-{Math.floor(1000 + Math.random() * 9000)}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
                   </p>
                 </div>
@@ -191,7 +191,7 @@ export default function RegisterWizard() {
                       setStep(1);
                       setFormData(initialFormData);
                     }}
-                    className="px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all"
+                    className="px-6 py-2.5 rounded-xl bg-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all"
                   >
                     Đăng Ký Đội Mới
                   </button>
@@ -208,60 +208,60 @@ export default function RegisterWizard() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-semibold text-lg border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <User className="w-5 h-5" />
                       <span>Bước 1: Thông tin liên hệ Trưởng đoàn</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Tên Đội/Nhóm/CLB *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tên Đội/Nhóm/CLB *</label>
                         <input
                           type="text"
                           name="teamName"
                           value={formData.teamName}
                           onChange={handleChange}
                           placeholder="Ví dụ: CLB Sen Vàng"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.teamName && <p className="text-xs text-primary">{errors.teamName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Trưởng đoàn / Người Đại diện *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Trưởng đoàn / Người Đại diện *</label>
                         <input
                           type="text"
                           name="representativeName"
                           value={formData.representativeName}
                           onChange={handleChange}
                           placeholder="Họ và tên"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.representativeName && <p className="text-xs text-primary">{errors.representativeName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Số điện thoại liên hệ (Zalo) *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Số điện thoại liên hệ (Zalo) *</label>
                         <input
                           type="text"
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
                           placeholder="Nhập số điện thoại"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.phone && <p className="text-xs text-primary">{errors.phone}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Email liên hệ *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Email liên hệ *</label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
                           placeholder="example@gmail.com"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
                       </div>
@@ -278,7 +278,7 @@ export default function RegisterWizard() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-semibold text-lg border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Video className="w-5 h-5" />
                       <span>Bước 2: Chi tiết tiết mục dự thi</span>
                     </div>
@@ -286,25 +286,25 @@ export default function RegisterWizard() {
                     <div className="grid grid-cols-1 gap-6">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Tên bài dự thi (Tiết mục) *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tên bài dự thi (Tiết mục) *</label>
                           <input
                             type="text"
                             name="performanceTitle"
                             value={formData.performanceTitle}
                             onChange={handleChange}
                             placeholder="Ví dụ: Hào Khí Việt Nam"
-                            className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           {errors.performanceTitle && <p className="text-xs text-primary">{errors.performanceTitle}</p>}
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Thể loại đăng ký *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Thể loại đăng ký *</label>
                           <select
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
-                            className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           >
                             <option value="dan_ca">Dân Ca</option>
                             <option value="dan_vu">Dân Vũ</option>
@@ -314,27 +314,27 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Ý tưởng & Nội dung (MC giới thiệu & BGK thẩm định) *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ý tưởng & Nội dung (MC giới thiệu & BGK thẩm định) *</label>
                         <textarea
                           name="description"
                           value={formData.description}
                           onChange={handleChange}
                           rows={4}
                           placeholder="Mô tả ngắn gọn về thông điệp, văn hóa vùng miền tôn vinh trong tiết mục..."
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors resize-none"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
                         />
                         {errors.description && <p className="text-xs text-primary">{errors.description}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Số lượng Micro, đạo cụ...)</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Số lượng Micro, đạo cụ...)</label>
                         <textarea
                           name="technicalRequirements"
                           value={formData.technicalRequirements}
                           onChange={handleChange}
                           rows={3}
                           placeholder="Ví dụ: Cần 3 micro không dây cầm tay, 1 bục đứng trung tâm..."
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors resize-none"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
                         />
                       </div>
                     </div>
@@ -350,41 +350,41 @@ export default function RegisterWizard() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-semibold text-lg border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Upload className="w-5 h-5" />
                       <span>Bước 3: Tải lên tư liệu âm nhạc / video</span>
                     </div>
 
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Đường dẫn file Nhạc nền (Google Drive / Dropbox) *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đường dẫn file Nhạc nền (Google Drive / Dropbox) *</label>
                         <input
                           type="url"
                           name="audioLink"
                           value={formData.audioLink}
                           onChange={handleChange}
                           placeholder="Dán link Drive đã mở quyền truy cập"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.audioLink && <p className="text-xs text-primary">{errors.audioLink}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-light-alabaster/70 uppercase tracking-wider">Đường dẫn Video chạy thử / Tập luyện (YouTube / Google Drive)</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đường dẫn Video chạy thử / Tập luyện (YouTube / Google Drive)</label>
                         <input
                           type="url"
                           name="videoLink"
                           value={formData.videoLink}
                           onChange={handleChange}
                           placeholder="Dán link video tập luyện của đội"
-                          className="w-full bg-dark-obsidian border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-secondary focus:outline-none transition-colors"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                       </div>
 
-                      <div className="border border-dashed border-white/10 rounded-xl p-8 text-center space-y-2 bg-dark-obsidian/30">
-                        <Upload className="w-8 h-8 text-light-alabaster/40 mx-auto" />
-                        <p className="text-xs text-light-alabaster/60">Kéo thả ảnh đại diện của đội thi (định dạng JPG/PNG)</p>
-                        <p className="text-[10px] text-light-alabaster/40">Dung lượng tối đa: 5MB. Phục vụ truyền thông bình chọn.</p>
+                      <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center space-y-2 bg-slate-50/50">
+                        <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                        <p className="text-xs text-slate-600">Kéo thả ảnh đại diện của đội thi (định dạng JPG/PNG)</p>
+                        <p className="text-[10px] text-slate-400">Dung lượng tối đa: 5MB. Phục vụ truyền thông bình chọn.</p>
                       </div>
                     </div>
                   </motion.div>
@@ -399,39 +399,39 @@ export default function RegisterWizard() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-semibold text-lg border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Sparkles className="w-5 h-5" />
                       <span>Bước 4: Xác nhận hồ sơ đăng ký</span>
                     </div>
 
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-6 space-y-4 text-sm">
-                      <div className="grid grid-cols-2 gap-4 border-b border-white/5 pb-4">
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Tên Đội Thi:</span>
-                          <strong className="text-light-cream">{formData.teamName}</strong>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên Đội Thi:</span>
+                          <strong className="text-slate-800">{formData.teamName}</strong>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Trưởng Đoàn:</span>
-                          <strong className="text-light-cream">{formData.representativeName}</strong>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Trưởng Đoàn:</span>
+                          <strong className="text-slate-800">{formData.representativeName}</strong>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Số Điện Thoại:</span>
-                          <span className="text-light-cream">{formData.phone}</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Số Điện Thoại:</span>
+                          <span className="text-slate-800">{formData.phone}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Email liên hệ:</span>
-                          <span className="text-light-cream">{formData.email}</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Email liên hệ:</span>
+                          <span className="text-slate-800">{formData.email}</span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Tên tiết mục:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên tiết mục:</span>
                           <strong className="text-secondary">{formData.performanceTitle}</strong>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-light-alabaster/40 uppercase tracking-wider">Ý tưởng tiết mục:</span>
-                          <p className="text-xs text-light-alabaster/70 italic">&ldquo;{formData.description}&rdquo;</p>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Ý tưởng tiết mục:</span>
+                          <p className="text-xs text-slate-600 italic">&ldquo;{formData.description}&rdquo;</p>
                         </div>
                         {formData.audioLink && (
                           <div className="text-xs text-accent">
@@ -443,7 +443,7 @@ export default function RegisterWizard() {
 
                     <div className="flex items-start gap-3 bg-primary/10 border border-primary/20 rounded-xl p-4">
                       <input type="checkbox" required id="agreement" className="mt-1 accent-primary" />
-                      <label htmlFor="agreement" className="text-xs text-light-alabaster/70 leading-relaxed">
+                      <label htmlFor="agreement" className="text-xs text-slate-600 leading-relaxed">
                         Tôi cam kết tất cả thông tin khai báo trên là chính xác. Bản quyền âm nhạc của tiết mục hoàn toàn thuộc trách nhiệm tự thỏa thuận của đội thi. Ban tổ chức được toàn quyền sử dụng hình ảnh tiết mục để làm tư liệu truyền thông.
                       </label>
                     </div>
@@ -451,12 +451,12 @@ export default function RegisterWizard() {
                 )}
 
                 {/* Footer Controls */}
-                <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between pt-6 border-t border-slate-100">
                   {step > 1 ? (
                     <button
                       type="button"
                       onClick={handlePrev}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-white/15 text-xs font-semibold text-light-cream hover:bg-white/5 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4" /> Quay lại
                     </button>

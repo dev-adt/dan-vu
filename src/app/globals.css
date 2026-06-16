@@ -18,8 +18,8 @@
 }
 
 :root {
-  --background: #020617;
-  --foreground: #F8FAFC;
+  --background: #FAFAFA;
+  --foreground: #0F172A;
 }
 
 body {
@@ -34,7 +34,7 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: #FAFAFA;
 }
 ::-webkit-scrollbar-thumb {
   background: #00695C;
@@ -49,7 +49,7 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glow-gold-hover:hover {
-  box-shadow: 0 0 20px rgba(244, 180, 0, 0.4);
+  box-shadow: 0 0 20px rgba(244, 180, 0, 0.25);
   border-color: #F4B400;
 }
 
@@ -57,15 +57,17 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glow-crimson-hover:hover {
-  box-shadow: 0 0 20px rgba(198, 40, 40, 0.4);
+  box-shadow: 0 0 20px rgba(198, 40, 40, 0.25);
   border-color: #C62828;
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism utility - Light Mode Optimized */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
 }
+
 

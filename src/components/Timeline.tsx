@@ -61,16 +61,16 @@ export default function Timeline() {
   return (
     <div className="py-12 px-4 max-w-4xl mx-auto">
       <div className="text-center mb-16">
-        <h2 className="font-heading font-bold text-3xl sm:text-4xl text-light-cream">
+        <h2 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900">
           Lịch trình Sự kiện tương tác
         </h2>
         <div className="w-12 h-1 bg-secondary mx-auto mt-4 rounded-full" />
-        <p className="text-light-alabaster/60 text-sm mt-3">
+        <p className="text-slate-600 text-sm mt-3">
           Theo dõi các mốc thời gian quan trọng của Festival Dân ca Dân vũ 2026
         </p>
       </div>
 
-      <div className="relative border-l border-white/10 ml-4 md:ml-32 space-y-12">
+      <div className="relative border-l border-slate-200 ml-4 md:ml-32 space-y-12">
         {stages.map((stage, idx) => {
           const Icon = stage.icon;
           const isCurrent = stage.status === 'current';
@@ -88,10 +88,10 @@ export default function Timeline() {
               {/* Dot Icon Indicator */}
               <span className={`absolute -left-[17px] top-1.5 flex h-8 w-8 items-center justify-center rounded-full border transition-transform duration-300 ${
                 isCurrent 
-                  ? 'bg-secondary border-secondary text-dark-obsidian scale-125 shadow-[0_0_15px_rgba(244,180,0,0.5)]' 
+                  ? 'bg-secondary border-secondary text-dark-obsidian scale-125 shadow-[0_0_15px_rgba(244,180,0,0.3)]' 
                   : isPast 
-                    ? 'bg-accent border-accent text-light-alabaster' 
-                    : 'bg-dark-slate border-white/10 text-light-alabaster/50'
+                    ? 'bg-accent border-accent text-white' 
+                    : 'bg-white border-slate-200 text-slate-400'
               }`}>
                 <Icon className="w-4 h-4" />
               </span>
@@ -99,7 +99,7 @@ export default function Timeline() {
               {/* Sidebar date marker */}
               <div className="hidden md:block absolute -left-36 top-2.5 w-28 text-right">
                 <span className={`text-xs font-semibold uppercase tracking-wider ${
-                  isCurrent ? 'text-secondary' : 'text-light-alabaster/40'
+                  isCurrent ? 'text-primary' : 'text-slate-500'
                 }`}>
                   {stage.date}
                 </span>
@@ -108,15 +108,15 @@ export default function Timeline() {
               {/* Main card */}
               <div className={`p-6 rounded-xl border transition-all duration-300 ${
                 isCurrent 
-                  ? 'bg-white/5 border-secondary/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]' 
-                  : 'bg-dark-slate/40 border-white/5 hover:border-white/10'
+                  ? 'bg-amber-50/60 border-secondary/40 shadow-sm' 
+                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
               }`}>
                 <span className="md:hidden block text-xs font-semibold text-secondary/80 uppercase tracking-wider mb-2">
                   {stage.date}
                 </span>
                 <div className="flex items-center justify-between">
                   <h3 className={`font-heading font-semibold text-lg ${
-                    isCurrent ? 'text-secondary' : 'text-light-cream'
+                    isCurrent ? 'text-primary' : 'text-slate-900'
                   }`}>
                     {stage.title}
                   </h3>
@@ -126,7 +126,7 @@ export default function Timeline() {
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-sm text-light-alabaster/60 leading-relaxed">
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                   {stage.description}
                 </p>
               </div>

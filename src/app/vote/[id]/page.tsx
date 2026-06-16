@@ -88,8 +88,8 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
 
   if (!candidate) {
     return (
-      <div className="flex flex-col min-h-screen bg-dark-obsidian text-light-alabaster relative justify-center items-center">
-        <p className="text-sm text-light-alabaster/60 animate-pulse">Đang tải thông tin tiết mục...</p>
+      <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative justify-center items-center">
+        <p className="text-sm text-slate-600 animate-pulse">Đang tải thông tin tiết mục...</p>
       </div>
     );
   }
@@ -108,7 +108,7 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-obsidian text-light-alabaster relative">
+    <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
       <Navbar />
 
       <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
@@ -116,7 +116,7 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
         <div className="mb-6">
           <Link
             href="/vote"
-            className="inline-flex items-center gap-1.5 text-xs text-light-alabaster/60 hover:text-secondary transition-colors uppercase font-bold tracking-wider"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-primary transition-colors uppercase font-bold tracking-wider"
           >
             <ChevronLeft className="w-4 h-4" /> Quay lại danh sách bình chọn
           </Link>
@@ -125,41 +125,41 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left: Video Player */}
           <div className="lg:col-span-8 space-y-6">
-            <div className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-2xl flex items-center justify-center bg-black">
+            <div className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-200 shadow-sm flex items-center justify-center bg-black">
               {/* Overlay graphic */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
               <div className="z-10 text-center space-y-4">
-                <button className="w-20 h-20 rounded-full bg-secondary text-dark-obsidian flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_25px_rgba(244,180,0,0.5)]">
+                <button className="w-20 h-20 rounded-full bg-secondary text-dark-obsidian flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_25px_rgba(244,180,0,0.4)]">
                   <Play className="w-8 h-8 fill-dark-obsidian ml-1" />
                 </button>
-                <p className="text-xs font-semibold uppercase tracking-wider text-light-cream">Trình Phát Video Dự Thi Sơ Loại</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-white">Trình Phát Video Dự Thi Sơ Loại</p>
               </div>
             </div>
 
             {/* Performance Descriptions */}
-            <div className="glass-panel rounded-2xl border border-white/10 p-6 sm:p-8 space-y-6">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 space-y-6 shadow-sm">
               <div>
-                <span className="text-xs uppercase tracking-widest font-semibold text-secondary">Giới thiệu Tiết mục</span>
-                <h2 className="font-heading font-bold text-2xl sm:text-3xl text-light-cream mt-2">
+                <span className="text-xs uppercase tracking-widest font-bold text-primary">Giới thiệu Tiết mục</span>
+                <h2 className="font-heading font-bold text-2xl sm:text-3xl text-slate-900 mt-2">
                   {candidate.performanceTitle}
                 </h2>
-                <div className="flex items-center gap-4 text-xs text-light-alabaster/40 mt-3 border-y border-white/5 py-3">
+                <div className="flex items-center gap-4 text-xs text-slate-500 mt-3 border-y border-slate-100 py-3">
                   <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-accent" /> {candidate.teamName}</span>
                   <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-accent" /> {candidate.origin}</span>
                 </div>
               </div>
 
-              <div className="space-y-4 text-sm text-light-alabaster/70 leading-relaxed">
+              <div className="space-y-4 text-sm text-slate-700 leading-relaxed">
                 <div>
-                  <h4 className="font-semibold text-light-cream mb-1 text-xs uppercase tracking-wider">Ý tưởng & Câu chuyện Văn hóa</h4>
+                  <h4 className="font-bold text-slate-900 mb-1 text-xs uppercase tracking-wider">Ý tưởng & Câu chuyện Văn hóa</h4>
                   <p>{candidate.culturalBackground}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-light-cream mb-1 text-xs uppercase tracking-wider">Trưởng đoàn / Đại diện</h4>
+                  <h4 className="font-bold text-slate-900 mb-1 text-xs uppercase tracking-wider">Trưởng đoàn / Đại diện</h4>
                   <p className="text-xs">{candidate.representative}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-light-cream mb-1 text-xs uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Rider)</h4>
+                  <h4 className="font-bold text-slate-900 mb-1 text-xs uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Rider)</h4>
                   <p className="text-xs italic">{candidate.technicalRequirements}</p>
                 </div>
               </div>
@@ -168,16 +168,16 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
 
           {/* Right: Vote Panel & Social Actions */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="glass-panel rounded-2xl border-2 border-secondary/20 p-6 space-y-6 shadow-xl">
+            <div className="glass-panel bg-white rounded-2xl border-2 border-secondary/30 p-6 space-y-6 shadow-sm">
               <div className="text-center space-y-2">
                 <span className="text-[10px] font-bold text-dark-obsidian bg-secondary px-3 py-1 rounded-full uppercase tracking-wider">
                   Cổng Bình Chọn
                 </span>
-                <p className="text-xs text-light-alabaster/40 mt-2">Mã số tiết mục: {candidate.id.toUpperCase()}</p>
+                <p className="text-xs text-slate-500 mt-2">Mã số tiết mục: {candidate.id.toUpperCase()}</p>
                 <div className="flex items-center justify-center gap-2 pt-4">
-                  <Heart className="w-6 h-6 text-primary fill-primary/30" />
-                  <span className="text-3xl font-extrabold text-light-cream">{localVotes.toLocaleString()}</span>
-                  <span className="text-xs text-light-alabaster/40">lượt vote</span>
+                  <Heart className="w-6 h-6 text-primary fill-primary/10 animate-pulse" />
+                  <span className="text-3xl font-extrabold text-slate-900">{localVotes.toLocaleString()}</span>
+                  <span className="text-xs text-slate-500">lượt vote</span>
                 </div>
               </div>
 
@@ -196,18 +196,18 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
                 )}
               </div>
 
-              <div className="border-t border-white/5 pt-4 space-y-3">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-light-alabaster/40 text-center">
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 text-center">
                   Chia sẻ tiết mục
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-light-cream">
+                  <button className="py-2 text-xs font-semibold rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-700">
                     Facebook
                   </button>
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-light-cream">
+                  <button className="py-2 text-xs font-semibold rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-700">
                     Messenger
                   </button>
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-light-cream">
+                  <button className="py-2 text-xs font-semibold rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-700">
                     Zalo
                   </button>
                 </div>
@@ -215,12 +215,12 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
             </div>
 
             {/* Anti-fraud advisory */}
-            <div className="glass-panel rounded-2xl border border-white/10 p-5 space-y-3">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-sm">
               <div className="flex items-center gap-2 text-secondary">
                 <ShieldCheck className="w-5 h-5" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Hệ thống bảo mật</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Hệ thống bảo mật</span>
               </div>
-              <p className="text-[11px] text-light-alabaster/50 leading-relaxed">
+              <p className="text-[11px] text-slate-600 leading-relaxed">
                 Platform sử dụng công nghệ định danh vân tay thiết bị (Device Canvas Fingerprinting), giám sát địa chỉ IP thời gian thực, kết hợp kiểm định Google reCAPTCHA v3 chống spam. Mọi lượt bình chọn gian lận đều được ghi nhận tự động và xử lý lọc bỏ định kỳ 12h/lần bởi BTC.
               </p>
             </div>
@@ -228,49 +228,83 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
         </div>
       </main>
 
-      {/* Verification Auth Modal */}
+      {/* Verification Auth Modal (Gmail Login Mocked) */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="glass-panel border border-white/10 rounded-2xl p-6 max-w-md w-full space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full space-y-6 shadow-2xl">
             <div className="text-center space-y-2">
-              <ShieldAlert className="w-10 h-10 text-secondary mx-auto" />
-              <h3 className="font-heading font-bold text-xl text-light-cream">Xác thực Tài khoản Bình chọn</h3>
-              <p className="text-xs text-light-alabaster/60">Để chống tình trạng bình chọn tự động (bot/spam), vui lòng nhập email liên kết.</p>
+              <ShieldAlert className="w-10 h-10 text-primary mx-auto" />
+              <h3 className="font-heading font-bold text-xl text-slate-900">Xác thực Google Gmail</h3>
+              <p className="text-xs text-slate-500">Mỗi tài khoản Gmail chỉ được bình chọn 01 lần/ngày cho mỗi tiết mục.</p>
             </div>
 
-            <form onSubmit={handleVoteSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-light-alabaster/40">Địa chỉ Email *</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-light-alabaster/40 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="example@gmail.com"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    className="w-full bg-dark-obsidian border border-white/10 rounded-xl pl-10 pr-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
+            {!emailInput ? (
+              /* Google OAuth Trigger Button */
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerifying(true);
+                    setTimeout(() => {
+                      setIsVerifying(false);
+                      setEmailInput('user.gmail@gmail.com');
+                    }, 1200);
+                  }}
+                  disabled={isVerifying}
+                  className="w-full py-3.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-sm"
+                >
+                  {isVerifying ? (
+                    <span className="animate-pulse">Đang kết nối tới Google Accounts...</span>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.286 4.114-3.52 0-6.376-2.857-6.376-6.377s2.857-6.377 6.376-6.377c1.782 0 3.32.73 4.46 1.91l3.185-3.185C19.348 2.115 16.03.738 12.24.738 5.912.738.738 5.912.738 12.24s5.174 11.502 11.502 11.502c6.262 0 11.378-5.076 11.378-11.502 0-.785-.09-1.542-.26-2.255H12.24z"/>
+                      </svg>
+                      <span>ĐĂNG NHẬP BẰNG GMAIL</span>
+                    </>
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(false)}
-                  className="w-1/2 py-2.5 border border-white/10 rounded-xl text-xs font-semibold text-light-cream hover:bg-white/5 transition-colors"
+                  className="w-full py-2 rounded-xl border border-slate-100 text-xs text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   Hủy bỏ
                 </button>
-                <button
-                  type="submit"
-                  disabled={isVerifying}
-                  className="w-1/2 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-2"
-                >
-                  {isVerifying ? 'Đang xác thực...' : 'Xác nhận Vote'}
-                </button>
               </div>
-            </form>
+            ) : (
+              /* Success confirmation */
+              <form onSubmit={handleVoteSubmit} className="space-y-4">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
+                    G
+                  </div>
+                  <div>
+                    <span className="block text-[10px] text-slate-400 uppercase tracking-wider">Đã xác thực Gmail:</span>
+                    <span className="text-xs font-semibold text-slate-800">{emailInput}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailInput('');
+                    }}
+                    className="w-1/2 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Đăng xuất
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isVerifying}
+                    className="w-1/2 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    {isVerifying ? 'Đang gửi...' : 'Gửi Bình Chọn'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
