@@ -66,18 +66,18 @@ sudo npm install -y -g pm2
 
 ```bash
 # Di chuyển đến thư mục chứa web
-cd /var/www
+cd /www/wwwroot
 
 # Clone code về VPS
-git clone https://github.com/your-username/your-repo-name.git nhip-buoc-viet-nam
-cd nhip-buoc-viet-nam
+git clone https://github.com/dev-adt/dan-vu.git danvu.edunow.today
+cd danvu.edunow.today
 
 # Cài đặt các gói thư viện
 npm install
 ```
 
 ### Bước 3: Tạo file cấu hình môi trường Production
-Tạo file `.env.production` tại thư mục `/var/www/nhip-buoc-viet-nam`:
+Tạo file `.env.production` tại thư mục `/www/wwwroot/danvu.edunow.today`:
 ```bash
 nano .env.production
 ```
