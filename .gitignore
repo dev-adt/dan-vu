@@ -40,6 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Plan
+# Temporary metadata and documentation plans
+AGENTS.md
+CLAUDE.md
 Plan.md
 Yêu cầu.txt
