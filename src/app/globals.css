@@ -5,10 +5,10 @@
   --color-secondary: #F4B400;
   --color-accent: #00695C;
   
-  --color-dark-obsidian: #020617;
-  --color-dark-slate: #0F172A;
-  --color-light-alabaster: #F8FAFC;
-  --color-light-cream: #FAFAFA;
+  --color-dark-obsidian: #111827;
+  --color-dark-slate: #1F2937;
+  --color-light-alabaster: #FCFBF7;
+  --color-light-cream: #F3EFE9;
   
   --font-heading: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-jakarta), Inter, system-ui, sans-serif;
@@ -18,8 +18,8 @@
 }
 
 :root {
-  --background: #FAFAFA;
-  --foreground: #0F172A;
+  --background: #FCFBF7;
+  --foreground: #111827;
 }
 
 body {
@@ -34,7 +34,7 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAFAFA;
+  background: #FCFBF7;
 }
 ::-webkit-scrollbar-thumb {
   background: #00695C;

@@ -79,19 +79,46 @@ export default function VoteDiscovery() {
     });
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-obsidian text-light-alabaster relative">
+    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative overflow-x-hidden w-full">
       <Navbar />
 
-      <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      {/* Background watermark wrapper to prevent layout shift */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Rotating Dong Son Bronze Drum Watermarks */}
+        <div className="absolute top-[15%] -left-48 w-96 sm:w-[500px] h-96 sm:h-[500px] opacity-[0.025] select-none">
+          <motion.svg
+            animate={{ rotate: 360 }}
+            transition={{ duration: 180, repeat: Infinity, ease: 'linear' }}
+            viewBox="0 0 400 400"
+            className="w-full h-full text-accent"
+            fill="none"
+            stroke="currentColor"
+          >
+            <circle cx="200" cy="200" r="190" strokeWidth="1" />
+            <circle cx="200" cy="200" r="180" strokeWidth="0.5" strokeDasharray="3,3" />
+            <circle cx="200" cy="200" r="150" strokeWidth="0.5" />
+            <circle cx="200" cy="200" r="120" strokeWidth="1" />
+            <circle cx="200" cy="200" r="90" strokeWidth="0.5" strokeDasharray="4,2" />
+            <circle cx="200" cy="200" r="60" strokeWidth="1.5" />
+            <path
+              d="M200,170 L205,190 L225,185 L210,197 L227,210 L206,204 L200,225 L194,204 L173,210 L190,197 L175,185 L195,190 Z"
+              fill="currentColor"
+              fillOpacity="0.2"
+            />
+          </motion.svg>
+        </div>
+      </div>
+
+      <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         {/* Banner header */}
         <div className="text-center mb-12">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
             Khán Giả Bình Chọn
           </span>
-          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-light-cream mt-2">
+          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
             Đại Sứ Yêu Thích Nhất
           </h1>
-          <p className="text-xs text-light-alabaster/50 mt-2 max-w-xl mx-auto">
+          <p className="text-xs text-dark-slate/75 mt-2 max-w-xl mx-auto">
             Mỗi tài khoản được bình chọn 01 lần/ngày cho mỗi tiết mục. Hành vi gian lận (hack vote) sẽ bị hủy kết quả.
           </p>
         </div>
@@ -103,65 +130,65 @@ export default function VoteDiscovery() {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 glass-panel border border-accent/40 bg-dark-slate/90 text-light-cream px-6 py-3.5 rounded-xl flex items-center gap-3 shadow-lg"
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 glass-panel border border-accent/40 bg-light-alabaster/95 text-dark-obsidian px-6 py-3.5 rounded-xl flex items-center gap-3 shadow-lg"
             >
               <CheckCircle2 className="w-5 h-5 text-accent animate-bounce" />
               <div className="text-xs text-left">
                 <p className="font-semibold text-accent">Ghi nhận bình chọn thành công!</p>
-                <p className="text-[10px] text-light-alabaster/60">Cảm ơn bạn đã đóng góp tiếng nói tôn vinh di sản.</p>
+                <p className="text-[10px] text-dark-slate/70">Cảm ơn bạn đã đóng góp tiếng nói tôn vinh di sản.</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Filter controls panel */}
-        <div className="glass-panel rounded-2xl border border-white/10 p-5 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-light-alabaster/80 border border-slate-300/40 rounded-2xl p-5 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm backdrop-blur-sm">
           {/* Search bar input */}
           <div className="relative w-full md:max-w-xs">
-            <Search className="w-4 h-4 text-light-alabaster/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-dark-slate/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Nhập tên đội hoặc mã số..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-dark-obsidian border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs focus:border-secondary focus:outline-none transition-colors"
+              className="w-full bg-light-cream border border-slate-300/50 rounded-xl pl-10 pr-4 py-2 text-xs focus:border-secondary focus:outline-none transition-colors text-dark-obsidian placeholder-dark-slate/40"
             />
           </div>
 
           {/* Filters category & sort options */}
           <div className="flex flex-wrap items-center justify-end gap-3 w-full md:w-auto">
-            <div className="flex bg-dark-obsidian border border-white/10 p-1 rounded-lg">
+            <div className="flex bg-light-cream border border-slate-300/50 p-1 rounded-lg">
               <button
                 onClick={() => setActiveCategory('all')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  activeCategory === 'all' ? 'bg-accent text-white' : 'text-light-alabaster/60 hover:text-light-cream'
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                  activeCategory === 'all' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
                 Tất cả
               </button>
               <button
                 onClick={() => setActiveCategory('dan_ca')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  activeCategory === 'dan_ca' ? 'bg-accent text-white' : 'text-light-alabaster/60 hover:text-light-cream'
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                  activeCategory === 'dan_ca' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
                 Dân ca
               </button>
               <button
                 onClick={() => setActiveCategory('dan_vu')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  activeCategory === 'dan_vu' ? 'bg-accent text-white' : 'text-light-alabaster/60 hover:text-light-cream'
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                  activeCategory === 'dan_vu' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
                 Dân vũ
               </button>
             </div>
 
-            <div className="flex bg-dark-obsidian border border-white/10 p-1 rounded-lg">
+            <div className="flex bg-light-cream border border-slate-300/50 p-1 rounded-lg">
               <button
                 onClick={() => setActiveSort('votes')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                  activeSort === 'votes' ? 'bg-secondary text-dark-obsidian' : 'text-light-alabaster/60 hover:text-light-cream'
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                  activeSort === 'votes' ? 'bg-secondary text-[#111827] shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
                 Nhiều vote nhất
@@ -186,10 +213,10 @@ export default function VoteDiscovery() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-dark-slate/20 rounded-2xl border border-white/5 space-y-2">
-            <SlidersHorizontal className="w-8 h-8 text-light-alabaster/30 mx-auto" />
-            <p className="text-sm font-semibold text-light-cream">Không tìm thấy kết quả phù hợp</p>
-            <p className="text-xs text-light-alabaster/40">Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc đổi bộ lọc.</p>
+          <div className="text-center py-20 bg-light-cream/40 rounded-2xl border border-slate-300/30 space-y-2">
+            <SlidersHorizontal className="w-8 h-8 text-dark-slate/30 mx-auto" />
+            <p className="text-sm font-semibold text-dark-obsidian">Không tìm thấy kết quả phù hợp</p>
+            <p className="text-xs text-dark-slate/60">Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc đổi bộ lọc.</p>
           </div>
         )}
       </main>

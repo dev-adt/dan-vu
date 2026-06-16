@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="vi"
       className={`${playfair.variable} ${plusJakarta.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-dark-obsidian text-light-alabaster selection:bg-accent selection:text-white">
+      <body className="min-h-full flex flex-col bg-gradient-to-b from-light-alabaster to-light-cream text-dark-obsidian selection:bg-accent selection:text-white">
         {children}
       </body>
     </html>
