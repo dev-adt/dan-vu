@@ -109,7 +109,7 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative overflow-x-clip w-full">
       <Navbar />
 
       {/* Background watermark wrapper to prevent layout shift */}

@@ -25,7 +25,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative selection:bg-accent selection:text-white overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative selection:bg-accent selection:text-white overflow-x-clip w-full">
       <Navbar />
 
       {/* Background watermark wrapper to prevent layout shift */}
@@ -255,7 +255,8 @@ export default function Home() {
             </div>
             <div>
               <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">02 Giải Nhì</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">Cờ lưu niệm & Chứng nhận</h3>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">15.000.000 VNĐ</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Cờ lưu niệm & Chứng nhận</p>
               <p className="text-xs text-dark-slate/85 mt-2">Vinh danh các tiết mục xuất sắc có kỹ thuật đồng đều và ý tưởng đột phá.</p>
             </div>
           </div>
@@ -270,7 +271,8 @@ export default function Home() {
             </div>
             <div>
               <span className="text-xs text-secondary uppercase tracking-widest font-semibold">01 Giải Nhất Vô Địch</span>
-              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">Cúp Vàng & Cờ lưu niệm</h3>
+              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">30.000.000 VNĐ</h3>
+              <p className="text-xs text-secondary font-bold uppercase tracking-wider mt-1">Cúp Vàng & Cờ lưu niệm</p>
               <p className="text-xs text-dark-slate/95 mt-2">Tiết mục đỉnh cao kết hợp trọn vẹn yếu tố dân gian bản địa và hơi thở sân khấu đương đại.</p>
             </div>
           </div>
@@ -282,7 +284,8 @@ export default function Home() {
             </div>
             <div>
               <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">03 Giải Ba</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">Cờ lưu niệm & Chứng nhận</h3>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">10.000.000 VNĐ</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Cờ lưu niệm & Chứng nhận</p>
               <p className="text-xs text-dark-slate/85 mt-2">Trao cho các đội biểu diễn đầy nhiệt huyết, giàu cảm xúc truyền tải.</p>
             </div>
           </div>

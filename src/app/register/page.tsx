@@ -8,11 +8,14 @@ import Footer from '@/components/Footer';
 
 interface FormData {
   teamName: string;
+  organization: string;
+  memberCount: string;
   representativeName: string;
   phone: string;
   email: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
   performanceTitle: string;
+  duration: string;
   description: string;
   technicalRequirements: string;
   audioLink: string;
@@ -21,11 +24,14 @@ interface FormData {
 
 const initialFormData: FormData = {
   teamName: '',
+  organization: '',
+  memberCount: '',
   representativeName: '',
   phone: '',
   email: '',
   category: 'dan_ca',
   performanceTitle: '',
+  duration: '',
   description: '',
   technicalRequirements: '',
   audioLink: '',
@@ -75,6 +81,7 @@ export default function RegisterWizard() {
 
     if (currentStep === 1) {
       if (!formData.teamName.trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
+      if (!formData.memberCount.trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
       if (!formData.representativeName.trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
       if (!formData.phone.trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
       if (!formData.email.trim()) {
@@ -84,6 +91,7 @@ export default function RegisterWizard() {
       }
     } else if (currentStep === 2) {
       if (!formData.performanceTitle.trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
+      if (!formData.duration.trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
       if (!formData.description.trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
     } else if (currentStep === 3) {
       if (!formData.audioLink.trim() && !formData.videoLink.trim()) {
@@ -228,6 +236,31 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đơn vị đại diện (Trường học, Phường/Xã... nếu có)</label>
+                        <input
+                          type="text"
+                          name="organization"
+                          value={formData.organization}
+                          onChange={handleChange}
+                          placeholder="Ví dụ: Phường Tràng Tiền"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Số lượng thành viên *</label>
+                        <input
+                          type="text"
+                          name="memberCount"
+                          value={formData.memberCount}
+                          onChange={handleChange}
+                          placeholder="Ví dụ: 15 người (Từ 5 - 30 người)"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                        {errors.memberCount && <p className="text-xs text-primary">{errors.memberCount}</p>}
+                      </div>
+
+                      <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Trưởng đoàn / Người Đại diện *</label>
                         <input
                           type="text"
@@ -284,7 +317,7 @@ export default function RegisterWizard() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tên bài dự thi (Tiết mục) *</label>
                           <input
@@ -310,6 +343,19 @@ export default function RegisterWizard() {
                             <option value="dan_vu">Dân Vũ</option>
                             <option value="both">Cả hai (Dân Ca & Dân Vũ)</option>
                           </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Thời lượng dự kiến *</label>
+                          <input
+                            type="text"
+                            name="duration"
+                            value={formData.duration}
+                            onChange={handleChange}
+                            placeholder="Ví dụ: 5 phút 30 giây (Tối đa 7 phút)"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                          />
+                          {errors.duration && <p className="text-xs text-primary">{errors.duration}</p>}
                         </div>
                       </div>
 
@@ -410,6 +456,16 @@ export default function RegisterWizard() {
                           <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên Đội Thi:</span>
                           <strong className="text-slate-800">{formData.teamName}</strong>
                         </div>
+                        {formData.organization && (
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Đơn vị đại diện:</span>
+                            <strong className="text-slate-800">{formData.organization}</strong>
+                          </div>
+                        )}
+                        <div>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Số lượng thành viên:</span>
+                          <strong className="text-slate-800">{formData.memberCount}</strong>
+                        </div>
                         <div>
                           <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Trưởng Đoàn:</span>
                           <strong className="text-slate-800">{formData.representativeName}</strong>
@@ -425,9 +481,15 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-2">
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên tiết mục:</span>
-                          <strong className="text-secondary">{formData.performanceTitle}</strong>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên tiết mục:</span>
+                            <strong className="text-secondary">{formData.performanceTitle}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Thời lượng dự kiến:</span>
+                            <strong className="text-secondary">{formData.duration}</strong>
+                          </div>
                         </div>
                         <div>
                           <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Ý tưởng tiết mục:</span>
