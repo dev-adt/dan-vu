@@ -1,14 +1,29 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Music, ArrowRight, Star, Heart, Award } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Timeline from '@/components/Timeline';
 
+const bgImages = [
+  '/images/hero-bg-1.png',
+  '/images/hero-bg-2.png',
+  '/images/hero-bg-3.png',
+];
+
 export default function Home() {
+  const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % bgImages.length);
+    }, 6000); // changes every 6 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative selection:bg-accent selection:text-white overflow-x-hidden w-full">
       <Navbar />
@@ -90,13 +105,28 @@ export default function Home() {
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden bg-transparent border-b border-slate-200/20">
         {/* Background elements wrapper to prevent absolute-flex rendering shift */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {/* Background Image Slider with Crossfade */}
+          <div className="absolute inset-0 z-0 select-none overflow-hidden">
+            <AnimatePresence initial={false}>
+              <motion.div
+                key={currentBgIndex}
+                initial={{ opacity: 0, scale: 1.08 }}
+                animate={{ opacity: 0.28, scale: 1.02 }}
+                exit={{ opacity: 0, scale: 1.00 }}
+                transition={{ duration: 2.0, ease: 'easeInOut' }}
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${bgImages[currentBgIndex]})` }}
+              />
+            </AnimatePresence>
+          </div>
+
           {/* Soft elegant background gradient & abstract decorative glow */}
-          <div className="absolute inset-0 bg-gradient-to-t from-light-alabaster via-light-alabaster/70 to-light-alabaster/30 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-light-alabaster via-light-alabaster/65 to-light-alabaster/20 z-10" />
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-[100px] animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full filter blur-[100px] animate-pulse" />
-          
+
           {/* Subtle geometric pattern placeholder */}
-          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#C62828_1px,transparent_1px)] [background-size:24px_24px]" />
+          <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#C62828_1px,transparent_1px)] [background-size:24px_24px] z-10" />
 
           {/* Clean background gradient */}
           <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
