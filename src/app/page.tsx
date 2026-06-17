@@ -16,6 +16,7 @@ const bgImages = [
 
 export default function Home() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
+  const [isPlayingVideo, setIsPlayingVideo] = React.useState(false);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -220,13 +221,33 @@ export default function Home() {
           transition={{ duration: 0.6 }}
           className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/60 group shadow-md flex items-center justify-center bg-light-cream/40"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-primary/5 mix-blend-overlay" />
-          <div className="z-10 text-center space-y-4">
-            <button className="w-16 h-16 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-md">
-              <Play className="w-6 h-6 fill-[#111827] ml-1" />
-            </button>
-            <p className="text-xs font-bold uppercase tracking-wider text-dark-obsidian">Xem Video Giới Thiệu Sự Kiện</p>
-          </div>
+          {isPlayingVideo ? (
+            <iframe
+              src="https://www.youtube.com/embed/CL13X-8o4h0?si=pKykR4ri2L-a_v1K&autoplay=1"
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full border-0"
+            />
+          ) : (
+            <>
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
+                style={{ backgroundImage: `url('https://img.youtube.com/vi/CL13X-8o4h0/maxresdefault.jpg')` }}
+              />
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-all duration-300 group-hover:bg-black/30" />
+              <div className="z-10 text-center space-y-4">
+                <button 
+                  onClick={() => setIsPlayingVideo(true)}
+                  className="w-16 h-16 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer"
+                >
+                  <Play className="w-6 h-6 fill-[#111827] ml-1" />
+                </button>
+                <p className="text-xs font-bold uppercase tracking-wider text-white">Xem Video Giới Thiệu Sự Kiện</p>
+              </div>
+            </>
+          )}
         </motion.div>
       </section>
 
