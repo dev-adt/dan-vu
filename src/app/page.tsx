@@ -171,7 +171,8 @@ export default function Home() {
               Bình Chọn Tiết Mục
             </Link>
             <a
-              href="#"
+              href="/files/the-le-chi-tiet.pdf"
+              download="The_le_chi_tiet_Nhip_buoc_Viet_Nam_2026.pdf"
               className="text-xs font-semibold text-dark-slate/60 hover:text-primary underline underline-offset-4 mt-2 sm:mt-0"
             >
               Tải Thể Lệ Chi Tiết (PDF)

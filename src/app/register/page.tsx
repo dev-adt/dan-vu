@@ -44,13 +44,15 @@ export default function RegisterWizard() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState('');
 
   // Load draft from localStorage on mount
   useEffect(() => {
     const draft = localStorage.getItem('nhip_buoc_viet_nam_draft');
     if (draft) {
       try {
-        setFormData(JSON.parse(draft));
+        const parsed = JSON.parse(draft);
+        setFormData((prev) => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error('Failed to parse draft storage', e);
       }
@@ -80,21 +82,21 @@ export default function RegisterWizard() {
     const tempErrors: Partial<Record<keyof FormData, string>> = {};
 
     if (currentStep === 1) {
-      if (!formData.teamName.trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
-      if (!formData.memberCount.trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
-      if (!formData.representativeName.trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
-      if (!formData.phone.trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
-      if (!formData.email.trim()) {
+      if (!(formData.teamName || '').trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
+      if (!(formData.memberCount || '').trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
+      if (!(formData.representativeName || '').trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
+      if (!(formData.phone || '').trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
+      if (!(formData.email || '').trim()) {
         tempErrors.email = 'Email không được bỏ trống.';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         tempErrors.email = 'Địa chỉ email không hợp lệ.';
       }
     } else if (currentStep === 2) {
-      if (!formData.performanceTitle.trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
-      if (!formData.duration.trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
-      if (!formData.description.trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
+      if (!(formData.performanceTitle || '').trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
+      if (!(formData.duration || '').trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
+      if (!(formData.description || '').trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
     } else if (currentStep === 3) {
-      if (!formData.audioLink.trim() && !formData.videoLink.trim()) {
+      if (!(formData.audioLink || '').trim() && !(formData.videoLink || '').trim()) {
         tempErrors.audioLink = 'Bạn phải điền ít nhất link nhạc nền (Beat) hoặc link video chạy thử.';
       }
     }
@@ -120,11 +122,31 @@ export default function RegisterWizard() {
     if (!validateStep(3)) return;
 
     setIsSaving(true);
-    // Simulate API registration delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSaving(false);
-    setIsSubmitted(true);
-    localStorage.removeItem('nhip_buoc_viet_nam_draft');
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || 'Đã có lỗi xảy ra khi nộp hồ sơ.');
+        setIsSaving(false);
+        return;
+      }
+
+      setSubmittedId(result.id);
+      setIsSaving(false);
+      setIsSubmitted(true);
+      localStorage.removeItem('nhip_buoc_viet_nam_draft');
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+      setIsSaving(false);
+    }
   };
 
   const stepTitles = [
@@ -189,7 +211,7 @@ export default function RegisterWizard() {
                 <div className="space-y-2">
                   <h2 className="font-heading font-bold text-2xl text-slate-900">Gửi Hồ Sơ Thành Công!</h2>
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    Mã số hồ sơ của bạn là <strong className="text-secondary">DC-{Math.floor(1000 + Math.random() * 9000)}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
+                    Mã số hồ sơ của bạn là <strong className="text-secondary">{submittedId}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
                   </p>
                 </div>
                 <div className="pt-4">

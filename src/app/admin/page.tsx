@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { LayoutDashboard, Users, Heart, AlertOctagon, UserCheck, ShieldAlert, Ban, Download, CheckCircle } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
+  ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle
+} from 'lucide-react';
 
 interface FraudLog {
   id: string;
@@ -15,44 +18,29 @@ interface FraudLog {
   status: 'valid' | 'flagged' | 'voided';
 }
 
-const mockFraudLogs: FraudLog[] = [
-  {
-    id: 'log-01',
-    teamName: 'Nhóm Múa Chăm Hữu Nghị',
-    ip: '113.161.42.10',
-    fingerprint: 'canvas_hash_a1f9e2b8',
-    timestamp: '2026-06-16 11:20:44',
-    score: 0.12,
-    status: 'flagged',
-  },
-  {
-    id: 'log-02',
-    teamName: 'Đoàn Nghệ Thuật CLB Sen Vàng',
-    ip: '42.119.89.201',
-    fingerprint: 'canvas_hash_7c62d04a',
-    timestamp: '2026-06-16 11:18:02',
-    score: 0.95,
-    status: 'valid',
-  },
-  {
-    id: 'log-03',
-    teamName: 'CLB Dân Vũ Hòa Bình',
-    ip: '113.161.42.10',
-    fingerprint: 'canvas_hash_a1f9e2b8',
-    timestamp: '2026-06-16 11:15:30',
-    score: 0.08,
-    status: 'flagged',
-  },
-  {
-    id: 'log-04',
-    teamName: 'CLB Dân Ca Sông Trà',
-    ip: '172.56.21.98',
-    fingerprint: 'canvas_hash_d389a9f2',
-    timestamp: '2026-06-16 11:10:15',
-    score: 0.88,
-    status: 'valid',
-  },
-];
+interface Team {
+  id: string;
+  created_at: string;
+  team_name: string;
+  organization?: string;
+  member_count?: string;
+  representative_name: string;
+  phone: string;
+  email: string;
+  category: 'dan_ca' | 'dan_vu' | 'both';
+  performance_title: string;
+  duration: string;
+  description: string;
+  technical_requirements: string;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+}
+
+interface Judge {
+  id: string;
+  email: string;
+  full_name: string;
+  created_at: string;
+}
 
 export default function AdminDashboard() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -60,43 +48,280 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [authHeader, setAuthHeader] = useState('');
 
-  const [logs, setLogs] = useState<FraudLog[]>(mockFraudLogs);
+  // Active Tab
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'judges'>('monitoring');
+
+  // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
-    teamsCount: 52,
-    votesCount: 12074,
-    fraudCount: 14,
-    judgesCount: 5,
+    teamsCount: 0,
+    votesCount: 0,
+    fraudCount: 0,
+    judgesCount: 0,
   });
+  const [logs, setLogs] = useState<FraudLog[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  // Editing state for Team
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [isSavingTeam, setIsSavingTeam] = useState(false);
+
+  // New Judge creation state
+  const [newJudgeEmail, setNewJudgeEmail] = useState('');
+  const [newJudgePassword, setNewJudgePassword] = useState('');
+  const [newJudgeName, setNewJudgeName] = useState('');
+  const [isCreatingJudge, setIsCreatingJudge] = useState(false);
+  const [judgeError, setJudgeError] = useState('');
+
+  // Load state from API when logged in
+  useEffect(() => {
+    if (isAdminLoggedIn && authHeader) {
+      fetchStats();
+      fetchTeams();
+      fetchJudges();
+    }
+  }, [isAdminLoggedIn, authHeader, activeTab]);
+
+  // Fetch Dashboard Stats & Logs
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/admin/stats', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.stats);
+        setLogs(data.logs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch admin stats:', err);
+    }
+  };
+
+  // Fetch Teams
+  const fetchTeams = async () => {
+    try {
+      const res = await fetch('/api/admin/teams', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTeams(data.teams);
+      }
+    } catch (err) {
+      console.error('Failed to fetch teams:', err);
+    }
+  };
+
+  // Fetch Judges
+  const fetchJudges = async () => {
+    try {
+      const res = await fetch('/api/admin/judges', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setJudges(data.judges);
+      }
+    } catch (err) {
+      console.error('Failed to fetch judges:', err);
+    }
+  };
+
+  // Login handler
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
     setLoginError('');
-    
-    setTimeout(() => {
-      setIsLoggingIn(false);
-      if (username === 'admin' && password === 'admin') {
+
+    const token = 'Basic ' + btoa(username + ':' + password);
+    try {
+      const res = await fetch('/api/admin/stats', {
+        headers: { Authorization: token },
+      });
+
+      if (res.ok) {
+        setAuthHeader(token);
         setIsAdminLoggedIn(true);
+        // Save token in sessionStorage
+        sessionStorage.setItem('admin_auth', token);
       } else {
         setLoginError('Sai tài khoản hoặc mật khẩu quản trị.');
       }
-    }, 1000);
+    } catch (err) {
+      setLoginError('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
-  const handleVoidVote = (id: string) => {
-    setLogs((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: 'voided' as const } : l))
-    );
-    setStats((prev) => ({
-      ...prev,
-      votesCount: prev.votesCount - 1,
-      fraudCount: prev.fraudCount - 1,
-    }));
+  // Auto-restore session from sessionStorage on mount
+  useEffect(() => {
+    const cachedToken = sessionStorage.getItem('admin_auth');
+    if (cachedToken) {
+      setAuthHeader(cachedToken);
+      setIsAdminLoggedIn(true);
+    }
+  }, []);
+
+  // Void a vote
+  const handleVoidVote = async (id: string) => {
+    try {
+      const res = await fetch('/api/admin/stats', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ id, is_valid: false }),
+      });
+
+      if (res.ok) {
+        fetchStats();
+      } else {
+        alert('Lỗi khi hủy vote.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Approve / Reject a team submission
+  const handleUpdateTeamStatus = async (id: string, newStatus: 'approved' | 'rejected') => {
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+
+      if (res.ok) {
+        fetchTeams();
+        fetchStats();
+      } else {
+        alert('Cập nhật trạng thái đội thi thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Save edited team details
+  const handleSaveEditedTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeam) return;
+
+    setIsSavingTeam(true);
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify(editingTeam),
+      });
+
+      if (res.ok) {
+        setEditingTeam(null);
+        fetchTeams();
+      } else {
+        alert('Cập nhật thông tin đội thi thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingTeam(false);
+    }
+  };
+
+  // Delete a team
+  const handleDeleteTeam = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa vĩnh viễn đội thi này khỏi cơ sở dữ liệu?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/teams?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader },
+      });
+
+      if (res.ok) {
+        fetchTeams();
+        fetchStats();
+      } else {
+        alert('Xóa đội thi thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Create a new judge account
+  const handleCreateJudge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setJudgeError('');
+    setIsCreatingJudge(true);
+
+    try {
+      const res = await fetch('/api/admin/judges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          email: newJudgeEmail,
+          password: newJudgePassword,
+          fullName: newJudgeName,
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        setNewJudgeEmail('');
+        setNewJudgePassword('');
+        setNewJudgeName('');
+        fetchJudges();
+        fetchStats();
+        alert('Tạo tài khoản giám khảo thành công.');
+      } else {
+        setJudgeError(result.error || 'Tạo tài khoản giám khảo thất bại.');
+      }
+    } catch (err) {
+      setJudgeError('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsCreatingJudge(false);
+    }
+  };
+
+  // Delete a judge account
+  const handleDeleteJudge = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa tài khoản giám khảo này?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/judges?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader },
+      });
+
+      if (res.ok) {
+        fetchJudges();
+        fetchStats();
+      } else {
+        alert('Xóa tài khoản giám khảo thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleExport = (format: 'Excel' | 'PDF') => {
-    alert(`Đang khởi tạo đường ống kết xuất báo cáo định dạng ${format}...`);
+    alert(`Đang khởi tạo kết xuất báo cáo điểm số định dạng ${format}...`);
   };
 
   return (
@@ -148,7 +373,7 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full bg-primary text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-opacity-95 transition-all shadow-sm mt-6 glow-crimson-hover"
+                className="w-full bg-primary text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-opacity-95 transition-all shadow-sm mt-6 glow-crimson-hover cursor-pointer"
               >
                 {isLoggingIn ? 'Đang xác thực...' : 'Đăng nhập Admin'}
               </button>
@@ -166,15 +391,24 @@ export default function AdminDashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleExport('Excel')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent/10 border border-accent/20 rounded-xl text-xs font-semibold text-accent hover:bg-accent/25 transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent/10 border border-accent/20 rounded-xl text-xs font-semibold text-accent hover:bg-accent/25 transition-all cursor-pointer"
                 >
                   <Download className="w-4 h-4" /> Xuất Excel
                 </button>
                 <button
                   onClick={() => handleExport('PDF')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-xs font-semibold text-primary hover:bg-primary/25 transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-xs font-semibold text-primary hover:bg-primary/25 transition-all cursor-pointer"
                 >
                   <Download className="w-4 h-4" /> Xuất PDF Điểm
+                </button>
+                <button
+                  onClick={() => {
+                    sessionStorage.removeItem('admin_auth');
+                    setIsAdminLoggedIn(false);
+                  }}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs text-slate-600 font-semibold rounded-xl transition-all cursor-pointer"
+                >
+                  Đăng xuất
                 </button>
               </div>
             </div>
@@ -218,94 +452,491 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Voter Audit log */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-secondary" />
-                <h2 className="font-heading font-bold text-xl text-slate-900">Nhật ký Giám sát Bình chọn bất thường</h2>
-              </div>
+            {/* Dashboard Tab Navigation */}
+            <div className="border-b border-slate-200 flex gap-4">
+              <button
+                onClick={() => setActiveTab('monitoring')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'monitoring' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Giám Sát Bình Chọn
+              </button>
+              <button
+                onClick={() => setActiveTab('teams')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'teams' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Quản Lý Đội Thi
+              </button>
+              <button
+                onClick={() => setActiveTab('judges')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'judges' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Tài Khoản Giám Khảo
+              </button>
+            </div>
 
-              <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                      <tr>
-                        <th className="px-6 py-4">Thời gian</th>
-                        <th className="px-6 py-4">Tiết mục</th>
-                        <th className="px-6 py-4">Địa chỉ IP</th>
-                        <th className="px-6 py-4">Device Fingerprint</th>
-                        <th className="px-6 py-4 text-center">Hệ số reCAPTCHA</th>
-                        <th className="px-6 py-4 text-center">Trạng thái</th>
-                        <th className="px-6 py-4 text-right">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs">
-                      {logs.map((log) => {
-                        const isFlagged = log.status === 'flagged';
-                        const isVoided = log.status === 'voided';
-                        const isLowScore = log.score < 0.3;
+            {/* Content for Monitoring Tab */}
+            {activeTab === 'monitoring' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-secondary" />
+                  <h2 className="font-heading font-bold text-xl text-slate-900">Nhật ký Giám sát Bình chọn bất thường</h2>
+                </div>
 
-                        return (
-                          <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="px-6 py-4 text-slate-600 font-mono">
-                              {log.timestamp}
-                            </td>
-                            <td className="px-6 py-4 font-heading font-semibold text-slate-800">
-                              {log.teamName}
-                            </td>
-                            <td className="px-6 py-4 font-mono text-slate-600">
-                              {log.ip}
-                            </td>
-                            <td className="px-6 py-4 font-mono text-slate-500">
-                              {log.fingerprint}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`font-semibold ${isLowScore ? 'text-primary' : 'text-accent'}`}>
-                                {log.score}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              {isVoided ? (
-                                <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
-                                  Đã hủy
-                                </span>
-                              ) : isFlagged ? (
-                                <span className="text-secondary font-semibold uppercase tracking-wider text-[10px] animate-pulse">
-                                  Nghi vấn
-                                </span>
-                              ) : (
-                                <span className="text-accent font-semibold uppercase tracking-wider text-[10px]">
-                                  Hợp lệ
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              {isFlagged ? (
-                                <button
-                                  onClick={() => handleVoidVote(log.id)}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-wider hover:bg-opacity-90 transition-all shadow-sm"
-                                >
-                                  <Ban className="w-3.5 h-3.5" /> Hủy Vote
-                                </button>
-                              ) : isVoided ? (
-                                <span className="text-slate-400 text-[10px]">Đã xử lý</span>
-                              ) : (
-                                <span className="text-accent inline-flex items-center gap-1 text-[10px] font-semibold">
-                                  <CheckCircle className="w-3.5 h-3.5" /> An toàn
-                                </span>
-                              )}
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                        <tr>
+                          <th className="px-6 py-4">Thời gian</th>
+                          <th className="px-6 py-4">Tiết mục</th>
+                          <th className="px-6 py-4">Địa chỉ IP</th>
+                          <th className="px-6 py-4">Device Fingerprint</th>
+                          <th className="px-6 py-4 text-center">Hệ số reCAPTCHA</th>
+                          <th className="px-6 py-4 text-center">Trạng thái</th>
+                          <th className="px-6 py-4 text-right">Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs">
+                        {logs.length > 0 ? (
+                          logs.map((log) => {
+                            const isFlagged = log.status === 'flagged';
+                            const isVoided = log.status === 'voided';
+                            const isLowScore = log.score < 0.3;
+
+                            return (
+                              <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="px-6 py-4 text-slate-600 font-mono">
+                                  {log.timestamp}
+                                </td>
+                                <td className="px-6 py-4 font-heading font-semibold text-slate-800">
+                                  {log.teamName}
+                                </td>
+                                <td className="px-6 py-4 font-mono text-slate-600">
+                                  {log.ip}
+                                </td>
+                                <td className="px-6 py-4 font-mono text-slate-500">
+                                  {log.fingerprint}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <span className={`font-semibold ${isLowScore ? 'text-primary' : 'text-accent'}`}>
+                                    {log.score}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  {isVoided ? (
+                                    <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                                      Đã hủy
+                                    </span>
+                                  ) : isFlagged ? (
+                                    <span className="text-secondary font-semibold uppercase tracking-wider text-[10px] animate-pulse">
+                                      Nghi vấn
+                                    </span>
+                                  ) : (
+                                    <span className="text-accent font-semibold uppercase tracking-wider text-[10px]">
+                                      Hợp lệ
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  {isFlagged ? (
+                                    <button
+                                      onClick={() => handleVoidVote(log.id)}
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-wider hover:bg-opacity-90 transition-all shadow-sm cursor-pointer"
+                                    >
+                                      <Ban className="w-3.5 h-3.5" /> Hủy Vote
+                                    </button>
+                                  ) : isVoided ? (
+                                    <span className="text-slate-400 text-[10px]">Đã hủy</span>
+                                  ) : (
+                                    <span className="text-accent inline-flex items-center gap-1 text-[10px] font-semibold">
+                                      <CheckCircle className="w-3.5 h-3.5" /> An toàn
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="text-center py-10 text-slate-400 italic">
+                              Chưa ghi nhận phiếu bầu nào trong hệ thống.
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Content for Teams Management Tab */}
+            {activeTab === 'teams' && (
+              <div className="space-y-4">
+                <h2 className="font-heading font-bold text-xl text-slate-900">Quản Lý Hồ Sơ Đăng Ký</h2>
+
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                        <tr>
+                          <th className="px-6 py-4">Mã số</th>
+                          <th className="px-6 py-4">Tên Đội</th>
+                          <th className="px-6 py-4">Tiết mục / Thể loại</th>
+                          <th className="px-6 py-4">Đại diện & SĐT</th>
+                          <th className="px-6 py-4 text-center">Trạng thái</th>
+                          <th className="px-6 py-4 text-right">Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs">
+                        {teams.length > 0 ? (
+                          teams.map((team) => {
+                            const isSubmitted = team.status === 'submitted';
+                            const isApproved = team.status === 'approved';
+                            const isRejected = team.status === 'rejected';
+
+                            return (
+                              <tr key={team.id} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="px-6 py-4 font-mono font-bold text-slate-500">
+                                  {team.id.substring(0, 8).toUpperCase()}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-semibold text-slate-800 block">{team.team_name}</span>
+                                  {team.organization && <span className="text-[10px] text-slate-500 block">ĐV: {team.organization}</span>}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-semibold block">{team.performance_title}</span>
+                                  <span className="text-[10px] text-slate-500 block">
+                                    {team.category === 'dan_ca' ? 'Dân Ca' : team.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ'} ({team.duration})
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="block">{team.representative_name}</span>
+                                  <span className="text-[10px] font-mono text-slate-500">{team.phone}</span>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  {isApproved ? (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase">
+                                      Đã Duyệt
+                                    </span>
+                                  ) : isRejected ? (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 uppercase">
+                                      Từ Chối
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase animate-pulse">
+                                      Chờ Duyệt
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+                                  {!isApproved && (
+                                    <button
+                                      onClick={() => handleUpdateTeamStatus(team.id, 'approved')}
+                                      className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] font-bold uppercase transition-all cursor-pointer"
+                                    >
+                                      Duyệt
+                                    </button>
+                                  )}
+                                  {!isRejected && (
+                                    <button
+                                      onClick={() => handleUpdateTeamStatus(team.id, 'rejected')}
+                                      className="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[10px] font-bold uppercase transition-all cursor-pointer"
+                                    >
+                                      Từ chối
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => setEditingTeam(team)}
+                                    className="p-1 text-slate-500 hover:text-accent transition-colors cursor-pointer inline-block"
+                                    title="Sửa thông tin"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteTeam(team.id)}
+                                    className="p-1 text-slate-400 hover:text-primary transition-colors cursor-pointer inline-block"
+                                    title="Xóa vĩnh viễn"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="text-center py-10 text-slate-400 italic">
+                              Không tìm thấy đội đăng ký nào trong hệ thống.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content for Judges Tab */}
+            {activeTab === 'judges' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left: list of judges */}
+                <div className="lg:col-span-8 space-y-4">
+                  <h2 className="font-heading font-bold text-xl text-slate-900">Danh Sách Giám Khảo</h2>
+
+                  <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                          <tr>
+                            <th className="px-6 py-4">Họ và Tên</th>
+                            <th className="px-6 py-4">Email</th>
+                            <th className="px-6 py-4">Ngày tạo</th>
+                            <th className="px-6 py-4 text-right">Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-xs">
+                          {judges.length > 0 ? (
+                            judges.map((judge) => (
+                              <tr key={judge.id} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="px-6 py-4 font-semibold text-slate-800">
+                                  {judge.full_name}
+                                </td>
+                                <td className="px-6 py-4 text-slate-600 font-mono">
+                                  {judge.email}
+                                </td>
+                                <td className="px-6 py-4 text-slate-500">
+                                  {new Date(judge.created_at).toLocaleDateString('vi-VN')}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <button
+                                    onClick={() => handleDeleteJudge(judge.id)}
+                                    className="p-1 text-slate-400 hover:text-primary transition-colors cursor-pointer inline-block"
+                                    title="Xóa tài khoản"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="text-center py-10 text-slate-400 italic">
+                                Chưa có tài khoản giám khảo nào.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: create judge form */}
+                <div className="lg:col-span-4 space-y-4">
+                  <h2 className="font-heading font-bold text-xl text-slate-900">Tạo tài khoản Giám khảo</h2>
+
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    {judgeError && (
+                      <div className="p-3 bg-primary/10 border border-primary/20 text-primary text-xs rounded-xl text-center font-semibold">
+                        {judgeError}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleCreateJudge} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Họ và tên *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newJudgeName}
+                          onChange={(e) => setNewJudgeName(e.target.value)}
+                          placeholder="Ví dụ: GS. NSND Lê Văn Minh"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Email đăng nhập *</label>
+                        <input
+                          type="email"
+                          required
+                          value={newJudgeEmail}
+                          onChange={(e) => setNewJudgeEmail(e.target.value)}
+                          placeholder="giamkhao@nhipbuocvietnam.gov.vn"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mật khẩu ban đầu *</label>
+                        <input
+                          type="password"
+                          required
+                          value={newJudgePassword}
+                          onChange={(e) => setNewJudgePassword(e.target.value)}
+                          placeholder="Mật khẩu ít nhất 6 ký tự"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isCreatingJudge}
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-3 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        {isCreatingJudge ? 'Đang khởi tạo...' : 'Tạo tài khoản'}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
+
+      {/* Edit Team Modal */}
+      {editingTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 my-8">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-heading font-bold text-lg text-slate-900">Sửa thông tin hồ sơ: {editingTeam.team_name}</h3>
+              <button onClick={() => setEditingTeam(null)} className="text-slate-400 hover:text-slate-900 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedTeam} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Tên Đội *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.team_name}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, team_name: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Đơn vị đại diện</label>
+                  <input
+                    type="text"
+                    value={editingTeam.organization || ''}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, organization: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Số lượng thành viên *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.member_count}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, member_count: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Trưởng đoàn đại diện *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.representative_name}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, representative_name: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Số điện thoại *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.phone}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, phone: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editingTeam.email}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, email: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Tên tiết mục *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.performance_title}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, performance_title: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Thời lượng dự kiến *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeam.duration}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, duration: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-slate-500">Mô tả ý tưởng</label>
+                <textarea
+                  value={editingTeam.description || ''}
+                  onChange={(e) => setEditingTeam({ ...editingTeam, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800 resize-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-slate-500">Yêu cầu kỹ thuật</label>
+                <textarea
+                  value={editingTeam.technical_requirements || ''}
+                  onChange={(e) => setEditingTeam({ ...editingTeam, technical_requirements: e.target.value })}
+                  rows={2}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800 resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeam(null)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingTeam}
+                  className="inline-flex items-center gap-1.5 px-6 py-2 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingTeam ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

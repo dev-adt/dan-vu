@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Play, Heart, Share2, Award, Calendar, ChevronLeft, ShieldCheck, Mail, ShieldAlert } from 'lucide-react';
+import { Play, Heart, Award, Calendar, ChevronLeft, ShieldCheck, Mail, LogIn, LogOut, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 interface CandidateDetails {
   id: string;
@@ -17,77 +18,137 @@ interface CandidateDetails {
   origin: string;
   culturalBackground: string;
   technicalRequirements: string;
+  photoUrl: string;
+  videoUrl: string;
+  audioUrl: string;
 }
 
-const mockDb: Record<string, CandidateDetails> = {
-  'dc-001': {
-    id: 'dc-001',
-    teamName: 'Đoàn Nghệ Thuật CLB Sen Vàng',
-    representative: 'Nguyễn Thị Tuyết',
-    performanceTitle: 'Liên khúc Dân ca Ba miền',
-    category: 'dan_ca',
-    votesCount: 3410,
-    origin: 'Hà Nội, Việt Nam',
-    culturalBackground: 'Tiết mục hòa quyện điệu chèo cổ Quan họ Bắc Ninh, lý kéo chài Nam Bộ và hò Huế miền Trung, kể về hành trình khai phá đất nước đầy tự hào của người Việt cổ qua các thế hệ dòng chảy.',
-    technicalRequirements: 'Cần 5 micro không dây cầm tay, 2 bục đứng gỗ sơn mài đỏ, ánh sáng vàng ấm rải đều sân khấu.',
-  },
-  'dv-002': {
-    id: 'dv-002',
-    teamName: 'CLB Dân Vũ Hòa Bình',
-    representative: 'Bùi Văn Hùng',
-    performanceTitle: 'Vũ điệu Gặt Lúa Tây Bắc',
-    category: 'dan_vu',
-    votesCount: 2894,
-    origin: 'Hòa Bình, Việt Nam',
-    culturalBackground: 'Tái hiện sinh động không khí ngày hội thu hoạch trên các ruộng bậc thang Tây Bắc. Điệu múa mang tính cộng đồng cao, kết hợp nhạc cụ khèn Mông và trống gỗ truyền thống.',
-    technicalRequirements: 'Đạo cụ đặc thù gồm gùi tre, bó lúa mô phỏng. Cần khói lạnh sân khấu ở phần mở đầu.',
-  },
-  'dc-003': {
-    id: 'dc-003',
-    teamName: 'CLB Dân Ca Sông Trà',
-    representative: 'Lê Hoàng Nam',
-    performanceTitle: 'Điệu Lý Giao Duyên Xứ Quảng',
-    category: 'dan_ca',
-    votesCount: 1540,
-    origin: 'Quảng Ngãi, Việt Nam',
-    culturalBackground: 'Lấy cảm hứng từ điệu hò lý vùng sông nước duyên hải Trung Bộ, ca ngợi tình yêu lứa đôi, nét duyên dáng của người con gái Việt Nam và cuộc sống chài lưới mộc mạc.',
-    technicalRequirements: 'Micro nhạc cụ cho sáo trúc và đàn tranh, 2 micro cài tai cho ca sĩ chính.',
-  },
-  'dv-004': {
-    id: 'dv-004',
-    teamName: 'Nhóm Múa Chăm Hữu Nghị',
-    representative: 'Đoàn Thị Trà My',
-    performanceTitle: 'Vũ điệu Tháp Cổ Chămpa',
-    category: 'dan_vu',
-    votesCount: 4230,
-    origin: 'Ninh Thuận, Việt Nam',
-    culturalBackground: 'Lồng ghép các động tác múa Apsara cổ kính trước đền tháp Chàm linh thiêng. Tiết mục tôn vinh nét đẹp kiến trúc tâm linh và văn hóa dân gian Chăm đặc trưng truyền thống.',
-    technicalRequirements: 'Hệ thống ánh sáng đổi màu liên tục (đỏ, vàng, xanh ngọc). Yêu cầu khói nặng làm mờ chân múa.',
-  },
-};
-
 export default function CandidateDetail({ params }: { params: Promise<{ id: string }> }) {
-  // Handle Next.js 15 dynamic params unwrapping
   const [unwrappedParams, setUnwrappedParams] = useState<{ id: string } | null>(null);
   const [candidate, setCandidate] = useState<CandidateDetails | null>(null);
-  const [localVotes, setLocalVotes] = useState(0);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasVotedToday, setHasVotedToday] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
+  const [votedSuccess, setVotedSuccess] = useState(false);
+
+  // Auth User state
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Resolve router params
     params.then((p) => {
       setUnwrappedParams(p);
-      const data = mockDb[p.id];
-      if (data) {
-        setCandidate(data);
-        setLocalVotes(data.votesCount);
-      }
     });
   }, [params]);
 
-  if (!candidate) {
+  useEffect(() => {
+    // Get user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Reload team details whenever page params or user state changes (to evaluate hasVotedToday correctly)
+  useEffect(() => {
+    if (unwrappedParams) {
+      loadTeamDetails();
+    }
+  }, [unwrappedParams, user]);
+
+  const loadTeamDetails = async () => {
+    if (!unwrappedParams) return;
+    setIsLoading(true);
+    try {
+      // Pass authorization header if user is logged in to fetch hasVotedToday dynamically
+      const headers: HeadersInit = {};
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch(`/api/teams/detail?id=${unwrappedParams.id}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setCandidate(data.team);
+        setHasVotedToday(data.hasVotedToday);
+      } else {
+        setCandidate(null);
+      }
+    } catch (err) {
+      console.error('Failed to load team details:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+      },
+    });
+    if (error) console.error('OAuth error:', error);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const handleVoteSubmit = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      handleGoogleLogin();
+      return;
+    }
+
+    if (!candidate) return;
+
+    setIsVoting(true);
+    try {
+      const response = await fetch('/api/vote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          teamId: candidate.id,
+          fingerprint: 'canvas_hash_mock_fingerprint',
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || 'Bình chọn thất bại.');
+        setIsVoting(false);
+        return;
+      }
+
+      setVotedSuccess(true);
+      setHasVotedToday(true);
+      setTimeout(() => {
+        setVotedSuccess(false);
+      }, 4000);
+
+      // Reload to update count
+      loadTeamDetails();
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative justify-center items-center">
         <p className="text-sm text-dark-slate/60 animate-pulse">Đang tải thông tin tiết mục...</p>
@@ -95,18 +156,16 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const handleVoteSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailInput.trim()) return;
-
-    setIsVerifying(true);
-    // Simulate reCAPTCHA and verify OTP
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsVerifying(false);
-    setShowAuthModal(false);
-    setLocalVotes((prev) => prev + 1);
-    setHasVotedToday(true);
-  };
+  if (!candidate) {
+    return (
+      <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative justify-center items-center gap-4">
+        <p className="text-sm text-dark-slate/60">Không tìm thấy tiết mục hoặc chưa được BTC phê duyệt.</p>
+        <Link href="/vote" className="px-4 py-2 bg-accent text-white font-bold text-xs uppercase rounded-xl">
+          Quay lại cổng bình chọn
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative overflow-x-clip w-full">
@@ -114,7 +173,6 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
 
       {/* Background watermark wrapper to prevent layout shift */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Rotating Dong Son Bronze Drum Watermarks */}
         <div className="absolute top-[10%] -left-48 w-96 sm:w-[500px] h-96 sm:h-[500px] opacity-[0.025] select-none">
           <motion.svg
             animate={{ rotate: 360 }}
@@ -127,9 +185,6 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
             <circle cx="200" cy="200" r="190" strokeWidth="1" />
             <circle cx="200" cy="200" r="180" strokeWidth="0.5" strokeDasharray="3,3" />
             <circle cx="200" cy="200" r="150" strokeWidth="0.5" />
-            <circle cx="200" cy="200" r="120" strokeWidth="1" />
-            <circle cx="200" cy="200" r="90" strokeWidth="0.5" strokeDasharray="4,2" />
-            <circle cx="200" cy="200" r="60" strokeWidth="1.5" />
             <path
               d="M200,170 L205,190 L225,185 L210,197 L227,210 L206,204 L200,225 L194,204 L173,210 L190,197 L175,185 L195,190 Z"
               fill="currentColor"
@@ -156,12 +211,21 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
             <div className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/40 shadow-sm flex items-center justify-center bg-black">
               {/* Overlay graphic */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-              <div className="z-10 text-center space-y-4">
-                <button className="w-20 h-20 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_25px_rgba(244,180,0,0.4)]">
-                  <Play className="w-8 h-8 fill-[#111827] ml-1" />
-                </button>
-                <p className="text-xs font-bold uppercase tracking-wider text-white">Trình Phát Video Dự Thi Sơ Loại</p>
-              </div>
+              {candidate.videoUrl ? (
+                <iframe
+                  className="w-full h-full border-0 absolute inset-0 z-0"
+                  src={candidate.videoUrl.replace('watch?v=', 'embed/')}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="z-10 text-center space-y-4">
+                  <button className="w-20 h-20 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_25px_rgba(244,180,0,0.4)]">
+                    <Play className="w-8 h-8 fill-[#111827] ml-1" />
+                  </button>
+                  <p className="text-xs font-bold uppercase tracking-wider text-white">Chưa tải lên video dự thi chính thức</p>
+                </div>
+              )}
             </div>
 
             {/* Performance Descriptions */}
@@ -180,7 +244,7 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
               <div className="space-y-4 text-sm text-dark-slate/90 leading-relaxed">
                 <div>
                   <h4 className="font-bold text-dark-obsidian mb-1 text-xs uppercase tracking-wider">Ý tưởng & Câu chuyện Văn hóa</h4>
-                  <p>{candidate.culturalBackground}</p>
+                  <p>{candidate.culturalBackground || 'Chưa cung cấp thông tin mô tả chi tiết ý tưởng của tiết mục.'}</p>
                 </div>
                 <div>
                   <h4 className="font-bold text-dark-obsidian mb-1 text-xs uppercase tracking-wider">Trưởng đoàn / Đại diện</h4>
@@ -188,7 +252,7 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
                 </div>
                 <div>
                   <h4 className="font-bold text-dark-obsidian mb-1 text-xs uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Rider)</h4>
-                  <p className="text-xs italic">{candidate.technicalRequirements}</p>
+                  <p className="text-xs italic">{candidate.technicalRequirements || 'Chưa có yêu cầu kỹ thuật sân khấu đặc biệt.'}</p>
                 </div>
               </div>
             </div>
@@ -201,25 +265,52 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
                 <span className="text-[10px] font-bold text-[#111827] bg-secondary px-3 py-1 rounded-full uppercase tracking-wider">
                   Cổng Bình Chọn
                 </span>
-                <p className="text-xs text-dark-slate/60 mt-2">Mã số tiết mục: {candidate.id.toUpperCase()}</p>
+                <p className="text-xs text-dark-slate/60 mt-2">Mã số tiết mục: {candidate.id.substring(0, 8).toUpperCase()}</p>
                 <div className="flex items-center justify-center gap-2 pt-4">
                   <Heart className="w-6 h-6 text-primary fill-primary/10 animate-pulse" />
-                  <span className="text-3xl font-extrabold text-dark-obsidian">{localVotes.toLocaleString()}</span>
+                  <span className="text-3xl font-extrabold text-dark-obsidian">{candidate.votesCount.toLocaleString()}</span>
                   <span className="text-xs text-dark-slate/60">lượt vote</span>
                 </div>
               </div>
 
-              <div className="pt-4">
+              {/* User panel */}
+              <div className="border-t border-b border-slate-200/60 py-4 text-center">
+                {user ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-xs text-dark-slate/60">Bạn đang đăng nhập bằng Google:</p>
+                    <span className="text-xs font-bold font-mono text-dark-obsidian">{user.email}</span>
+                    <button
+                      onClick={handleLogout}
+                      className="text-[10px] uppercase font-bold text-slate-400 hover:text-primary mt-1 underline cursor-pointer"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-dark-slate/60">Bạn chưa đăng nhập. Đăng nhập Google để bình chọn:</p>
+                    <button
+                      onClick={handleGoogleLogin}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold uppercase rounded-xl transition-all cursor-pointer text-slate-700"
+                    >
+                      <LogIn className="w-3.5 h-3.5" /> Đăng nhập Google
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2">
                 {hasVotedToday ? (
                   <div className="w-full text-center py-4 bg-accent/10 border border-accent/20 rounded-xl text-accent text-xs font-semibold">
                     ✓ Bạn đã bình chọn cho tiết mục này hôm nay
                   </div>
                 ) : (
                   <button
-                    onClick={() => setShowAuthModal(true)}
+                    onClick={handleVoteSubmit}
+                    disabled={isVoting}
                     className="w-full bg-accent text-white hover:bg-opacity-90 font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all glow-gold-hover cursor-pointer"
                   >
-                    BÌNH CHỌN NGAY
+                    {isVoting ? 'ĐANG GỬI...' : 'BÌNH CHỌN NGAY'}
                   </button>
                 )}
               </div>
@@ -256,86 +347,30 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
         </div>
       </main>
 
-      {/* Verification Auth Modal (Gmail Login Mocked) */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="bg-light-alabaster border border-slate-300/50 rounded-2xl p-8 max-w-md w-full space-y-6 shadow-2xl">
-            <div className="text-center space-y-2">
-              <ShieldAlert className="w-10 h-10 text-primary mx-auto" />
-              <h3 className="font-heading font-bold text-xl text-dark-obsidian">Xác thực Google Gmail</h3>
-              <p className="text-xs text-dark-slate/60">Mỗi tài khoản Gmail chỉ được bình chọn 01 lần/ngày cho mỗi tiết mục.</p>
-            </div>
-
-            {!emailInput ? (
-              /* Google OAuth Trigger Button */
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsVerifying(true);
-                    setTimeout(() => {
-                      setIsVerifying(false);
-                      setEmailInput('user.gmail@gmail.com');
-                    }, 1200);
-                  }}
-                  disabled={isVerifying}
-                  className="w-full py-3.5 px-4 rounded-xl border border-slate-300/60 text-dark-slate hover:bg-light-cream font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-sm cursor-pointer"
-                >
-                  {isVerifying ? (
-                    <span className="animate-pulse">Đang kết nối tới Google Accounts...</span>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.286 4.114-3.52 0-6.376-2.857-6.376-6.377s2.857-6.377 6.376-6.377c1.782 0 3.32.73 4.46 1.91l3.185-3.185C19.348 2.115 16.03.738 12.24.738 5.912.738.738 5.912.738 12.24s5.174 11.502 11.502 11.502c6.262 0 11.378-5.076 11.378-11.502 0-.785-.09-1.542-.26-2.255H12.24z"/>
-                      </svg>
-                      <span>ĐĂNG NHẬP BẰNG GMAIL</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAuthModal(false)}
-                  className="w-full py-2 rounded-xl border border-transparent text-xs text-dark-slate/50 hover:text-dark-obsidian transition-colors cursor-pointer"
-                >
-                  Hủy bỏ
-                </button>
+      <AnimatePresence>
+        {votedSuccess && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center space-y-4 shadow-2xl"
+            >
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto text-accent">
+                <CheckCircle2 className="w-8 h-8 animate-bounce" />
               </div>
-            ) : (
-              /* Success confirmation */
-              <form onSubmit={handleVoteSubmit} className="space-y-4">
-                <div className="p-4 rounded-xl bg-light-cream border border-slate-300/40 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
-                    G
-                  </div>
-                  <div>
-                    <span className="block text-[10px] text-dark-slate/50 uppercase tracking-wider">Đã xác thực Gmail:</span>
-                    <span className="text-xs font-semibold text-dark-obsidian">{emailInput}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailInput('');
-                    }}
-                    className="w-1/2 py-2.5 border border-slate-300/50 rounded-xl text-xs font-semibold text-dark-slate/85 hover:bg-light-cream transition-colors cursor-pointer"
-                  >
-                    Đăng xuất
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isVerifying}
-                    className="w-1/2 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    {isVerifying ? 'Đang gửi...' : 'Gửi Bình Chọn'}
-                  </button>
-                </div>
-              </form>
-            )}
+              <h3 className="font-heading font-bold text-xl text-slate-900">Bình Chọn Thành Công!</h3>
+              <p className="text-xs text-slate-600">Lượt bình chọn của bạn đã được ghi nhận vào hệ thống. Mỗi thiết bị và tài khoản được phép vote 1 lần/ngày cho mỗi đội.</p>
+              <button
+                onClick={() => setVotedSuccess(false)}
+                className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase rounded-xl cursor-pointer"
+              >
+                Đóng
+              </button>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

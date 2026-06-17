@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, AlertTriangle, ShieldCheck, ChevronLeft, Save, FileCheck } from 'lucide-react';
+import { Play, RotateCcw, AlertTriangle, ChevronLeft, Save, FileCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 interface ScoreDetails {
   concept: number;
@@ -11,6 +12,14 @@ interface ScoreDetails {
   costume: number;
   stage: number;
   comments: string;
+}
+
+interface TeamDetails {
+  id: string;
+  teamName: string;
+  performanceTitle: string;
+  videoUrl: string;
+  category: string;
 }
 
 const rubricMax = {
@@ -23,6 +32,8 @@ const rubricMax = {
 export default function ElectronicScorecard({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [unwrappedParams, setUnwrappedParams] = useState<{ id: string } | null>(null);
+  
+  const [team, setTeam] = useState<TeamDetails | null>(null);
   const [scores, setScores] = useState<ScoreDetails>({
     concept: 20,
     technique: 25,
@@ -31,43 +42,138 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
     comments: '',
   });
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     params.then((p) => setUnwrappedParams(p));
   }, [params]);
 
+  useEffect(() => {
+    if (unwrappedParams) {
+      loadScorecardDetails();
+    }
+  }, [unwrappedParams]);
+
+  const loadScorecardDetails = async () => {
+    if (!unwrappedParams) return;
+    setIsLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/judge');
+        return;
+      }
+
+      const res = await fetch(`/api/judge/scorecards/detail?teamId=${unwrappedParams.id}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTeam(data.team);
+        if (data.scorecard) {
+          setScores({
+            concept: data.scorecard.score_concept,
+            technique: data.scorecard.score_technique,
+            costume: data.scorecard.score_costume,
+            stage: data.scorecard.score_stage,
+            comments: data.scorecard.feedback || '',
+          });
+          setIsLocked(data.scorecard.is_locked);
+        }
+      } else {
+        router.push('/judge');
+      }
+    } catch (err) {
+      console.error('Error loading scorecard details:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const totalScore = scores.concept + scores.technique + scores.costume + scores.stage;
 
   const handleSliderChange = (criteria: keyof Omit<ScoreDetails, 'comments'>, val: number) => {
+    if (isLocked) return;
     setScores((prev) => ({
       ...prev,
       [criteria]: val,
     }));
   };
 
-  const handleSaveDraft = async () => {
+  const saveScorecard = async (lock: boolean) => {
+    if (!unwrappedParams) return;
     setIsSaving(true);
-    // Simulate async storage saving
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    router.push('/judge');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/judge');
+        return;
+      }
+
+      const res = await fetch('/api/judge/scorecards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          teamId: unwrappedParams.id,
+          scoreConcept: scores.concept,
+          scoreTechnique: scores.technique,
+          scoreCostume: scores.costume,
+          scoreStage: scores.stage,
+          feedback: scores.comments,
+          isLocked: lock,
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        router.push('/judge');
+      } else {
+        alert(result.error || 'Lưu phiếu điểm thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    await saveScorecard(false);
   };
 
   const handleConfirmSubmit = async () => {
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsSaving(false);
     setShowConfirmModal(false);
-    router.push('/judge');
+    await saveScorecard(true);
   };
 
-  if (!unwrappedParams) {
+  if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-dark-obsidian text-light-alabaster">
+      <div className="flex h-screen items-center justify-center bg-slate-900 text-white">
         <p className="text-sm animate-pulse">Đang tải phiếu chấm điểm...</p>
+      </div>
+    );
+  }
+
+  if (!team) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-900 text-white gap-4">
+        <p className="text-sm">Không tìm thấy thông tin tiết mục.</p>
+        <button onClick={() => router.push('/judge')} className="px-4 py-2 bg-accent text-white font-bold text-xs uppercase rounded-xl">
+          Quay lại portal
+        </button>
       </div>
     );
   }
@@ -89,24 +195,34 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
               Phiếu Chấm Điểm
             </span>
             <span className="text-xs text-slate-800 font-heading font-semibold">
-              Mã số tiết mục: {unwrappedParams.id.toUpperCase()}
+              Mã số tiết mục: {team.id.substring(0, 8).toUpperCase()}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleSaveDraft}
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors text-slate-700"
-          >
-            <Save className="w-4 h-4" /> Lưu Bản Nháp
-          </button>
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary text-dark-obsidian rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-opacity-90 transition-all shadow-md"
-          >
-            <FileCheck className="w-4 h-4" /> Gửi Điểm Chính Thức
-          </button>
+          {isLocked ? (
+            <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-200 uppercase tracking-wider">
+              ✓ Đã gửi chính thức
+            </span>
+          ) : (
+            <>
+              <button
+                onClick={handleSaveDraft}
+                disabled={isSaving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors text-slate-700 cursor-pointer"
+              >
+                <Save className="w-4 h-4" /> Lưu Bản Nháp
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(true)}
+                disabled={isSaving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary text-dark-obsidian rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-opacity-90 transition-all shadow-md cursor-pointer"
+              >
+                <FileCheck className="w-4 h-4" /> Gửi Điểm Chính Thức
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -115,8 +231,14 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
         {/* Left Pane: Video Player (60% width on large screens) */}
         <div className="w-full lg:w-[60%] flex flex-col bg-black relative min-h-0 border-r border-slate-200">
           <div className="flex-1 relative flex items-center justify-center min-h-0">
-            {/* Aspect box inside flexbox wrapper */}
-            <div className="w-full max-h-full aspect-video relative bg-dark-slate/40 flex items-center justify-center border-y border-white/5">
+            {team.videoUrl ? (
+              <iframe
+                className="w-full h-full border-0 absolute inset-0 z-0"
+                src={team.videoUrl.replace('watch?v=', 'embed/')}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
               <div className="z-10 text-center space-y-4">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
@@ -125,28 +247,19 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                   <Play className={`w-6 h-6 fill-dark-obsidian ml-1 ${isPlaying ? 'animate-ping' : ''}`} />
                 </button>
                 <p className="text-xs font-semibold uppercase tracking-wider text-light-cream">
-                  {isPlaying ? 'Video Đang Phát' : 'Bấm để phát video bài dự thi'}
+                  BTC chưa đính kèm video chạy thử cho đội này
                 </p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Left panel video control controls */}
           <div className="h-14 bg-slate-900 border-t border-white/10 flex items-center px-4 justify-between text-xs text-slate-300 shrink-0">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="hover:text-secondary font-semibold"
-              >
-                {isPlaying ? 'Pause' : 'Play'}
-              </button>
-              <button className="flex items-center gap-1 hover:text-secondary">
-                <RotateCcw className="w-3.5 h-3.5" /> Replay
-              </button>
+              <span className="font-heading font-semibold text-white">{team.teamName} - "{team.performanceTitle}"</span>
             </div>
             <div className="flex items-center gap-3">
-              <span>Tốc độ: <strong>1.0x</strong></span>
-              <span>Thời lượng: <strong>07:00</strong></span>
+              <span>Thể loại: <strong>{team.category === 'dan_ca' ? 'Dân Ca' : team.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ'}</strong></span>
             </div>
           </div>
         </div>
@@ -170,6 +283,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 min="0"
                 max={rubricMax.concept}
                 value={scores.concept}
+                disabled={isLocked}
                 onChange={(e) => handleSliderChange('concept', parseInt(e.target.value))}
                 className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
@@ -187,6 +301,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 min="0"
                 max={rubricMax.technique}
                 value={scores.technique}
+                disabled={isLocked}
                 onChange={(e) => handleSliderChange('technique', parseInt(e.target.value))}
                 className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
@@ -204,6 +319,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 min="0"
                 max={rubricMax.costume}
                 value={scores.costume}
+                disabled={isLocked}
                 onChange={(e) => handleSliderChange('costume', parseInt(e.target.value))}
                 className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
@@ -221,6 +337,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 min="0"
                 max={rubricMax.stage}
                 value={scores.stage}
+                disabled={isLocked}
                 onChange={(e) => handleSliderChange('stage', parseInt(e.target.value))}
                 className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent"
               />
@@ -245,6 +362,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
             <textarea
               rows={4}
               value={scores.comments}
+              disabled={isLocked}
               onChange={(e) => setScores((prev) => ({ ...prev, comments: e.target.value }))}
               placeholder="Nhập ý kiến chuyên môn gửi về cho BTC và phản hồi đội thi..."
               className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none resize-none transition-colors"
@@ -256,7 +374,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
       {/* Confirmation Lock Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="glass-panel border border-slate-200 rounded-2xl p-6 max-w-sm w-full space-y-6">
+          <div className="glass-panel border border-slate-200 bg-white rounded-2xl p-6 max-w-sm w-full space-y-6">
             <div className="text-center space-y-2">
               <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
               <h3 className="font-heading font-bold text-xl text-slate-900">Khóa & Gửi điểm?</h3>
@@ -269,7 +387,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="w-1/2 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="w-1/2 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Hủy bỏ
               </button>
@@ -277,7 +395,7 @@ export default function ElectronicScorecard({ params }: { params: Promise<{ id: 
                 type="button"
                 onClick={handleConfirmSubmit}
                 disabled={isSaving}
-                className="w-1/2 py-2.5 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-opacity-90 transition-all flex items-center justify-center gap-1.5"
+                className="w-1/2 py-2.5 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-opacity-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {isSaving ? 'Đang gửi...' : 'Tôi xác nhận'}
               </button>

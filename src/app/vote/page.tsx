@@ -1,67 +1,127 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CandidateCard from '@/components/CandidateCard';
-import { Search, SlidersHorizontal, Heart, CheckCircle2 } from 'lucide-react';
+import { Search, SlidersHorizontal, CheckCircle2, LogIn, LogOut, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
-interface MockCandidate {
+interface Candidate {
   id: string;
   teamName: string;
-  performanceTitle: string;
+  representativeName: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
+  performanceTitle: string;
+  duration: string;
+  description: string;
+  photoUrl: string;
   votesCount: number;
 }
 
-const mockCandidates: MockCandidate[] = [
-  {
-    id: 'dc-001',
-    teamName: 'Đoàn Nghệ Thuật CLB Sen Vàng',
-    performanceTitle: 'Liên khúc Dân ca Ba miền',
-    category: 'dan_ca',
-    votesCount: 3410,
-  },
-  {
-    id: 'dv-002',
-    teamName: 'CLB Dân Vũ Hòa Bình',
-    performanceTitle: 'Vũ điệu Gặt Lúa Tây Bắc',
-    category: 'dan_vu',
-    votesCount: 2894,
-  },
-  {
-    id: 'dc-003',
-    teamName: 'CLB Dân Ca Sông Trà',
-    performanceTitle: 'Điệu Lý Giao Duyên Xứ Quảng',
-    category: 'dan_ca',
-    votesCount: 1540,
-  },
-  {
-    id: 'dv-004',
-    teamName: 'Nhóm Múa Chăm Hữu Nghị',
-    performanceTitle: 'Vũ điệu Tháp Cổ Chămpa',
-    category: 'dan_vu',
-    votesCount: 4230,
-  },
-];
-
 export default function VoteDiscovery() {
-  const [candidates, setCandidates] = useState<MockCandidate[]>(mockCandidates);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'dan_ca' | 'dan_vu'>('all');
   const [activeSort, setActiveSort] = useState<'votes' | 'newest'>('votes');
   const [votedId, setVotedId] = useState<string | null>(null);
 
-  const handleVote = (id: string) => {
-    // Increment local vote counter
-    setCandidates((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, votesCount: c.votesCount + 1 } : c))
-    );
-    setVotedId(id);
-    setTimeout(() => {
-      setVotedId(null);
-    }, 3000);
+  // Authenticated user state
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Get session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen to auth state change
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Fetch approved teams list
+    loadApprovedTeams();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadApprovedTeams = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/teams/approved');
+      if (res.ok) {
+        const data = await res.json();
+        setCandidates(data.teams);
+      }
+    } catch (err) {
+      console.error('Failed to load approved teams:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+      },
+    });
+    if (error) {
+      console.error('Error logging in with Google OAuth:', error);
+      alert('Không thể kết nối đến máy chủ xác thực.');
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const handleVote = async (id: string) => {
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      if (confirm('Bạn cần đăng nhập tài khoản Google để thực hiện bình chọn. Bấm OK để đăng nhập ngay.')) {
+        handleGoogleLogin();
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/vote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          teamId: id,
+          fingerprint: 'canvas_hash_mock_fingerprint', // Mock fingerprint for audit
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || 'Bình chọn thất bại.');
+        return;
+      }
+
+      setVotedId(id);
+      setTimeout(() => {
+        setVotedId(null);
+      }, 3000);
+
+      // Refresh list to update count
+      loadApprovedTeams();
+    } catch (err) {
+      console.error(err);
+      alert('Không thể gửi bình chọn lên máy chủ.');
+    }
   };
 
   const filteredCandidates = candidates
@@ -75,7 +135,7 @@ export default function VoteDiscovery() {
     })
     .sort((a, b) => {
       if (activeSort === 'votes') return b.votesCount - a.votesCount;
-      return 0; // maintain default
+      return 0; // Default
     });
 
   return (
@@ -84,7 +144,6 @@ export default function VoteDiscovery() {
 
       {/* Background watermark wrapper to prevent layout shift */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Rotating Dong Son Bronze Drum Watermarks */}
         <div className="absolute top-[15%] -left-48 w-96 sm:w-[500px] h-96 sm:h-[500px] opacity-[0.025] select-none">
           <motion.svg
             animate={{ rotate: 360 }}
@@ -111,16 +170,55 @@ export default function VoteDiscovery() {
 
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         {/* Banner header */}
-        <div className="text-center mb-12">
-          <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            Khán Giả Bình Chọn
-          </span>
-          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
-            Đại Sứ Yêu Thích Nhất
-          </h1>
-          <p className="text-xs text-dark-slate/75 mt-2 max-w-xl mx-auto">
-            Mỗi tài khoản được bình chọn 01 lần/ngày cho mỗi tiết mục. Hành vi gian lận (hack vote) sẽ bị hủy kết quả.
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 border-b border-slate-200/50 pb-6">
+          <div className="text-center md:text-left">
+            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
+              Khán Giả Bình Chọn
+            </span>
+            <h1 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
+              Đại Sứ Yêu Thích Nhất
+            </h1>
+            <p className="text-xs text-dark-slate/75 mt-2 max-w-xl">
+              Mỗi tài khoản Google được bình chọn tối đa 01 lần/ngày cho mỗi tiết mục. Hành vi gian lận (hack vote) sẽ bị hủy kết quả.
+            </p>
+          </div>
+
+          {/* User Auth Status Panel */}
+          <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm flex items-center gap-4">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full rounded-full" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-xs font-semibold text-dark-obsidian">{user.user_metadata?.full_name || 'Khán Giả'}</span>
+                    <span className="block text-[10px] text-dark-slate/60 font-mono">{user.email}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Đăng xuất
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-dark-slate/60">Đăng nhập tài khoản Google để thực hiện bình chọn:</p>
+                <button
+                  onClick={handleGoogleLogin}
+                  className="px-4 py-2 bg-accent text-white hover:bg-opacity-95 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" /> Đăng nhập Google
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Voting notification toast */}
@@ -198,7 +296,11 @@ export default function VoteDiscovery() {
         </div>
 
         {/* Discovery Candidate Grid */}
-        {filteredCandidates.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-20">
+            <p className="text-xs text-dark-slate/60 animate-pulse">Đang nạp danh sách bình chọn...</p>
+          </div>
+        ) : filteredCandidates.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredCandidates.map((candidate) => (
               <CandidateCard
@@ -208,6 +310,7 @@ export default function VoteDiscovery() {
                 performanceTitle={candidate.performanceTitle}
                 category={candidate.category}
                 votesCount={candidate.votesCount}
+                thumbnailUrl={candidate.photoUrl}
                 onVote={handleVote}
               />
             ))}

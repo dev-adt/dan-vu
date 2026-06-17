@@ -9,11 +9,14 @@ export interface Team {
   id: string;
   created_at: string;
   team_name: string;
+  organization?: string;
+  member_count?: string;
   representative_name: string;
   phone: string;
   email: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
   performance_title: string;
+  duration?: string;
   description: string;
   technical_requirements: string;
   audio_url?: string;

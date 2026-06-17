@@ -34,7 +34,13 @@ export default function Footer() {
               <Link href="/judge" className="hover:text-secondary transition-colors">Cổng chấm điểm Giám khảo</Link>
             </li>
             <li>
-              <a href="#" className="hover:text-secondary transition-colors">Tải Thể Lệ Chi Tiết (PDF)</a>
+              <a
+                href="/files/the-le-chi-tiet.pdf"
+                download="The_le_chi_tiet_Nhip_buoc_Viet_Nam_2026.pdf"
+                className="hover:text-secondary transition-colors"
+              >
+                Tải Thể Lệ Chi Tiết (PDF)
+              </a>
             </li>
           </ul>
         </div>
