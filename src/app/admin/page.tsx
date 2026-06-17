@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   const [authHeader, setAuthHeader] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'judges'>('monitoring');
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'judges' | 'rankings'>('monitoring');
 
   // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
@@ -63,6 +63,8 @@ export default function AdminDashboard() {
   const [logs, setLogs] = useState<FraudLog[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
+  const [rankings, setRankings] = useState<any[]>([]);
+  const [isLoadingRankings, setIsLoadingRankings] = useState(false);
 
   // Editing state for Team
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -81,8 +83,27 @@ export default function AdminDashboard() {
       fetchStats();
       fetchTeams();
       fetchJudges();
+      fetchRankings();
     }
   }, [isAdminLoggedIn, authHeader, activeTab]);
+
+  // Fetch Rankings & Grades
+  const fetchRankings = async () => {
+    setIsLoadingRankings(true);
+    try {
+      const res = await fetch('/api/admin/scorecards', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRankings(data.rankings || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch rankings:', err);
+    } finally {
+      setIsLoadingRankings(false);
+    }
+  };
 
   // Fetch Dashboard Stats & Logs
   const fetchStats = async () => {
@@ -321,12 +342,55 @@ export default function AdminDashboard() {
   };
 
   const handleExport = (format: 'Excel' | 'PDF') => {
-    alert(`Đang khởi tạo kết xuất báo cáo điểm số định dạng ${format}...`);
+    if (rankings.length === 0) {
+      alert('Không có dữ liệu để kết xuất.');
+      return;
+    }
+
+    if (format === 'Excel') {
+      let csvContent = '\uFEFF'; // UTF-8 BOM
+      csvContent += 'Xếp Hạng,Mã Số,Tên Đội,Thể Loại,Tiết Mục,Giám Khảo Đã Chấm,Ý Tưởng (Trung bình),Kỹ Thuật (Trung bình),Trang Phục (Trung bình),Hiệu Ứng Sân Khấu (Trung bình),Điểm Trung Bình\n';
+      
+      rankings.forEach((r, index) => {
+        const categoryLabel = r.category === 'dan_ca' ? 'Dân Ca' : r.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ';
+        const row = [
+          index + 1,
+          r.id.substring(0, 8).toUpperCase(),
+          `"${r.teamName.replace(/"/g, '""')}"`,
+          `"${categoryLabel}"`,
+          `"${r.performanceTitle.replace(/"/g, '""')}"`,
+          r.gradedCount,
+          r.avgConcept,
+          r.avgTechnique,
+          r.avgCostume,
+          r.avgStage,
+          r.averageScore
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Bang_xep_hang_diem_so_Nhip_buoc_Viet_Nam_2026.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // PDF print
+      setActiveTab('rankings');
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
-      <Navbar />
+      <div className="print:hidden">
+        <Navbar />
+      </div>
 
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {!isAdminLoggedIn ? (
@@ -382,8 +446,16 @@ export default function AdminDashboard() {
         ) : (
           /* Enterprise Admin Dashboard Content */
           <div className="space-y-10">
+            {/* Print Only Header */}
+            <div className="hidden print:block text-center text-slate-900 mb-6">
+              <h1 className="text-xl font-bold uppercase tracking-wider font-heading">FESTIVAL DÂN CA DÂN VŨ QUỐC TẾ 2026</h1>
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-[#00695C] mt-1">BÁO CÁO ĐIỂM SỐ & BẢNG XẾP HẠNG CHI TIẾT</h2>
+              <p className="text-[10px] text-slate-500 mt-1.5">Xuất từ hệ thống quản trị lúc: {new Date().toLocaleString('vi-VN')}</p>
+              <div className="border-b border-slate-300 w-full mt-4" />
+            </div>
+
             {/* Title summary */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-6 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-6 gap-4 print:hidden">
               <div className="space-y-1">
                 <span className="text-xs uppercase tracking-widest text-primary font-semibold">Cổng điều hành Admin</span>
                 <h1 className="font-heading font-bold text-3xl text-slate-900">Real-time Analytics Dashboard</h1>
@@ -414,7 +486,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Real-time counters row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 print:hidden">
               {/* Card 1 */}
               <div className="bg-white border border-slate-200 p-6 rounded-2xl flex items-center justify-between shadow-sm">
                 <div>
@@ -453,7 +525,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Dashboard Tab Navigation */}
-            <div className="border-b border-slate-200 flex gap-4">
+            <div className="border-b border-slate-200 flex gap-4 print:hidden">
               <button
                 onClick={() => setActiveTab('monitoring')}
                 className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
@@ -469,6 +541,14 @@ export default function AdminDashboard() {
                 }`}
               >
                 Quản Lý Đội Thi
+              </button>
+              <button
+                onClick={() => setActiveTab('rankings')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'rankings' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Bảng Điểm & Xếp Hạng
               </button>
               <button
                 onClick={() => setActiveTab('judges')}
@@ -798,6 +878,101 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Content for Rankings Tab */}
+            {activeTab === 'rankings' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between print:hidden">
+                  <h2 className="font-heading font-bold text-xl text-slate-900">Bảng Điểm Sơ Khảo & Xếp Hạng Đội Thi</h2>
+                  <span className="text-xs text-slate-500 font-medium">Sắp xếp theo Điểm Trung Bình giảm dần</span>
+                </div>
+
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white print:border-none print:shadow-none print:bg-white print:text-black">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm border-collapse">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold print:bg-white print:text-black print:border-b-2 print:border-black">
+                        <tr>
+                          <th className="px-6 py-4 text-center w-16">Xếp Hạng</th>
+                          <th className="px-6 py-4">Mã số</th>
+                          <th className="px-6 py-4">Tên Đội</th>
+                          <th className="px-6 py-4">Tiết mục / Thể loại</th>
+                          <th className="px-6 py-4 text-center">GK Đã Chấm</th>
+                          <th className="px-6 py-4 text-center hidden md:table-cell print:table-cell">Chi tiết Tiêu chí (Trung bình)</th>
+                          <th className="px-6 py-4 text-center font-bold text-slate-800 print:text-black">Điểm Trung Bình</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs print:divide-y print:divide-black/20">
+                        {isLoadingRankings ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-10 text-slate-400 italic">
+                              Đang tính toán bảng điểm và xếp hạng...
+                            </td>
+                          </tr>
+                        ) : rankings.length > 0 ? (
+                          rankings.map((row, index) => {
+                            return (
+                              <tr key={row.id} className="hover:bg-slate-50/60 transition-colors print:hover:bg-transparent">
+                                <td className="px-6 py-4 text-center font-bold text-sm text-slate-700 print:text-black">
+                                  {index + 1}
+                                </td>
+                                <td className="px-6 py-4 font-mono font-semibold text-slate-500 print:text-black">
+                                  {row.id.substring(0, 8).toUpperCase()}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-semibold text-slate-900 block print:text-black">{row.teamName}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-semibold block text-slate-800 print:text-black">{row.performanceTitle}</span>
+                                  <span className="text-[10px] text-slate-500 block print:text-black">
+                                    {row.category === 'dan_ca' ? 'Dân Ca' : row.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-center font-semibold text-slate-700 print:text-black">
+                                  {row.gradedCount} giám khảo
+                                </td>
+                                <td className="px-6 py-4 text-center hidden md:table-cell print:table-cell text-slate-500 font-medium">
+                                  {row.gradedCount > 0 ? (
+                                    <div className="flex justify-center gap-3 text-[10px]">
+                                      <span title="Nội dung & Ý tưởng">Ý tưởng: {row.avgConcept}/30</span>
+                                      <span title="Kỹ thuật biểu diễn">Kỹ thuật: {row.avgTechnique}/40</span>
+                                      <span title="Trang phục & Đạo cụ">Trang phục: {row.avgCostume}/20</span>
+                                      <span title="Hiệu ứng sân khấu">Hiệu ứng: {row.avgStage}/10</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 italic">Chưa có dữ liệu</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-center font-extrabold text-sm text-primary print:text-black">
+                                  {row.gradedCount > 0 ? `${row.averageScore} / 100` : 'Chưa chấm'}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="text-center py-10 text-slate-400 italic">
+                              Chưa có đội thi nào được duyệt để xếp hạng.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Print only sign off */}
+                <div className="hidden print:flex justify-between mt-16 text-xs text-slate-800">
+                  <div className="text-center w-48">
+                    <p className="font-bold">Trưởng Ban Tổ Chức</p>
+                    <p className="text-[10px] text-slate-400 mt-12">(Ký và ghi rõ họ tên)</p>
+                  </div>
+                  <div className="text-center w-48">
+                    <p className="font-bold">Đại Diện Hội Đồng Giám Khảo</p>
+                    <p className="text-[10px] text-slate-400 mt-12">(Ký và ghi rõ họ tên)</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -938,7 +1113,9 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <Footer />
+      <div className="print:hidden">
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -148,6 +148,29 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
     }
   };
 
+  const handleShareFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareZalo = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://sp.zalo.me/share_to_zalo?url=${url}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareMessenger = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: candidate?.performanceTitle || 'Nhịp Bước Việt Nam 2026',
+        text: `Bình chọn cho tiết mục "${candidate?.performanceTitle}" của đội ${candidate?.teamName} tại Festival 2026!`,
+        url: window.location.href,
+      }).catch((err) => console.log('Error sharing:', err));
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Đã sao chép liên kết chia sẻ vào khay nhớ tạm!');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative justify-center items-center">
@@ -320,13 +343,22 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
                   Chia sẻ tiết mục
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer">
+                  <button
+                    onClick={handleShareFacebook}
+                    className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer"
+                  >
                     Facebook
                   </button>
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer">
+                  <button
+                    onClick={handleShareMessenger}
+                    className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer"
+                  >
                     Messenger
                   </button>
-                  <button className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer">
+                  <button
+                    onClick={handleShareZalo}
+                    className="py-2 text-xs font-semibold rounded-lg bg-light-cream hover:bg-light-cream/80 border border-slate-300/40 transition-colors text-dark-slate cursor-pointer"
+                  >
                     Zalo
                   </button>
                 </div>

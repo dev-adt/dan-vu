@@ -55,6 +55,9 @@ export default function Footer() {
               <span className="text-light-alabaster/40">Hotline:</span> +84 (0) 987 654 321 (Mr. Thanh)
             </li>
             <li>
+              <span className="text-light-alabaster/40">Fanpage:</span> <a href="https://facebook.com/nhipbuocvietnam2026" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-secondary transition-colors">facebook.com/nhipbuocvietnam2026</a>
+            </li>
+            <li>
               <span className="text-light-alabaster/40">Email:</span> btc@nhipbuocvietnam.gov.vn
             </li>
             <li>
