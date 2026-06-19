@@ -111,10 +111,12 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   };
 
   const handleGoogleLogin = async () => {
+    // Use NEXT_PUBLIC_SITE_URL on VPS (behind reverse proxy, window.location.origin may return localhost)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+        redirectTo: `${siteUrl}/api/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
       },
     });
     if (error) console.error('OAuth error:', error);
