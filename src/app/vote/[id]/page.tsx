@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Play, Heart, Award, Calendar, ChevronLeft, ShieldCheck, Mail, LogIn, LogOut, CheckCircle2 } from 'lucide-react';
@@ -23,8 +23,40 @@ interface CandidateDetails {
   audioUrl: string;
 }
 
+function getVideoEmbedUrl(url: string): string {
+  if (!url) return '';
+
+  // Google Drive
+  if (url.includes('drive.google.com')) {
+    if (url.includes('drive.google.com/file/d/')) {
+      const parts = url.split('drive.google.com/file/d/');
+      if (parts.length > 1) {
+        const fileId = parts[1].split('/')[0].split('?')[0].split('&')[0];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+      }
+    }
+    if (url.includes('drive.google.com/open?id=')) {
+      const parts = url.split('drive.google.com/open?id=');
+      if (parts.length > 1) {
+        const fileId = parts[1].split('&')[0];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+      }
+    }
+  }
+
+  // YouTube
+  const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const ytMatch = url.match(ytRegExp);
+  if (ytMatch && ytMatch[2].length === 11) {
+    const videoId = ytMatch[2];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+
+  return url;
+}
+
 export default function CandidateDetail({ params }: { params: Promise<{ id: string }> }) {
-  const [unwrappedParams, setUnwrappedParams] = useState<{ id: string } | null>(null);
+  const unwrappedParams = use(params);
   const [candidate, setCandidate] = useState<CandidateDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasVotedToday, setHasVotedToday] = useState(false);
@@ -35,19 +67,12 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Resolve router params
-    params.then((p) => {
-      setUnwrappedParams(p);
-    });
-  }, [params]);
-
-  useEffect(() => {
     // Get user session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } }: any = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setUser(session?.user ?? null);
     });
 
@@ -56,10 +81,8 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
 
   // Reload team details whenever page params or user state changes (to evaluate hasVotedToday correctly)
   useEffect(() => {
-    if (unwrappedParams) {
-      loadTeamDetails();
-    }
-  }, [unwrappedParams, user]);
+    loadTeamDetails();
+  }, [unwrappedParams.id, user]);
 
   const loadTeamDetails = async () => {
     if (!unwrappedParams) return;
@@ -234,10 +257,10 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
             <div className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/40 shadow-sm flex items-center justify-center bg-black">
               {/* Overlay graphic */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-              {candidate.videoUrl ? (
+              {candidate.videoUrl && (candidate.videoUrl.startsWith('http://') || candidate.videoUrl.startsWith('https://')) ? (
                 <iframe
                   className="w-full h-full border-0 absolute inset-0 z-0"
-                  src={candidate.videoUrl.replace('watch?v=', 'embed/')}
+                  src={getVideoEmbedUrl(candidate.videoUrl)}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />

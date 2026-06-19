@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase-client';
 import nodemailer from 'nodemailer';
 
 // Initialize Supabase Client with Service Role Key for Admin operations
@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       technicalRequirements,
       audioLink,
       videoLink,
+      photoUrl,
     } = body;
 
     // Validate fields
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         technical_requirements: technicalRequirements || null,
         audio_url: audioLink || null,
         video_url: videoLink || null,
+        photo_url: photoUrl || null,
         status: 'submitted', // Auto submitted
       })
       .select()

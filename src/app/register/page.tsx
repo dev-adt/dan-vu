@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -20,6 +21,7 @@ interface FormData {
   technicalRequirements: string;
   audioLink: string;
   videoLink: string;
+  photoUrl: string;
 }
 
 const initialFormData: FormData = {
@@ -36,6 +38,7 @@ const initialFormData: FormData = {
   technicalRequirements: '',
   audioLink: '',
   videoLink: '',
+  photoUrl: '',
 };
 
 export default function RegisterWizard() {
@@ -45,6 +48,90 @@ export default function RegisterWizard() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+
+    // Check size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Dung lượng ảnh vượt quá giới hạn 5MB.');
+      return;
+    }
+
+    // Check type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn tệp hình ảnh (.jpg, .jpeg, .png).');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const mockUrl = `https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80`;
+        setFormData((prev) => ({ ...prev, photoUrl: mockUrl }));
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `team-photos/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      setFormData((prev) => ({ ...prev, photoUrl: publicUrl }));
+    } catch (err: any) {
+      console.error('Error uploading photo:', err);
+      alert('Không thể tải lên ảnh: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handlePhotoUpload(e.target.files[0]);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handlePhotoUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData((prev) => ({ ...prev, photoUrl: '' }));
+  };
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -98,6 +185,9 @@ export default function RegisterWizard() {
     } else if (currentStep === 3) {
       if (!(formData.audioLink || '').trim() && !(formData.videoLink || '').trim()) {
         tempErrors.audioLink = 'Bạn phải điền ít nhất link nhạc nền (Beat) hoặc link video chạy thử.';
+      }
+      if (!(formData.photoUrl || '').trim()) {
+        tempErrors.photoUrl = 'Vui lòng tải lên ảnh đại diện của đội thi.';
       }
     }
 
@@ -449,10 +539,58 @@ export default function RegisterWizard() {
                         />
                       </div>
 
-                      <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center space-y-2 bg-slate-50/50">
-                        <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                        <p className="text-xs text-slate-600">Kéo thả ảnh đại diện của đội thi (định dạng JPG/PNG)</p>
-                        <p className="text-[10px] text-slate-400">Dung lượng tối đa: 5MB. Phục vụ truyền thông bình chọn.</p>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ảnh Đại Diện Đội Thi *</label>
+                        <div
+                          onDragEnter={handleDrag}
+                          onDragOver={handleDrag}
+                          onDragLeave={handleDrag}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                            isDragActive ? 'border-secondary bg-secondary/5' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/png, image/jpeg, image/jpg"
+                            className="hidden"
+                          />
+
+                          {isUploadingPhoto ? (
+                            <div className="space-y-2 py-4">
+                              <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
+                              <p className="text-xs text-slate-500">Đang tải ảnh lên máy chủ...</p>
+                            </div>
+                          ) : formData.photoUrl ? (
+                            <div className="relative group w-48 h-32 rounded-lg overflow-hidden border border-slate-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                              <img
+                                src={formData.photoUrl}
+                                alt="Xem trước ảnh đại diện"
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleRemovePhoto}
+                                className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-sm animate-fadeIn"
+                                title="Xóa ảnh"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                              <p className="text-xs font-medium text-slate-600">
+                                Kéo thả ảnh vào đây, hoặc <span className="text-secondary hover:underline">nhấp để chọn</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400">Định dạng JPG, PNG. Dung lượng tối đa: 5MB.</p>
+                            </>
+                          )}
+                        </div>
+                        {errors.photoUrl && <p className="text-xs text-primary mt-1">{errors.photoUrl}</p>}
                       </div>
                     </div>
                   </motion.div>
@@ -520,6 +658,14 @@ export default function RegisterWizard() {
                         {formData.audioLink && (
                           <div className="text-xs text-accent">
                             ✓ Nhạc nền đính kèm hợp lệ.
+                          </div>
+                        )}
+                        {formData.photoUrl && (
+                          <div className="flex items-center gap-3 pt-3 border-t border-slate-100/50 mt-2 animate-fadeIn">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Ảnh đại diện:</span>
+                            <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                              <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+                            </div>
                           </div>
                         )}
                       </div>

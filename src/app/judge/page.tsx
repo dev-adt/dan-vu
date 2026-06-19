@@ -20,8 +20,6 @@ export default function JudgePortal() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpField, setShowOtpField] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [gradingList, setGradingList] = useState<PerformanceGrading[]>([]);
@@ -37,7 +35,7 @@ export default function JudgePortal() {
 
   useEffect(() => {
     // Check if already authenticated on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (session) {
         setIsAuthenticated(true);
         setJudgeName(session.user.user_metadata?.full_name || 'Ban Giám Khảo');
@@ -70,47 +68,33 @@ export default function JudgePortal() {
     e.preventDefault();
     setIsLoggingIn(true);
 
-    if (!showOtpField) {
-      // 1. Sign in with Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        alert('Đăng nhập thất bại: ' + error.message);
-        setIsLoggingIn(false);
-        return;
-      }
-
-      setJudgeName(data.user?.user_metadata?.full_name || 'Ban Giám Khảo');
+    if (error) {
+      alert('Đăng nhập thất bại: ' + error.message);
       setIsLoggingIn(false);
-      setShowOtpField(true); // Proceed to OTP verification step
-    } else {
-      // Simulate 2FA OTP matching (accepts any 6 digits for testing)
-      if (otp.length === 6) {
-        setIsLoggingIn(false);
-        setIsAuthenticated(true);
-        
-        // Load data
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          loadGradingList(session.access_token);
-        }
-      } else {
-        alert('Mã OTP không hợp lệ. Vui lòng nhập 6 chữ số.');
-        setIsLoggingIn(false);
-      }
+      return;
+    }
+
+    setJudgeName(data.user?.user_metadata?.full_name || 'Ban Giám Khảo');
+    setIsAuthenticated(true);
+    setIsLoggingIn(false);
+
+    // Load grading data
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      loadGradingList(session.access_token);
     }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
-    setShowOtpField(false);
     setEmail('');
     setPassword('');
-    setOtp('');
     setGradingList([]);
   };
 
@@ -127,57 +111,39 @@ export default function JudgePortal() {
                 <UserCheck className="w-8 h-8" />
               </span>
               <h1 className="font-heading font-bold text-2xl text-slate-900">Cổng Giám Khảo Bảo Mật</h1>
-              <p className="text-xs text-slate-600">Vui lòng nhập tài khoản và mã xác thực 2FA được BTC cung cấp.</p>
+              <p className="text-xs text-slate-600">Vui lòng nhập tài khoản và mật khẩu được Ban Tổ Chức cung cấp.</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              {!showOtpField ? (
-                <>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Email tài khoản *</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="giamkhao@nhipbuocvietnam.gov.vn"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Mật khẩu *</label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-1 animate-fadeIn">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-accent">Mã bảo mật 2FA OTP *</label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    placeholder="123456"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="w-full bg-white border border-secondary rounded-xl px-4 py-3 text-sm focus:border-accent focus:outline-none text-center font-bold tracking-[0.5em] text-accent transition-colors"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1.5 text-center">Nhập 6 số bất kỳ để hoàn tất xác minh 2FA.</p>
-                </div>
-              )}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Email tài khoản *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="giamkhao@nhipbuocvietnam.gov.vn"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Mật khẩu *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={isLoggingIn}
                 className="w-full bg-accent text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-opacity-90 transition-all shadow-md mt-6 cursor-pointer"
               >
-                {isLoggingIn ? 'Đang kiểm tra...' : showOtpField ? 'Xác thực & Vào Portal' : 'Đăng Nhập'}
+                {isLoggingIn ? 'Đang kiểm tra...' : 'Đăng Nhập'}
               </button>
             </form>
           </div>

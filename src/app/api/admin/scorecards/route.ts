@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase-client';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       scoresByTeam[s.team_id].count += 1;
     });
 
-    const rankings = (teams || []).map((t) => {
+    const rankings = (teams || []).map((t: any) => {
       const stats = scoresByTeam[t.id];
       if (stats && stats.count > 0) {
         return {
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
     });
 
     // 4. Sort rankings: teams with grades first (highest score to lowest), then ungraded teams
-    rankings.sort((a, b) => {
+    rankings.sort((a: any, b: any) => {
       if (a.gradedCount > 0 && b.gradedCount === 0) return -1;
       if (a.gradedCount === 0 && b.gradedCount > 0) return 1;
       return b.averageScore - a.averageScore;

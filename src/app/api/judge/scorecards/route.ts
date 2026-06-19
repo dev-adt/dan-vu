@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase-client';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Merge status and score into team objects
-    const list = (teams || []).map((t) => {
+    const list = (teams || []).map((t: any) => {
       const card = scorecardMap[t.id];
       return {
         id: t.id,
