@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CandidateCard from '@/components/CandidateCard';
 import { Search, SlidersHorizontal, CheckCircle2, LogIn, LogOut, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { getBrowserSiteUrl } from '@/lib/auth-redirect';
 
 interface Candidate {
   id: string;
@@ -29,27 +31,9 @@ export default function VoteDiscovery() {
   const [votedId, setVotedId] = useState<string | null>(null);
 
   // Authenticated user state
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
-  useEffect(() => {
-    // Get session
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen to auth state change
-    const { data: { subscription } }: any = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Fetch approved teams list
-    loadApprovedTeams();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadApprovedTeams = async () => {
-    setIsLoading(true);
+  const loadApprovedTeams = useCallback(async () => {
     try {
       const res = await fetch('/api/teams/approved');
       if (res.ok) {
@@ -61,11 +45,28 @@ export default function VoteDiscovery() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Get session
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen to auth state change
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Fetch approved teams list
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadApprovedTeams();
+
+    return () => subscription.unsubscribe();
+  }, [loadApprovedTeams]);
 
   const handleGoogleLogin = async () => {
-    // Use NEXT_PUBLIC_SITE_URL on VPS (behind reverse proxy, window.location.origin may return localhost)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const siteUrl = getBrowserSiteUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

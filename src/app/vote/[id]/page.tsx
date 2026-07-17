@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useCallback, useState, useEffect, use } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Play, Heart, Award, Calendar, ChevronLeft, ShieldCheck, Mail, LogIn, LogOut, CheckCircle2 } from 'lucide-react';
+import { Play, Heart, Award, Calendar, ChevronLeft, ShieldCheck, LogIn, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { getBrowserSiteUrl } from '@/lib/auth-redirect';
 
 interface CandidateDetails {
   id: string;
@@ -64,29 +66,10 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   const [votedSuccess, setVotedSuccess] = useState(false);
 
   // Auth User state
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
-  useEffect(() => {
-    // Get user session
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } }: any = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Reload team details whenever page params or user state changes (to evaluate hasVotedToday correctly)
-  useEffect(() => {
-    loadTeamDetails();
-  }, [unwrappedParams.id, user]);
-
-  const loadTeamDetails = async () => {
+  const loadTeamDetails = useCallback(async () => {
     if (!unwrappedParams) return;
-    setIsLoading(true);
     try {
       // Pass authorization header if user is logged in to fetch hasVotedToday dynamically
       const headers: HeadersInit = {};
@@ -108,11 +91,29 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [unwrappedParams]);
+
+  useEffect(() => {
+    // Get user session
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Reload team details whenever page params or user state changes (to evaluate hasVotedToday correctly)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTeamDetails();
+  }, [loadTeamDetails, user]);
 
   const handleGoogleLogin = async () => {
-    // Use NEXT_PUBLIC_SITE_URL on VPS (behind reverse proxy, window.location.origin may return localhost)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const siteUrl = getBrowserSiteUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
