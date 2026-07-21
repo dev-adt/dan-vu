@@ -15,8 +15,29 @@ async function getJudgeUser(req: NextRequest) {
   }
   const token = authHeader.replace('Bearer ', '');
   const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  const { data: { user } } = await supabaseClient.auth.getUser(token);
-  return user;
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+  if (error || !user) {
+    return null;
+  }
+
+  // 1. Check user metadata role
+  if (user.user_metadata?.role === 'judge') {
+    return user;
+  }
+
+  // 2. Check if user ID exists in public.judges table
+  const { data: judgeRecord } = await supabaseAdmin
+    .from('judges')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (judgeRecord) {
+    return user;
+  }
+
+  return null;
 }
 
 // GET: Fetch all teams with this judge's grading status
