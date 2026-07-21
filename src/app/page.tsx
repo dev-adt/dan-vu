@@ -146,9 +146,14 @@ export default function Home() {
             <h1 className="font-heading font-extrabold text-4xl sm:text-6xl md:text-7xl text-dark-obsidian leading-tight tracking-wide">
               NHỊP BƯỚC VIỆT NAM
             </h1>
-            <p className="text-lg sm:text-xl text-dark-slate/85 italic font-semibold tracking-wide max-w-2xl mx-auto">
-              &ldquo;Nơi tôn vinh bản sắc bản địa và nhịp điệu hiện đại.&rdquo;
+            <p className="text-base sm:text-xl text-primary font-bold tracking-wide max-w-3xl mx-auto">
+              Chủ đề: &ldquo;Kết nối văn hóa - Lan tỏa hòa bình - Vươn tầm hội nhập&rdquo;
             </p>
+            <div className="pt-2">
+              <span className="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl backdrop-blur-sm shadow-sm">
+                📍 Từ 28/08 đến 02/09/2026 tại Quảng trường 7/5, phường Điện Biên Phủ, tỉnh Điện Biên
+              </span>
+            </div>
           </motion.div>
 
           <motion.div
@@ -193,23 +198,27 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <span className="w-3 h-6 bg-accent rounded-full" />
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent">
-              Vần Hóa & Sứ Mệnh
+              Văn Hóa & Sứ Mệnh
             </span>
           </div>
           <h2 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian leading-tight">
             Giao thoa giữa di sản ngàn năm & vũ điệu đương đại
           </h2>
           <p className="text-dark-slate/95 leading-relaxed text-sm">
-            Festival Dân ca Dân vũ Quốc tế &ldquo;Nhịp Bước Việt Nam 2026&rdquo; không chỉ đơn thuần là sân chơi tài năng nghệ thuật, mà còn là hành trình lưu giữ ngọn lửa di sản. Chúng tôi kiến tạo không gian văn hóa nơi các giai điệu cổ xưa kết duyên cùng các vũ điệu hiện đại tinh tế, tạo nên bức tranh đa sắc tộc rực rỡ sắc màu quốc gia.
+            Festival Dân ca Dân vũ Quốc tế &ldquo;Nhịp Bước Việt Nam 2026&rdquo; chào mừng 81 năm Quốc khánh (02/9/1945 - 02/9/2026). Đây là ngày hội văn hóa quy tụ các đoàn nghệ thuật dân gian, dân vũ trong nước và quốc tế (Lào, Thái Lan, Trung Quốc,...), kết nối di sản văn hóa phi vật thể và quảng bá hình ảnh đất nước, con người Việt Nam cùng tỉnh Điện Biên.
           </p>
-          <div className="grid grid-cols-2 gap-6 pt-4">
-            <div className="p-5 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
-              <span className="block text-2xl font-bold text-primary">10+</span>
-              <span className="text-xs text-dark-slate/60">Quốc gia tham dự</span>
+          <div className="grid grid-cols-3 gap-3 pt-4">
+            <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
+              <span className="block text-xl sm:text-2xl font-bold text-primary">50-100</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">Đoàn NT & CLB dự thi</span>
             </div>
-            <div className="p-5 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
-              <span className="block text-2xl font-bold text-primary">50+</span>
-              <span className="text-xs text-dark-slate/60">Câu lạc bộ trong nước</span>
+            <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
+              <span className="block text-xl sm:text-2xl font-bold text-accent">300</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">Gian hàng hội chợ & OCOP</span>
+            </div>
+            <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
+              <span className="block text-xl sm:text-2xl font-bold text-amber-600">Khinh Khí Cầu</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">Trình diễn độc đáo</span>
             </div>
           </div>
         </motion.div>
@@ -231,6 +240,70 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* Logo & Brand Identity Contest Section */}
+      <section className="py-16 px-4 max-w-7xl mx-auto relative z-10">
+        <div className="bg-gradient-to-br from-amber-500/10 via-primary/5 to-accent/10 border-2 border-amber-500/30 rounded-3xl p-8 sm:p-12 shadow-xl space-y-8 relative overflow-hidden backdrop-blur-md">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-amber-500/20 pb-6">
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
+                <Star className="w-3.5 h-3.5 fill-amber-600" /> Cuộc Thi Thiết Kế Chính Thức
+              </span>
+              <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900">
+                PHÁT ĐỘNG CUỘC THI THIẾT KẾ LOGO VÀ BỘ NHẬN DIỆN FESTIVAL
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-700 mt-2 max-w-3xl">
+                Tìm kiếm biểu trưng chính thức cho Festival Dân ca Dân vũ Quốc tế 2026. Dành cho các công dân Việt Nam và người nước ngoài có năng lực sáng tạo mỹ thuật & thiết kế.
+              </p>
+            </div>
+            <div className="bg-white/90 border border-amber-500/40 px-5 py-3.5 rounded-2xl text-center shadow-sm shrink-0">
+              <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Thời gian tiếp nhận</span>
+              <span className="font-bold text-sm text-primary">21/07/2026 – 30/07/2026</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Contest Awards */}
+            <div className="space-y-4 bg-white/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+              <h3 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-600" /> Cơ Cấu Giải Thưởng Cuộc Thi Logo
+              </h3>
+              <ul className="space-y-3 text-xs sm:text-sm text-slate-700">
+                <li className="flex items-start gap-3 bg-amber-50/80 p-3.5 rounded-xl border border-amber-200/60">
+                  <span className="font-bold text-amber-900 shrink-0">01 Giải Nhất:</span>
+                  <div>
+                    <strong className="text-amber-900 text-base">10.000.000 VNĐ</strong> + Giấy chứng nhận của Ban Tổ chức.
+                    <p className="text-[11px] text-slate-600 mt-0.5">Tác phẩm đạt giải sẽ được lựa chọn làm Logo chính thức của Festival.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <span className="font-bold text-slate-800 shrink-0">02 Giải Khuyến Khích:</span>
+                  <div>
+                    <strong className="text-slate-900 text-base">5.000.000 VNĐ / giải</strong> + Giấy chứng nhận của Ban Tổ chức.
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* Submission Info */}
+            <div className="space-y-4 bg-white/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2 mb-3">
+                  <Heart className="w-5 h-5 text-accent" /> Hồ Sơ & Địa Chỉ Tiếp Nhận
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  Tác phẩm dự thi bảo đảm tính sáng tạo, tính biểu trưng, khả năng ứng dụng cao và chưa từng tham gia hoặc đạt giải tại các cuộc thi khác.
+                </p>
+                <div className="mt-4 p-3.5 bg-slate-100/90 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 space-y-1.5">
+                  <p><strong>Hồ sơ gửi về:</strong> Văn phòng Ban Tổ chức, số 53 Nguyễn Du, phường Hai Bà Trưng, thành phố Hà Nội.</p>
+                  <p><strong>Trưởng Ban Truyền Thông:</strong> Mrs. Hương - 0966 925 606</p>
+                  <p><strong>Email chính thức:</strong> festval2026@dancadanvu.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Event Timeline */}
       <section className="bg-light-cream/30 py-20 border-y border-slate-200/40 relative z-10">
         <Timeline />
@@ -240,10 +313,10 @@ export default function Home() {
       <section className="py-24 px-4 max-w-7xl mx-auto space-y-16 relative z-10">
         <div className="text-center">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            Cơ Cấu Giải Thưởng
+            Cơ Cấu Giải Thưởng Festival
           </span>
           <h2 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
-            Vinh Danh Tài Năng Nghệ Thuật
+            Giải Thưởng Toàn Đoàn & Chuyên Đề
           </h2>
           <div className="w-12 h-0.5 bg-secondary mx-auto mt-4" />
         </div>
@@ -256,9 +329,9 @@ export default function Home() {
             </div>
             <div>
               <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">02 Giải Nhì</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">15.000.000 VNĐ</h3>
-              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Cờ lưu niệm & Chứng nhận</p>
-              <p className="text-xs text-dark-slate/85 mt-2">Vinh danh các tiết mục xuất sắc có kỹ thuật đồng đều và ý tưởng đột phá.</p>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">100.000.000 VNĐ</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Mỗi giải / Cờ & Chứng nhận</p>
+              <p className="text-xs text-dark-slate/85 mt-2">Vinh danh các tập thể xuất sắc có kỹ thuật đồng đều và ý tưởng dàn dựng đột phá.</p>
             </div>
           </div>
 
@@ -271,10 +344,10 @@ export default function Home() {
               <Award className="w-10 h-10" />
             </div>
             <div>
-              <span className="text-xs text-secondary uppercase tracking-widest font-semibold">01 Giải Nhất Vô Địch</span>
-              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">30.000.000 VNĐ</h3>
-              <p className="text-xs text-secondary font-bold uppercase tracking-wider mt-1">Cúp Vàng & Cờ lưu niệm</p>
-              <p className="text-xs text-dark-slate/95 mt-2">Tiết mục đỉnh cao kết hợp trọn vẹn yếu tố dân gian bản địa và hơi thở sân khấu đương đại.</p>
+              <span className="text-xs text-secondary uppercase tracking-widest font-semibold">01 Giải Nhất Toàn Đoàn</span>
+              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">150.000.000 VNĐ</h3>
+              <p className="text-xs text-secondary font-bold uppercase tracking-wider mt-1">Cúp Vàng, Cờ & Chứng nhận</p>
+              <p className="text-xs text-dark-slate/95 mt-2">Trao cho đoàn nghệ thuật xuất sắc nhất kết hợp trọn vẹn bản sắc dân gian và tinh hoa vũ đạo.</p>
             </div>
           </div>
 
@@ -285,18 +358,27 @@ export default function Home() {
             </div>
             <div>
               <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">03 Giải Ba</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">10.000.000 VNĐ</h3>
-              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Cờ lưu niệm & Chứng nhận</p>
-              <p className="text-xs text-dark-slate/85 mt-2">Trao cho các đội biểu diễn đầy nhiệt huyết, giàu cảm xúc truyền tải.</p>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">80.000.000 VNĐ</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Mỗi giải / Cờ & Chứng nhận</p>
+              <p className="text-xs text-dark-slate/85 mt-2">Trao cho các đoàn biểu diễn nhiệt huyết, giàu cảm xúc truyền tải di sản.</p>
             </div>
           </div>
         </div>
 
-        {/* Subsidiary Awards */}
-        <div className="glass-panel border border-slate-300/40 rounded-2xl p-6 text-center max-w-2xl mx-auto bg-light-alabaster shadow-sm">
-          <p className="text-xs text-dark-slate/90">
-            <strong className="text-secondary font-semibold">Giải Phụ Khác:</strong> Đội có trang phục đẹp nhất, Đội được yêu thích nhất (do khán giả bình chọn online), Biên đạo xuất sắc nhất.
-          </p>
+        {/* Consolation & Special Category Prizes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="glass-panel border border-slate-300/40 rounded-2xl p-6 bg-light-alabaster shadow-sm">
+            <h4 className="font-bold text-sm text-primary uppercase tracking-wider mb-2">Các Giải Khuyến Khích</h4>
+            <p className="text-xs text-dark-slate/90 leading-relaxed">
+              Mỗi giải trị giá dự kiến <strong className="text-primary font-bold text-sm">50.000.000 VNĐ</strong>, kèm Cờ lưu niệm & Giấy chứng nhận của Ban Tổ chức.
+            </p>
+          </div>
+          <div className="glass-panel border border-amber-400/40 rounded-2xl p-6 bg-amber-50/50 shadow-sm">
+            <h4 className="font-bold text-sm text-amber-900 uppercase tracking-wider mb-2">Hệ Thống Giải Chuyên Đề</h4>
+            <p className="text-xs text-dark-slate/90 leading-relaxed">
+              Các giải: <em className="font-semibold text-slate-800">Tiết mục xuất sắc, Biên đạo xuất sắc, Đội hình đẹp nhất, Trang phục đẹp nhất, Giải Sáng tạo, Giải được khán giả yêu thích, Giải Giao lưu quốc tế</em>. Mỗi giải trị giá <strong className="text-amber-900 font-bold text-sm">30.000.000 VNĐ</strong> kèm Cúp (Biểu trưng), Giấy chứng nhận & Kỷ niệm chương.
+            </p>
+          </div>
         </div>
       </section>
 

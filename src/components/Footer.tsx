@@ -52,16 +52,16 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2 text-sm text-light-alabaster/70">
             <li>
-              <span className="text-light-alabaster/40">Hotline:</span> +84 (0) 987 654 321 (Mr. Thanh)
+              <span className="text-light-alabaster/40">Hotline/Truyền thông:</span> 0966 925 606 (Mrs. Hương - Trưởng Ban kết nối truyền thông)
             </li>
             <li>
-              <span className="text-light-alabaster/40">Fanpage:</span> <a href="https://facebook.com/nhipbuocvietnam2026" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-secondary transition-colors">facebook.com/nhipbuocvietnam2026</a>
+              <span className="text-light-alabaster/40">Email:</span> <a href="mailto:festval2026@dancadanvu.com" className="hover:underline hover:text-secondary transition-colors">festval2026@dancadanvu.com</a>
             </li>
             <li>
-              <span className="text-light-alabaster/40">Email:</span> btc@nhipbuocvietnam.gov.vn
+              <span className="text-light-alabaster/40">Văn phòng BTC tiếp nhận hồ sơ:</span> Số 53 Nguyễn Du, P. Hai Bà Trưng, TP. Hà Nội
             </li>
             <li>
-              <span className="text-light-alabaster/40">Địa chỉ:</span> Nhà hát Lớn Hà Nội, Số 01 Tràng Tiền, Hoàn Kiếm, Hà Nội
+              <span className="text-light-alabaster/40">Địa điểm tổ chức:</span> Quảng trường 7/5, P. Điện Biên Phủ, Tỉnh Điện Biên
             </li>
           </ul>
         </div>
