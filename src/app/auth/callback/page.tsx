@@ -27,10 +27,25 @@ export default function AuthCallbackPage() {
         return;
       }
 
+      // 1. Check if session was already established automatically by Supabase detectSessionInUrl
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession) {
+        router.replace(next);
+        return;
+      }
+
+      // 2. Exchange code for session if not already handled
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
+        // Re-check session in case of race condition with detectSessionInUrl
+        const { data: { session: recheckSession } } = await supabase.auth.getSession();
+        if (recheckSession) {
+          router.replace(next);
+          return;
+        }
+
         console.error('Error exchanging OAuth code:', error);
-        setErrorMessage('Khong the hoan tat dang nhap Google. Vui long thu lai.');
+        setErrorMessage('Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.');
         return;
       }
 

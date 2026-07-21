@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
     }
 
     const voterEmail = user.email;
-    const voterIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
+    const rawIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
+    let voterIp = rawIp.split(',')[0].trim();
+    if (!voterIp || voterIp === '::1') {
+      voterIp = '127.0.0.1';
+    }
 
     // 3. Enforce the limit: 1 vote/day for each team per user email
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -75,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error('Database insert error:', insertError);
-      return NextResponse.json({ error: 'Lỗi lưu phiếu bầu.' }, { status: 500 });
+      return NextResponse.json({ error: `Lỗi lưu phiếu bầu: ${insertError.message || 'Không thể ghi nhận phiếu'}` }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
