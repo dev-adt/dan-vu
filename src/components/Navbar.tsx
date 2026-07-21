@@ -22,8 +22,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Logo Brand */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="w-3 h-8 bg-gradient-to-b from-primary via-secondary to-accent rounded-full transition-transform group-hover:scale-y-125" />
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img
+                src="/icon.png"
+                alt="Logo Festival Dân Ca Dân Vũ"
+                className="w-9 h-9 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform"
+              />
               <div className="flex flex-col">
                 <span className="font-heading font-bold text-lg leading-none tracking-wide text-dark-slate group-hover:text-primary transition-colors">
                   NHỊP BƯỚC VIỆT NAM

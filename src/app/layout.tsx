@@ -15,6 +15,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Festival Dân Ca Dân Vũ Quốc Tế - Nhịp Bước Việt Nam 2026",
   description: "Nơi tôn vinh bản sắc bản địa và nhịp điệu hiện đại. Cổng thông tin chính thức, đăng ký dự thi, bình chọn trực tuyến và chấm điểm sơ khảo.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
