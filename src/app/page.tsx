@@ -1,8 +1,10 @@
+import { headers } from 'next/headers';
+import HomeClient from '@/components/HomeClient';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import HomeClient from '@/components/HomeClient';
-
-export default function Home() {
+export default async function Home() {
+  await headers();
   return <HomeClient />;
 }
