@@ -24,7 +24,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
               <img
-                src="/icon.png"
+                src="/favicon.png?v=3"
                 alt="Logo Festival Dân Ca Dân Vũ"
                 className="w-9 h-9 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform"
               />

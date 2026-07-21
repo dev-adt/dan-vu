@@ -16,9 +16,13 @@ export const metadata: Metadata = {
   title: "Festival Dân Ca Dân Vũ Quốc Tế - Nhịp Bước Việt Nam 2026",
   description: "Nơi tôn vinh bản sắc bản địa và nhịp điệu hiện đại. Cổng thông tin chính thức, đăng ký dự thi, bình chọn trực tuyến và chấm điểm sơ khảo.",
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: [
+      { url: "/favicon.png?v=3", type: "image/png" },
+      { url: "/icon.png?v=3", type: "image/png" },
+      { url: "/favicon.ico?v=3" },
+    ],
+    shortcut: ["/favicon.png?v=3"],
+    apple: ["/favicon.png?v=3"],
   },
 };
 
@@ -34,6 +38,11 @@ export default function RootLayout({
       lang="vi"
       className={`${playfair.variable} ${plusJakarta.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href="/favicon.png?v=3" type="image/png" />
+        <link rel="shortcut icon" href="/favicon.png?v=3" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon.png?v=3" />
+      </head>
       <body className="min-h-full flex flex-col bg-gradient-to-b from-light-alabaster to-light-cream text-dark-obsidian selection:bg-accent selection:text-white">
         {children}
       </body>
