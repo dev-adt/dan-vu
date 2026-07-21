@@ -31,6 +31,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' }, { status: 401 });
     }
 
+    // 2b. Block Judge accounts from public voting
+    if (user.user_metadata?.role === 'judge') {
+      return NextResponse.json({ error: 'Tài khoản Giám khảo không được thực hiện bình chọn khán giả.' }, { status: 403 });
+    }
+
+    const { data: judgeRecord } = await supabaseAdmin
+      .from('judges')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (judgeRecord) {
+      return NextResponse.json({ error: 'Tài khoản Giám khảo không được thực hiện bình chọn khán giả.' }, { status: 403 });
+    }
+
     const voterEmail = user.email;
     const rawIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
     let voterIp = rawIp.split(',')[0].trim();

@@ -36,14 +36,18 @@ export default function JudgePortal() {
   useEffect(() => {
     // Check if already authenticated on mount
     supabase.auth.getSession().then(({ data: { session } }: any) => {
-      if (session) {
-        setJudgeName(session.user.user_metadata?.full_name || 'Ban Giám Khảo');
-        loadGradingList(session.access_token);
+      if (session && session.user?.user_metadata?.role === 'judge') {
+        const name = session.user.user_metadata?.full_name || session.user.email || 'Ban Giám Khảo';
+        loadGradingList(session.access_token, name);
+      } else {
+        setIsAuthenticated(false);
+        setJudgeName('Ban Giám Khảo');
+        setGradingList([]);
       }
     });
   }, []);
 
-  const loadGradingList = async (accessToken: string) => {
+  const loadGradingList = async (accessToken: string, judgeDisplayName?: string) => {
     setIsLoadingList(true);
     try {
       const res = await fetch('/api/judge/scorecards', {
@@ -55,15 +59,20 @@ export default function JudgePortal() {
       if (res.ok) {
         const data = await res.json();
         setGradingList(data.list);
+        if (judgeDisplayName) {
+          setJudgeName(judgeDisplayName);
+        }
         setIsAuthenticated(true);
       } else {
         // Not a judge account -> deny judge portal access
         setIsAuthenticated(false);
+        setJudgeName('Ban Giám Khảo');
         setGradingList([]);
       }
     } catch (err) {
       console.error('Error fetching grading list:', err);
       setIsAuthenticated(false);
+      setJudgeName('Ban Giám Khảo');
     } finally {
       setIsLoadingList(false);
     }

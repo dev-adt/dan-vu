@@ -48,14 +48,23 @@ export default function VoteDiscovery() {
   }, []);
 
   useEffect(() => {
+    const checkVoterSession = (session: Session | null) => {
+      // Judge accounts are not voters
+      if (session?.user && session.user.user_metadata?.role !== 'judge') {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    };
+
     // Get session
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      setUser(session?.user ?? null);
+      checkVoterSession(session);
     });
 
     // Listen to auth state change
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
+      checkVoterSession(session);
     });
 
     // Fetch approved teams list
@@ -88,7 +97,12 @@ export default function VoteDiscovery() {
     // Get current session
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session) {
+    if (session?.user?.user_metadata?.role === 'judge') {
+      alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
+      return;
+    }
+
+    if (!session || !session.user) {
       if (confirm('Bạn cần đăng nhập tài khoản Google để thực hiện bình chọn. Bấm OK để đăng nhập ngay.')) {
         handleGoogleLogin();
       }

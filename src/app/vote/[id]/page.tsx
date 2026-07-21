@@ -94,13 +94,21 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   }, [unwrappedParams]);
 
   useEffect(() => {
+    const checkVoterSession = (session: Session | null) => {
+      if (session?.user && session.user.user_metadata?.role !== 'judge') {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    };
+
     // Get user session
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      setUser(session?.user ?? null);
+      checkVoterSession(session);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
+      checkVoterSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -130,7 +138,13 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
 
   const handleVoteSubmit = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+
+    if (session?.user?.user_metadata?.role === 'judge') {
+      alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
+      return;
+    }
+
+    if (!session || !session.user) {
       handleGoogleLogin();
       return;
     }
