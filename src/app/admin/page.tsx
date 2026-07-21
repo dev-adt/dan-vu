@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
-  ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle
+  ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle
 } from 'lucide-react';
 
 interface FraudLog {
@@ -32,7 +32,12 @@ interface Team {
   duration: string;
   description: string;
   technical_requirements: string;
+  audio_url?: string;
+  video_url?: string;
+  photo_url?: string;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  has_pending_update?: boolean;
+  pending_changes?: any;
 }
 
 interface Judge {
@@ -51,7 +56,7 @@ export default function AdminDashboard() {
   const [authHeader, setAuthHeader] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'judges' | 'rankings'>('monitoring');
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings'>('monitoring');
 
   // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
@@ -226,6 +231,54 @@ export default function AdminDashboard() {
         fetchStats();
       } else {
         alert('Cập nhật trạng thái đội thi thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Approve pending profile update request
+  const handleApprovePendingUpdate = async (id: string) => {
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ id, action: 'approve_update' }),
+      });
+
+      if (res.ok) {
+        fetchTeams();
+        alert('Đã chấp nhận cập nhật thông tin mới của đội thi!');
+      } else {
+        alert('Chấp nhận cập nhật thất bại.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Reject pending profile update request
+  const handleRejectPendingUpdate = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn TỪ CHỐI các thông tin thay đổi của đội thi này?')) return;
+
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ id, action: 'reject_update' }),
+      });
+
+      if (res.ok) {
+        fetchTeams();
+        alert('Đã từ chối yêu cầu thay đổi thông tin.');
+      } else {
+        alert('Từ chối cập nhật thất bại.');
       }
     } catch (err) {
       console.error(err);
@@ -525,10 +578,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Dashboard Tab Navigation */}
-            <div className="border-b border-slate-200 flex gap-4 print:hidden">
+            <div className="border-b border-slate-200 flex gap-4 print:hidden overflow-x-auto">
               <button
                 onClick={() => setActiveTab('monitoring')}
-                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'monitoring' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -536,15 +589,28 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab('teams')}
-                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'teams' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
-                Quản Lý Đội Thi
+                Quản Lý Đội Thi ({teams.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pending_updates')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'pending_updates' ? 'border-amber-600 text-amber-900 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Yêu Cầu Chỉnh Sửa
+                {teams.filter((t) => t.has_pending_update).length > 0 && (
+                  <span className="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                    {teams.filter((t) => t.has_pending_update).length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('rankings')}
-                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'rankings' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -552,7 +618,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab('judges')}
-                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'judges' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -761,6 +827,114 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Content for Pending Updates Tab */}
+            {activeTab === 'pending_updates' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h2 className="font-heading font-bold text-xl text-slate-900 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-600" /> Danh Sách Yêu Cầu Thay Đổi Thông Tin Hồ Sơ
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Đội thi đã được duyệt trước đó có thể gửi cập nhật thông tin. Xem so sánh thay đổi và duyệt hoặc từ chối.
+                    </p>
+                  </div>
+                </div>
+
+                {teams.filter((t) => t.has_pending_update).length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 space-y-2">
+                    <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto opacity-50" />
+                    <p className="font-semibold text-sm text-slate-600">Hiện tại không có yêu cầu thay đổi thông tin nào cần xử lý.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {teams
+                      .filter((t) => t.has_pending_update)
+                      .map((team) => {
+                        const pending = team.pending_changes || {};
+                        return (
+                          <div key={team.id} className="bg-white border-2 border-amber-300 rounded-2xl p-6 shadow-md space-y-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-4">
+                              <div>
+                                <span className="text-xs font-bold text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full uppercase tracking-wider">
+                                  Yêu Cầu Thay Đổi Thông Tin
+                                </span>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 mt-2">
+                                  {team.team_name} <span className="text-xs font-mono text-slate-400 font-normal">({team.id.substring(0, 8).toUpperCase()})</span>
+                                </h3>
+                                <p className="text-xs text-slate-500">Trưởng đoàn: {team.representative_name} | SĐT: {team.phone} | Email: {team.email}</p>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <button
+                                  onClick={() => handleApprovePendingUpdate(team.id)}
+                                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <CheckCircle className="w-4 h-4" /> Chấp Nhận Thay Đổi
+                                </button>
+                                <button
+                                  onClick={() => handleRejectPendingUpdate(team.id)}
+                                  className="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase tracking-wider border border-red-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <X className="w-4 h-4" /> Từ Chối
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Diff Comparison Table */}
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <thead>
+                                  <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                    <th className="p-3 w-1/4">Trường Thông Tin</th>
+                                    <th className="p-3 w-3/8 text-slate-600 bg-slate-100/50">Thông Tin Hiện Tại (Đã Duyệt Public)</th>
+                                    <th className="p-3 w-3/8 text-amber-900 bg-amber-50/80 font-extrabold">Thông Tin Đề Xuất Mới</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {Object.keys(pending).map((key) => {
+                                    const fieldLabels: Record<string, string> = {
+                                      team_name: 'Tên Đội / Nhóm',
+                                      organization: 'Đơn vị đại diện',
+                                      member_count: 'Số lượng thành viên',
+                                      representative_name: 'Trưởng đoàn',
+                                      phone: 'Số điện thoại',
+                                      email: 'Email',
+                                      category: 'Thể loại dự thi',
+                                      performance_title: 'Tên tiết mục',
+                                      duration: 'Thời lượng dự kiến',
+                                      description: 'Nội dung ý tưởng',
+                                      technical_requirements: 'Yêu cầu kỹ thuật',
+                                      audio_url: 'Link Nhạc Beat (Audio)',
+                                      video_url: 'Link Video chạy thử',
+                                      photo_url: 'Ảnh đại diện',
+                                    };
+
+                                    const label = fieldLabels[key] || key;
+                                    const currentValue = (team as any)[key] || '—';
+                                    const newValue = pending[key] || '—';
+
+                                    if (currentValue === newValue) return null;
+
+                                    return (
+                                      <tr key={key} className="hover:bg-slate-50/50">
+                                        <td className="p-3 font-bold text-slate-800">{label}</td>
+                                        <td className="p-3 text-slate-600 bg-slate-50/30 break-all">{String(currentValue)}</td>
+                                        <td className="p-3 text-amber-950 font-bold bg-amber-50/40 break-all">{String(newValue)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
             )}
 

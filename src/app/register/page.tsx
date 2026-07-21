@@ -14,6 +14,8 @@ interface FormData {
   representativeName: string;
   phone: string;
   email: string;
+  password?: string;
+  confirmPassword?: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
   performanceTitle: string;
   duration: string;
@@ -31,6 +33,8 @@ const initialFormData: FormData = {
   representativeName: '',
   phone: '',
   email: '',
+  password: '',
+  confirmPassword: '',
   category: 'dan_ca',
   performanceTitle: '',
   duration: '',
@@ -177,6 +181,14 @@ export default function RegisterWizard() {
         tempErrors.email = 'Email không được bỏ trống.';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         tempErrors.email = 'Địa chỉ email không hợp lệ.';
+      }
+      if (!(formData.password || '').trim()) {
+        tempErrors.password = 'Mật khẩu quản lý tài khoản không được bỏ trống.';
+      } else if ((formData.password || '').length < 6) {
+        tempErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự.';
+      }
+      if (formData.confirmPassword !== formData.password) {
+        tempErrors.confirmPassword = 'Mật khẩu xác nhận không trùng khớp.';
       }
     } else if (currentStep === 2) {
       if (!(formData.performanceTitle || '').trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
@@ -409,6 +421,32 @@ export default function RegisterWizard() {
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mật khẩu tài khoản Đội thi *</label>
+                        <input
+                          type="password"
+                          name="password"
+                          value={formData.password || ''}
+                          onChange={handleChange}
+                          placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                        {errors.password && <p className="text-xs text-primary">{errors.password}</p>}
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Xác nhận mật khẩu *</label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={formData.confirmPassword || ''}
+                          onChange={handleChange}
+                          placeholder="Nhập lại mật khẩu để xác nhận"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                        {errors.confirmPassword && <p className="text-xs text-primary">{errors.confirmPassword}</p>}
                       </div>
                     </div>
                   </motion.div>

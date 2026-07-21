@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Music, UserCheck, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Compass, Music, UserCheck, LayoutDashboard, Menu, X, Users } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function Navbar() {
   const navItems = [
     { name: 'Trang Chủ', href: '/', icon: Compass },
     { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
+    { name: 'Cổng Đội Thi', href: '/team/login', icon: Users },
     { name: 'Cổng Bình Chọn', href: '/vote', icon: Music },
     { name: 'Cổng Giám Khảo', href: '/judge', icon: UserCheck },
   ];

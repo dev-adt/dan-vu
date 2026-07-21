@@ -49,10 +49,61 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, status, team_name, organization, member_count, category, performance_title, duration, description, technical_requirements } = body;
+    const { id, action, status, team_name, organization, member_count, category, performance_title, duration, description, technical_requirements } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Mã đội thi (id) là bắt buộc.' }, { status: 400 });
+    }
+
+    // Handle approval of pending edits
+    if (action === 'approve_update') {
+      const { data: team, error: fetchErr } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchErr || !team) {
+        return NextResponse.json({ error: 'Không tìm thấy đội thi.' }, { status: 404 });
+      }
+
+      const pending = team.pending_changes || {};
+
+      const { data, error } = await supabaseAdmin
+        .from('teams')
+        .update({
+          ...pending,
+          has_pending_update: false,
+          pending_changes: null,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: 'Lỗi chấp nhận cập nhật: ' + error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, team: data, message: 'Đã chấp nhận cập nhật thông tin mới của đội thi.' });
+    }
+
+    // Handle rejection of pending edits
+    if (action === 'reject_update') {
+      const { data, error } = await supabaseAdmin
+        .from('teams')
+        .update({
+          has_pending_update: false,
+          pending_changes: null,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: 'Lỗi từ chối cập nhật: ' + error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, team: data, message: 'Đã từ chối yêu cầu cập nhật thông tin mới.' });
     }
 
     // Build update object dynamically

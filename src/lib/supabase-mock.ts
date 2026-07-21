@@ -22,7 +22,10 @@ export function getGlobalDb() {
       description: 'Tiết mục dân ca ba miền đặc sắc.',
       technical_requirements: '2 micro không dây',
       photo_url: '',
-      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      password: '12345678',
+      pending_changes: null,
+      has_pending_update: false
     },
     {
       id: 'dv-002',
@@ -38,7 +41,10 @@ export function getGlobalDb() {
       description: 'Mô tả điệu múa gặt lúa ngày mùa.',
       technical_requirements: 'Bục bệ sân khấu',
       photo_url: '',
-      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      password: '12345678',
+      pending_changes: null,
+      has_pending_update: false
     },
     {
       id: 'dc-003',
@@ -54,7 +60,10 @@ export function getGlobalDb() {
       description: 'Làn điệu dân ca ngọt ngào xứ Quảng.',
       technical_requirements: '3 micro, nhạc nền cổng AUX',
       photo_url: '',
-      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      password: '12345678',
+      pending_changes: null,
+      has_pending_update: false
     },
     {
       id: 'dv-004',
@@ -70,7 +79,10 @@ export function getGlobalDb() {
       description: 'Điệu múa huyền bí bên tháp cổ.',
       technical_requirements: 'Hiệu ứng khói lạnh',
       photo_url: '',
-      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      password: '12345678',
+      pending_changes: null,
+      has_pending_update: false
     }
   ];
 

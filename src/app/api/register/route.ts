@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
       representativeName,
       phone,
       email,
+      password,
       category,
       performanceTitle,
       duration,
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
         representative_name: representativeName,
         phone,
         email,
+        password: password || '12345678',
         category,
         performance_title: performanceTitle,
         duration,
@@ -51,6 +53,8 @@ export async function POST(req: NextRequest) {
         video_url: videoLink || null,
         photo_url: photoUrl || null,
         status: 'submitted', // Auto submitted
+        has_pending_update: false,
+        pending_changes: null,
       })
       .select()
       .single();
@@ -75,7 +79,7 @@ export async function POST(req: NextRequest) {
       const mailOptions = {
         from: process.env.SMTP_FROM || `"Festival Dân Ca Dân Vũ 2026" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: `[Festival 2026] Xác nhận đăng ký hồ sơ dự thi - ${teamName}`,
+        subject: `[Festival 2026] Xác nhận đăng ký hồ sơ dự thi & Tài khoản Cổng Đội Thi - ${teamName}`,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
             <div style="text-align: center; margin-bottom: 25px;">
@@ -88,7 +92,25 @@ export async function POST(req: NextRequest) {
             <p style="font-size: 14px; line-height: 1.6;">Ban Tổ Chức xin xác nhận đã tiếp nhận thành công hồ sơ đăng ký trực tuyến của đội <strong>${teamName}</strong> cho tiết mục <strong>"${performanceTitle}"</strong>.</p>
             
             <div style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 20px; margin: 25px 0;">
-              <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; border-b: 1px solid #e2e8f0; padding-bottom: 8px;">Thông tin tóm tắt hồ sơ:</h4>
+              <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; border-b: 1px solid #e2e8f0; padding-bottom: 8px;">Thông tin tài khoản Cổng Đội Thi:</h4>
+              <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 4px 0; color: #64748b; width: 40%;">Mã số hồ sơ:</td>
+                  <td style="padding: 4px 0; font-weight: 600; color: #c62828;">${teamData.id.substring(0, 8).toUpperCase()}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; color: #64748b;">Tên đăng nhập (Email):</td>
+                  <td style="padding: 4px 0; font-weight: 600;">${email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; color: #64748b;">Mật khẩu:</td>
+                  <td style="padding: 4px 0; font-weight: 600; color: #00695c;">(Mật khẩu bạn đã nhập khi đăng ký)</td>
+                </tr>
+              </table>
+              <div style="margin-top: 15px; text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://dancadanvu.com'}/team/login" style="display: inline-block; background-color: #00695c; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 13px;">Đăng Nhập Cổng Đội Thi</a>
+              </div>
+            </div>
               <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 4px 0; color: #64748b; width: 40%;">Mã số hồ sơ dự kiến:</td>
