@@ -8,12 +8,25 @@ import { Compass, Music, UserCheck, LayoutDashboard, Menu, X, Users } from 'luci
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hasTeamSession, setHasTeamSession] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const session = sessionStorage.getItem('team_session');
+      if (session) {
+        try {
+          const parsed = JSON.parse(session);
+          if (parsed?.id) setHasTeamSession(true);
+        } catch {}
+      }
+    }
+  }, [pathname]);
 
   const navItems = [
     { name: 'Trang Chủ', href: '/', icon: Compass },
-    { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
-    { name: 'Cổng Đội Thi', href: '/team/login', icon: Users },
     { name: 'Cổng Bình Chọn', href: '/vote', icon: Music },
+    { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
+    { name: 'Cổng Đội Thi', href: hasTeamSession ? '/team/dashboard' : '/team/login', icon: Users },
   ];
 
   return (

@@ -15,6 +15,20 @@ export default function TeamLoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const session = sessionStorage.getItem('team_session');
+      if (session) {
+        try {
+          const parsed = JSON.parse(session);
+          if (parsed?.id) {
+            router.push('/team/dashboard');
+          }
+        } catch {}
+      }
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

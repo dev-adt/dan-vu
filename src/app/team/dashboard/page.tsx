@@ -19,8 +19,12 @@ import {
   Award,
   Sparkles,
   RefreshCw,
+  Image as ImageIcon,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -30,6 +34,51 @@ export default function TeamDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'warning' | 'error' } | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Dung lượng ảnh vượt quá giới hạn 5MB.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn tệp hình ảnh (.jpg, .jpeg, .png).');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const mockUrl = `https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80`;
+        setEditForm((prev) => ({ ...prev, photoUrl: mockUrl }));
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `team-photos/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      setEditForm((prev) => ({ ...prev, photoUrl: publicUrl }));
+    } catch (err: any) {
+      console.error('Error uploading photo:', err);
+      alert('Không thể tải lên ảnh: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   // Form edit state
   const [editForm, setEditForm] = useState({
@@ -406,6 +455,85 @@ export default function TeamDashboardPage() {
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none"
                 placeholder="https://www.youtube.com/watch?v=..."
               />
+            </div>
+
+            {/* Photo Avatar Upload & Preview */}
+            <div className="space-y-2 md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4 text-accent" /> Ảnh Đại Diện Đội Thi (Logo / Ảnh Đội) *
+              </label>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+                {/* Preview Image */}
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-200 border-2 border-dashed border-slate-300 flex items-center justify-center shrink-0 relative">
+                  {editForm.photoUrl ? (
+                    <img
+                      src={editForm.photoUrl}
+                      alt="Ảnh đại diện đội thi"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center p-2 text-slate-400">
+                      <ImageIcon className="w-6 h-6 mx-auto opacity-50" />
+                      <span className="text-[10px]">Chưa có ảnh</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 flex-1 w-full">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handlePhotoUpload(e.target.files[0]);
+                      }
+                    }}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
+                      className="px-4 py-2 rounded-xl bg-accent hover:bg-opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+                    >
+                      {isUploadingPhoto ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang tải ảnh lên...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3.5 h-3.5" /> Chọn & Tải Ảnh Mới (Tối đa 5MB)
+                        </>
+                      )}
+                    </button>
+
+                    {editForm.photoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditForm((prev) => ({ ...prev, photoUrl: '' }))}
+                        className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" /> Gỡ ảnh
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Hoặc dán đường dẫn (URL) ảnh trực tiếp:</span>
+                    <input
+                      type="url"
+                      value={editForm.photoUrl}
+                      onChange={(e) => setEditForm({ ...editForm, photoUrl: e.target.value })}
+                      placeholder="https://domain.com/photo.jpg"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Description */}
