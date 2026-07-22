@@ -136,3 +136,26 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });
   }
 }
+
+// DELETE: Clear all vote data for testing
+export async function DELETE(req: NextRequest) {
+  if (!authenticateAdmin(req)) {
+    return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
+  }
+
+  try {
+    const { error } = await supabaseAdmin
+      .from('ballots')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (error) {
+      return NextResponse.json({ error: 'Lỗi xóa dữ liệu vote: ' + error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ dữ liệu bình chọn thử nghiệm.' });
+  } catch (err: any) {
+    console.error('Error clearing ballots:', err);
+    return NextResponse.json({ error: 'Lỗi máy chủ khi xóa dữ liệu.' }, { status: 500 });
+  }
+}

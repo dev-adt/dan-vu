@@ -214,6 +214,29 @@ export default function AdminDashboard() {
     }
   };
 
+  // Clear all vote data for testing
+  const handleClearAllVotes = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu bình chọn thử nghiệm để test lại từ đầu?')) return;
+
+    try {
+      const res = await fetch('/api/admin/stats', {
+        method: 'DELETE',
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+
+      if (res.ok) {
+        alert('Đã xóa sạch toàn bộ dữ liệu bình chọn thử nghiệm!');
+        fetchStats();
+      } else {
+        alert('Lỗi khi xóa dữ liệu bình chọn.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Approve / Reject a team submission
   const handleUpdateTeamStatus = async (id: string, newStatus: 'approved' | 'rejected') => {
     try {
@@ -629,9 +652,18 @@ export default function AdminDashboard() {
             {/* Content for Monitoring Tab */}
             {activeTab === 'monitoring' && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5 text-secondary" />
-                  <h2 className="font-heading font-bold text-xl text-slate-900">Nhật ký Giám sát Bình chọn bất thường</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-secondary" />
+                    <h2 className="font-heading font-bold text-xl text-slate-900">Nhật ký Giám sát Bình chọn bất thường</h2>
+                  </div>
+
+                  <button
+                    onClick={handleClearAllVotes}
+                    className="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase tracking-wider border border-red-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" /> Xóa Dữ Liệu Vote Thử Nghiệm
+                  </button>
                 </div>
 
                 <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
