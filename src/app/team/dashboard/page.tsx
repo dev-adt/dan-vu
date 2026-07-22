@@ -22,6 +22,10 @@ import {
   Image as ImageIcon,
   Loader2,
   X,
+  Eye,
+  EyeOff,
+  Lock,
+  KeyRound,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -96,8 +100,65 @@ export default function TeamDashboardPage() {
     audioUrl: '',
     videoUrl: '',
     photoUrl: '',
-    newPassword: '',
   });
+
+  // Password change state
+  const [passForm, setPassForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  });
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [passSaving, setPassSaving] = useState(false);
+  const [passMessage, setPassMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassMessage(null);
+
+    if (!passForm.oldPassword || !passForm.newPassword || !passForm.confirmNewPassword) {
+      setPassMessage({ text: 'Vui lòng nhập đầy đủ cả 3 ô mật khẩu.', type: 'error' });
+      return;
+    }
+
+    if (passForm.newPassword.trim().length < 6) {
+      setPassMessage({ text: 'Mật khẩu mới phải có tối thiểu 6 ký tự.', type: 'error' });
+      return;
+    }
+
+    if (passForm.newPassword !== passForm.confirmNewPassword) {
+      setPassMessage({ text: 'Mật khẩu mới và Xác nhận mật khẩu mới không trùng khớp.', type: 'error' });
+      return;
+    }
+
+    setPassSaving(true);
+    try {
+      const res = await fetch('/api/team/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: team.id,
+          oldPassword: passForm.oldPassword,
+          newPassword: passForm.newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPassMessage({ text: data.error || 'Đổi mật khẩu thất bại.', type: 'error' });
+        return;
+      }
+
+      setPassMessage({ text: data.message || 'Đổi mật khẩu thành công!', type: 'success' });
+      setPassForm({ oldPassword: '', newPassword: '', confirmNewPassword: '' });
+    } catch (err: any) {
+      setPassMessage({ text: 'Lỗi máy chủ khi đổi mật khẩu.', type: 'error' });
+    } finally {
+      setPassSaving(false);
+    }
+  };
 
   const loadProfile = async (teamId: string) => {
     try {
@@ -121,7 +182,6 @@ export default function TeamDashboardPage() {
           audioUrl: data.team.audio_url || '',
           videoUrl: data.team.video_url || '',
           photoUrl: data.team.photo_url || '',
-          newPassword: '',
         });
       } else {
         router.push('/team/login');
@@ -181,10 +241,6 @@ export default function TeamDashboardPage() {
         video_url: editForm.videoUrl,
         photo_url: editForm.photoUrl,
       };
-
-      if (editForm.newPassword && editForm.newPassword.trim().length >= 6) {
-        payload.password = editForm.newPassword.trim();
-      }
 
       const res = await fetch('/api/team/profile', {
         method: 'PATCH',
@@ -559,32 +615,135 @@ export default function TeamDashboardPage() {
               />
             </div>
 
-            {/* Change Password Option */}
-            <div className="space-y-1 md:col-span-2 pt-4 border-t border-slate-100">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Đổi Mật Khẩu Mới (Để trống nếu không muốn đổi)</label>
-              <input
-                type="password"
-                value={editForm.newPassword}
-                onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
-                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none max-w-md"
-              />
-            </div>
           </div>
 
-          <div className="pt-4 flex justify-end">
+          <div className="pt-4 flex justify-end border-t border-slate-100">
             <button
               type="submit"
               disabled={saving}
-              className="px-8 py-4 rounded-xl bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-accent/25 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-8 py-4 rounded-xl bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-accent/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {saving ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Đang Lưu Thay Đổi...
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Đang Lưu Hồ Sơ...
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" /> Lưu Hồ Sơ Thay Đổi
+                  <Save className="w-4 h-4" /> Lưu Thông Tin Hồ Sơ
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Separate Dedicated Card for Changing Password */}
+        <form onSubmit={handleChangePasswordSubmit} className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-lg space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <h2 className="font-heading font-bold text-xl text-dark-obsidian flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" /> Đổi Mật Khẩu Tài Khoản Đội Thi
+            </h2>
+            <span className="text-xs text-slate-400 font-medium">* Thay đổi có hiệu lực ngay (không cần chờ duyệt)</span>
+          </div>
+
+          {passMessage && (
+            <div
+              className={`p-3.5 rounded-xl border text-xs font-semibold ${
+                passMessage.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                  : 'bg-red-50 border-red-300 text-red-900'
+              }`}
+            >
+              {passMessage.text}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Old Password */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5 text-slate-500" /> Mật Khẩu Hiện Tại *
+              </label>
+              <div className="relative">
+                <input
+                  type={showOldPass ? 'text' : 'password'}
+                  value={passForm.oldPassword}
+                  onChange={(e) => setPassForm({ ...passForm, oldPassword: e.target.value })}
+                  placeholder="Nhập mật khẩu cũ"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPass(!showOldPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5 text-primary" /> Mật Khẩu Mới *
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPass ? 'text' : 'password'}
+                  value={passForm.newPassword}
+                  onChange={(e) => setPassForm({ ...passForm, newPassword: e.target.value })}
+                  placeholder="Tối thiểu 6 ký tự"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5 text-primary" /> Xác Nhận Mật Khẩu Mới *
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPass ? 'text' : 'password'}
+                  value={passForm.confirmNewPassword}
+                  onChange={(e) => setPassForm({ ...passForm, confirmNewPassword: e.target.value })}
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={passSaving}
+              className="px-6 py-3 rounded-xl bg-primary hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {passSaving ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Đang Cập Nhật Mật Khẩu...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" /> Cập Nhật Mật Khẩu Mới
                 </>
               )}
             </button>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon } from 'lucide-react';
+import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -55,6 +55,8 @@ export default function RegisterWizard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [showRegPass, setShowRegPass] = useState(false);
+  const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
 
   const handlePhotoUpload = async (file: File) => {
     if (!file) return;
@@ -425,27 +427,45 @@ export default function RegisterWizard() {
 
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mật khẩu tài khoản Đội thi *</label>
-                        <input
-                          type="password"
-                          name="password"
-                          value={formData.password || ''}
-                          onChange={handleChange}
-                          placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showRegPass ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password || ''}
+                            onChange={handleChange}
+                            placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPass(!showRegPass)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                          >
+                            {showRegPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
                         {errors.password && <p className="text-xs text-primary">{errors.password}</p>}
                       </div>
 
                       <div className="space-y-1 sm:col-span-2">
                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Xác nhận mật khẩu *</label>
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          value={formData.confirmPassword || ''}
-                          onChange={handleChange}
-                          placeholder="Nhập lại mật khẩu để xác nhận"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showRegConfirmPass ? 'text' : 'password'}
+                            name="confirmPassword"
+                            value={formData.confirmPassword || ''}
+                            onChange={handleChange}
+                            placeholder="Nhập lại mật khẩu để xác nhận"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegConfirmPass(!showRegConfirmPass)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                          >
+                            {showRegConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
                         {errors.confirmPassword && <p className="text-xs text-primary">{errors.confirmPassword}</p>}
                       </div>
                     </div>
