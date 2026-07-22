@@ -33,35 +33,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Các trường bắt buộc không được để trống.' }, { status: 400 });
     }
 
-    // Insert into Supabase table public.teams
-    const { data: teamData, error: dbError } = await supabaseAdmin
+    // Insert into Supabase table public.teams with fallback if new columns do not exist yet
+    let teamData: any = null;
+    let dbError: any = null;
+
+    const baseInsertData: any = {
+      team_name: teamName,
+      organization: organization || null,
+      member_count: memberCount,
+      representative_name: representativeName,
+      phone,
+      email,
+      category,
+      performance_title: performanceTitle,
+      duration,
+      description: description || null,
+      technical_requirements: technicalRequirements || null,
+      audio_url: audioLink || null,
+      video_url: videoLink || null,
+      photo_url: photoUrl || null,
+      status: 'submitted',
+    };
+
+    // Try full insert with password & pending update fields
+    const fullRes = await supabaseAdmin
       .from('teams')
       .insert({
-        team_name: teamName,
-        organization: organization || null,
-        member_count: memberCount,
-        representative_name: representativeName,
-        phone,
-        email,
+        ...baseInsertData,
         password: password || '12345678',
-        category,
-        performance_title: performanceTitle,
-        duration,
-        description: description || null,
-        technical_requirements: technicalRequirements || null,
-        audio_url: audioLink || null,
-        video_url: videoLink || null,
-        photo_url: photoUrl || null,
-        status: 'submitted', // Auto submitted
         has_pending_update: false,
         pending_changes: null,
       })
       .select()
       .single();
 
-    if (dbError) {
+    if (fullRes.error) {
+      // If error is missing column in Supabase schema cache, retry base insert
+      if (fullRes.error.message?.includes('column') || fullRes.error.message?.includes('schema cache')) {
+        const fallbackRes = await supabaseAdmin
+          .from('teams')
+          .insert(baseInsertData)
+          .select()
+          .single();
+
+        teamData = fallbackRes.data;
+        dbError = fallbackRes.error;
+      } else {
+        dbError = fullRes.error;
+      }
+    } else {
+      teamData = fullRes.data;
+    }
+
+    if (dbError || !teamData) {
       console.error('Database insertion error:', dbError);
-      return NextResponse.json({ error: 'Lỗi lưu dữ liệu đăng ký vào hệ thống: ' + dbError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Lỗi lưu dữ liệu đăng ký vào hệ thống: ' + (dbError?.message || 'Lỗi cơ sở dữ liệu') }, { status: 500 });
     }
 
     // Send confirmation email via SMTP
