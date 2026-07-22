@@ -137,22 +137,24 @@ export default function CandidateDetail({ params }: { params: Promise<{ id: stri
   };
 
   const handleVoteSubmit = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session?.user?.user_metadata?.role === 'judge') {
-      alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
-      return;
-    }
-
-    if (!session || !session.user) {
-      handleGoogleLogin();
-      return;
-    }
-
-    if (!candidate) return;
-
+    if (isVoting || !candidate) return;
     setIsVoting(true);
+
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user?.user_metadata?.role === 'judge') {
+        alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
+        setIsVoting(false);
+        return;
+      }
+
+      if (!session || !session.user) {
+        handleGoogleLogin();
+        setIsVoting(false);
+        return;
+      }
+
       const response = await fetch('/api/vote', {
         method: 'POST',
         headers: {

@@ -7,6 +7,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+// Server-side in-memory lock to prevent race conditions from rapid double-clicking
+const activeVoteLocks = new Set<string>();
+const recentIpVotes: { ip: string; timestamp: number }[] = [];
+
 export async function POST(req: NextRequest) {
   try {
     const { teamId, fingerprint } = await req.json();
@@ -53,51 +57,101 @@ export async function POST(req: NextRequest) {
       voterIp = '127.0.0.1';
     }
 
-    // 3. Enforce the limit: 1 vote/day for each team per user email
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const startOfToday = `${today}T00:00:00.000Z`;
-    const endOfToday = `${today}T23:59:59.999Z`;
+    const lockKey = `${voterEmail}_${teamId}_${today}`;
 
-    const { data: existingBallot, error: queryError } = await supabaseAdmin
-      .from('ballots')
-      .select('id')
-      .eq('voter_email', voterEmail)
-      .eq('team_id', teamId)
-      .gte('voted_at', startOfToday)
-      .lte('voted_at', endOfToday)
-      .eq('is_valid', true)
-      .maybeSingle();
-
-    if (queryError) {
-      console.error('Database query error:', queryError);
-      return NextResponse.json({ error: 'Lỗi kiểm tra lịch sử bình chọn.' }, { status: 500 });
-    }
-
-    if (existingBallot) {
+    // Mutex Lock: If a vote request for this email + team + day is currently processing, block concurrent double click
+    if (activeVoteLocks.has(lockKey)) {
       return NextResponse.json(
-        { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
+        { error: 'Hệ thống đang xử lý lượt bình chọn của bạn, vui lòng không nhấn liên tục!' },
         { status: 429 }
       );
     }
 
-    // 4. Log the ballot in Supabase public.ballots table
-    const { error: insertError } = await supabaseAdmin
-      .from('ballots')
-      .insert({
+    activeVoteLocks.add(lockKey);
+
+    try {
+      // 3. Check rapid IP voting (fraud detection: > 5 votes per 10 seconds from same IP)
+      const now = Date.now();
+      recentIpVotes.push({ ip: voterIp, timestamp: now });
+      // Keep last 60 seconds of IP history
+      const cutoff = now - 60000;
+      while (recentIpVotes.length > 0 && recentIpVotes[0].timestamp < cutoff) {
+        recentIpVotes.shift();
+      }
+
+      const votesFromSameIpRecently = recentIpVotes.filter(
+        (v) => v.ip === voterIp && v.timestamp > now - 10000
+      ).length;
+
+      const isSuspiciousIp = votesFromSameIpRecently > 3;
+
+      // 4. Enforce the limit: 1 vote/day for each team per user email
+      const startOfToday = `${today}T00:00:00.000Z`;
+      const endOfToday = `${today}T23:59:59.999Z`;
+
+      const { data: existingBallot, error: queryError } = await supabaseAdmin
+        .from('ballots')
+        .select('id')
+        .eq('voter_email', voterEmail)
+        .eq('team_id', teamId)
+        .gte('voted_at', startOfToday)
+        .lte('voted_at', endOfToday)
+        .eq('is_valid', true)
+        .maybeSingle();
+
+      if (queryError) {
+        console.error('Database query error:', queryError);
+        return NextResponse.json({ error: 'Lỗi kiểm tra lịch sử bình chọn.' }, { status: 500 });
+      }
+
+      if (existingBallot || isSuspiciousIp) {
+        // Log suspicious / duplicate click attempt to audit logs with is_valid = false
+        await supabaseAdmin.from('ballots').insert({
+          team_id: teamId,
+          voter_ip: voterIp,
+          voter_fingerprint: fingerprint || 'canvas_hash_mock_fingerprint',
+          voter_email: voterEmail,
+          recaptcha_score: isSuspiciousIp ? 0.12 : 0.25,
+          is_valid: false, // Flagged as Fraud / Invalid attempt
+        });
+
+        if (existingBallot) {
+          return NextResponse.json(
+            { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
+            { status: 429 }
+          );
+        } else {
+          return NextResponse.json(
+            { error: 'Phát hiện thao tác bình chọn bất thường từ địa chỉ IP này. Lượt bình chọn bị từ chối.' },
+            { status: 429 }
+          );
+        }
+      }
+
+      // 5. Log valid ballot in Supabase public.ballots table
+      const { error: insertError } = await supabaseAdmin.from('ballots').insert({
         team_id: teamId,
         voter_ip: voterIp,
-        voter_fingerprint: fingerprint || 'unknown',
+        voter_fingerprint: fingerprint || 'canvas_hash_mock_fingerprint',
         voter_email: voterEmail,
-        recaptcha_score: 0.9,
-        is_valid: true
+        recaptcha_score: 0.95,
+        is_valid: true,
       });
 
-    if (insertError) {
-      console.error('Database insert error:', insertError);
-      return NextResponse.json({ error: `Lỗi lưu phiếu bầu: ${insertError.message || 'Không thể ghi nhận phiếu'}` }, { status: 500 });
-    }
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        return NextResponse.json(
+          { error: `Lỗi lưu phiếu bầu: ${insertError.message || 'Không thể ghi nhận phiếu'}` },
+          { status: 500 }
+        );
+      }
 
-    return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true });
+    } finally {
+      // Release lock after processing completes
+      activeVoteLocks.delete(lockKey);
+    }
   } catch (err: any) {
     console.error('Vote processing internal error:', err);
     return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });

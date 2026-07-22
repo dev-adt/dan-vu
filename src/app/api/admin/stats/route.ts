@@ -41,11 +41,14 @@ export async function GET(req: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('is_valid', true);
 
-    // 3. Get fraud count (invalid or low score ballots)
-    const { count: fraudCount } = await supabaseAdmin
+    // 3. Get fraud count (invalid OR low recaptcha score ballots)
+    const { data: allBallotsForFraud } = await supabaseAdmin
       .from('ballots')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_valid', false);
+      .select('id, is_valid, recaptcha_score');
+
+    const fraudCount = (allBallotsForFraud || []).filter(
+      (b: any) => !b.is_valid || (b.recaptcha_score && b.recaptcha_score < 0.5)
+    ).length;
 
     // 4. Get judges count
     const { count: judgesCount } = await supabaseAdmin
@@ -68,10 +71,12 @@ export async function GET(req: NextRequest) {
       id: b.id,
       teamName: b.teams ? b.teams.team_name : 'N/A',
       ip: b.voter_ip,
-      fingerprint: b.voter_fingerprint,
+      fingerprint: b.voter_fingerprint || 'canvas_hash_mock_fingerprint',
       timestamp: new Date(b.voted_at).toLocaleString('vi-VN'),
-      score: b.recaptcha_score || 0.9,
-      status: !b.is_valid ? 'voided' : (b.recaptcha_score < 0.3 ? 'flagged' : 'valid'),
+      score: b.recaptcha_score || 0.95,
+      status: !b.is_valid
+        ? 'flagged'
+        : (b.recaptcha_score && b.recaptcha_score < 0.5 ? 'flagged' : 'valid'),
     }));
 
     return NextResponse.json({

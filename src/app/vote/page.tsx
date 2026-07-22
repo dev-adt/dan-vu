@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CandidateCard from '@/components/CandidateCard';
@@ -93,23 +93,33 @@ export default function VoteDiscovery() {
     setUser(null);
   };
 
+  const votingTeamIdsRef = useRef<Set<string>>(new Set());
+  const [votingTeamId, setVotingTeamId] = useState<string | null>(null);
+
   const handleVote = async (id: string) => {
-    // Get current session
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session?.user?.user_metadata?.role === 'judge') {
-      alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
+    // Synchronously block double click before any async call
+    if (votingTeamIdsRef.current.has(id)) {
       return;
     }
-
-    if (!session || !session.user) {
-      if (confirm('Bạn cần đăng nhập tài khoản Google để thực hiện bình chọn. Bấm OK để đăng nhập ngay.')) {
-        handleGoogleLogin();
-      }
-      return;
-    }
+    votingTeamIdsRef.current.add(id);
+    setVotingTeamId(id);
 
     try {
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user?.user_metadata?.role === 'judge') {
+        alert('Tài khoản Giám khảo không được thực hiện bình chọn khán giả. Vui lòng đăng nhập tài khoản Google.');
+        return;
+      }
+
+      if (!session || !session.user) {
+        if (confirm('Bạn cần đăng nhập tài khoản Google để thực hiện bình chọn. Bấm OK để đăng nhập ngay.')) {
+          handleGoogleLogin();
+        }
+        return;
+      }
+
       const response = await fetch('/api/vote', {
         method: 'POST',
         headers: {
@@ -138,6 +148,9 @@ export default function VoteDiscovery() {
     } catch (err) {
       console.error(err);
       alert('Không thể gửi bình chọn lên máy chủ.');
+    } finally {
+      votingTeamIdsRef.current.delete(id);
+      setVotingTeamId(null);
     }
   };
 
