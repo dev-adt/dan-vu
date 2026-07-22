@@ -71,10 +71,9 @@ export async function POST(req: NextRequest) {
     activeVoteLocks.add(lockKey);
 
     try {
-      // 3. Check rapid IP voting (fraud detection: > 5 votes per 10 seconds from same IP)
+      // 3. Check rapid IP voting (fraud detection: > 3 votes per 10 seconds from same IP)
       const now = Date.now();
       recentIpVotes.push({ ip: voterIp, timestamp: now });
-      // Keep last 60 seconds of IP history
       const cutoff = now - 60000;
       while (recentIpVotes.length > 0 && recentIpVotes[0].timestamp < cutoff) {
         recentIpVotes.shift();
@@ -86,57 +85,54 @@ export async function POST(req: NextRequest) {
 
       const isSuspiciousIp = votesFromSameIpRecently > 3;
 
-      // 4. Enforce the limit: 1 vote/day for each team per user email
+      // 4. Calculate dynamic score decay based on attempt count today for this email & team
       const startOfToday = `${today}T00:00:00.000Z`;
       const endOfToday = `${today}T23:59:59.999Z`;
 
-      const { data: existingBallot, error: queryError } = await supabaseAdmin
+      const { data: previousAttempts } = await supabaseAdmin
         .from('ballots')
-        .select('id')
+        .select('id, is_valid')
         .eq('voter_email', voterEmail)
         .eq('team_id', teamId)
         .gte('voted_at', startOfToday)
-        .lte('voted_at', endOfToday)
-        .eq('is_valid', true)
-        .maybeSingle();
+        .lte('voted_at', endOfToday);
 
-      if (queryError) {
-        console.error('Database query error:', queryError);
-        return NextResponse.json({ error: 'Lỗi kiểm tra lịch sử bình chọn.' }, { status: 500 });
+      const attemptCount = (previousAttempts?.length || 0) + 1;
+
+      // Progressive Score Decay Formula:
+      // n = 1 -> 1.00 (Hợp lệ, An toàn)
+      // n = 2 -> 0.85 (Hợp lệ, Giảm nhẹ 0.15 cho lỡ bấm nhầm/mạng yếu)
+      // n = 3 -> 0.65 (Nghi vấn, Giảm 0.35, cho phép Admin Hủy Vote)
+      // n = 4 -> 0.40 (Nghi vấn, Giảm 0.60)
+      // n >= 5 -> Decays down to 0.05 (Tự động Hủy Vote)
+      let calculatedScore = 1.0;
+      if (attemptCount === 2) {
+        calculatedScore = 0.85;
+      } else if (attemptCount === 3) {
+        calculatedScore = 0.65;
+      } else if (attemptCount === 4) {
+        calculatedScore = 0.40;
+      } else if (attemptCount >= 5) {
+        calculatedScore = Math.max(0.05, Number((1.0 - 0.20 * Math.pow(attemptCount - 1, 1.2)).toFixed(2)));
       }
 
-      if (existingBallot || isSuspiciousIp) {
-        // Log suspicious / duplicate click attempt to audit logs with is_valid = false
-        await supabaseAdmin.from('ballots').insert({
-          team_id: teamId,
-          voter_ip: voterIp,
-          voter_fingerprint: fingerprint || 'canvas_hash_mock_fingerprint',
-          voter_email: voterEmail,
-          recaptcha_score: isSuspiciousIp ? 0.12 : 0.25,
-          is_valid: false, // Flagged as Fraud / Invalid attempt
-        });
-
-        if (existingBallot) {
-          return NextResponse.json(
-            { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
-            { status: 429 }
-          );
-        } else {
-          return NextResponse.json(
-            { error: 'Phát hiện thao tác bình chọn bất thường từ địa chỉ IP này. Lượt bình chọn bị từ chối.' },
-            { status: 429 }
-          );
-        }
+      // Penalize IP spamming if > 3 votes in 10 sec
+      if (isSuspiciousIp) {
+        calculatedScore = Math.min(calculatedScore, 0.20);
       }
 
-      // 5. Log valid ballot in Supabase public.ballots table
+      // Automatically invalidate if score < 0.30 or if repeat attempt > 1 when valid vote already recorded
+      const alreadyHasValidVote = (previousAttempts || []).some((b: any) => b.is_valid);
+      const isValidBallot = calculatedScore >= 0.30 && !alreadyHasValidVote;
+
+      // Always log ballot to audit log for admin tracking
       const { error: insertError } = await supabaseAdmin.from('ballots').insert({
         team_id: teamId,
         voter_ip: voterIp,
         voter_fingerprint: fingerprint || 'canvas_hash_mock_fingerprint',
         voter_email: voterEmail,
-        recaptcha_score: 0.95,
-        is_valid: true,
+        recaptcha_score: calculatedScore,
+        is_valid: isValidBallot,
       });
 
       if (insertError) {
@@ -145,6 +141,20 @@ export async function POST(req: NextRequest) {
           { error: `Lỗi lưu phiếu bầu: ${insertError.message || 'Không thể ghi nhận phiếu'}` },
           { status: 500 }
         );
+      }
+
+      if (!isValidBallot) {
+        if (alreadyHasValidVote) {
+          return NextResponse.json(
+            { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
+            { status: 429 }
+          );
+        } else {
+          return NextResponse.json(
+            { error: 'Phát hiện thao tác bình chọn bất thường từ địa chỉ IP/Thiết bị này.' },
+            { status: 429 }
+          );
+        }
       }
 
       return NextResponse.json({ success: true });

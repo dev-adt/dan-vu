@@ -41,13 +41,13 @@ export async function GET(req: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('is_valid', true);
 
-    // 3. Get fraud count (invalid OR low recaptcha score ballots)
+    // 3. Get fraud count (invalid OR low recaptcha score ballots < 0.80)
     const { data: allBallotsForFraud } = await supabaseAdmin
       .from('ballots')
       .select('id, is_valid, recaptcha_score');
 
     const fraudCount = (allBallotsForFraud || []).filter(
-      (b: any) => !b.is_valid || (b.recaptcha_score && b.recaptcha_score < 0.5)
+      (b: any) => !b.is_valid || (b.recaptcha_score && b.recaptcha_score < 0.80)
     ).length;
 
     // 4. Get judges count
@@ -66,18 +66,30 @@ export async function GET(req: NextRequest) {
       throw ballotsError;
     }
 
-    // Format ballots to match UI layout
-    const formattedLogs = (ballotsData || []).map((b: any) => ({
-      id: b.id,
-      teamName: b.teams ? b.teams.team_name : 'N/A',
-      ip: b.voter_ip,
-      fingerprint: b.voter_fingerprint || 'canvas_hash_mock_fingerprint',
-      timestamp: new Date(b.voted_at).toLocaleString('vi-VN'),
-      score: b.recaptcha_score || 0.95,
-      status: !b.is_valid
-        ? 'flagged'
-        : (b.recaptcha_score && b.recaptcha_score < 0.5 ? 'flagged' : 'valid'),
-    }));
+    // Format ballots to match UI layout:
+    // score < 0.30 or is_valid === false -> 'voided' (Đã hủy / Tự động loại)
+    // 0.30 <= score < 0.80 -> 'flagged' (Nghi vấn Fraud - Admin có thể Hủy Vote)
+    // score >= 0.80 -> 'valid' (Hợp lệ / An toàn)
+    const formattedLogs = (ballotsData || []).map((b: any) => {
+      const score = b.recaptcha_score !== undefined && b.recaptcha_score !== null ? Number(b.recaptcha_score) : 1.0;
+      let status: 'valid' | 'flagged' | 'voided' = 'valid';
+
+      if (!b.is_valid || score < 0.30) {
+        status = 'voided';
+      } else if (score < 0.80) {
+        status = 'flagged';
+      }
+
+      return {
+        id: b.id,
+        teamName: b.teams ? b.teams.team_name : 'N/A',
+        ip: b.voter_ip,
+        fingerprint: b.voter_fingerprint || 'canvas_hash_mock_fingerprint',
+        timestamp: new Date(b.voted_at).toLocaleString('vi-VN'),
+        score,
+        status,
+      };
+    });
 
     return NextResponse.json({
       stats: {
