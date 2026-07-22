@@ -14,7 +14,6 @@ export default function Navbar() {
     { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
     { name: 'Cổng Đội Thi', href: '/team/login', icon: Users },
     { name: 'Cổng Bình Chọn', href: '/vote', icon: Music },
-    { name: 'Cổng Giám Khảo', href: '/judge', icon: UserCheck },
   ];
 
   return (

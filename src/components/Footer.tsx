@@ -31,9 +31,6 @@ export default function Footer() {
               <Link href="/vote" className="hover:text-secondary transition-colors">Cổng bình chọn khán giả</Link>
             </li>
             <li>
-              <Link href="/judge" className="hover:text-secondary transition-colors">Cổng chấm điểm Giám khảo</Link>
-            </li>
-            <li>
               <a
                 href="/files/the-le-chi-tiet.pdf"
                 download="The_le_chi_tiet_Nhip_buoc_Viet_Nam_2026.pdf"
