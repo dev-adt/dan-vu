@@ -85,47 +85,81 @@ export async function POST(req: NextRequest) {
 
       const isSuspiciousIp = votesFromSameIpRecently > 3;
 
-      // 4. Calculate dynamic score decay based on attempt count today for this email & team
+      // 4. Check if a ballot has already been cast today for this email + team
       const startOfToday = `${today}T00:00:00.000Z`;
       const endOfToday = `${today}T23:59:59.999Z`;
 
       const { data: previousAttempts } = await supabaseAdmin
         .from('ballots')
-        .select('id, is_valid')
+        .select('id, is_valid, recaptcha_score')
         .eq('voter_email', voterEmail)
         .eq('team_id', teamId)
         .gte('voted_at', startOfToday)
         .lte('voted_at', endOfToday);
 
-      const attemptCount = (previousAttempts?.length || 0) + 1;
+      if (previousAttempts && previousAttempts.length > 0) {
+        const existingBallot = previousAttempts[0];
+        const currentScore = existingBallot.recaptcha_score !== undefined && existingBallot.recaptcha_score !== null 
+          ? Number(existingBallot.recaptcha_score) 
+          : 1.0;
 
-      // Progressive Score Decay Formula:
-      // n = 1 -> 1.00 (Hợp lệ, An toàn)
-      // n = 2 -> 0.85 (Hợp lệ, Giảm nhẹ 0.15 cho lỡ bấm nhầm/mạng yếu)
-      // n = 3 -> 0.65 (Nghi vấn, Giảm 0.35, cho phép Admin Hủy Vote)
-      // n = 4 -> 0.40 (Nghi vấn, Giảm 0.60)
-      // n >= 5 -> Decays down to 0.05 (Tự động Hủy Vote)
+        // Progressive Score Decay for the existing row:
+        // Original: 1.00 (Valid)
+        // 2nd click -> decays to 0.85 (Valid)
+        // 3rd click -> decays to 0.65 (Flagged / Suspect)
+        // 4th click -> decays to 0.40 (Flagged / Suspect)
+        // 5th+ click -> decays to 0.05 (Voided / Invalid)
+        let calculatedScore = 1.0;
+        if (currentScore >= 0.90) {
+          calculatedScore = 0.85;
+        } else if (currentScore >= 0.75) {
+          calculatedScore = 0.65;
+        } else if (currentScore >= 0.50) {
+          calculatedScore = 0.40;
+        } else {
+          calculatedScore = 0.05;
+        }
+
+        // Penalize IP spamming if > 3 votes in 10 sec
+        if (isSuspiciousIp) {
+          calculatedScore = Math.min(calculatedScore, 0.20);
+        }
+
+        // Automatically invalidate the original vote if score falls below 0.30
+        const newIsValid = calculatedScore >= 0.30 && existingBallot.is_valid;
+
+        // Update the existing ballot in the database (decaying its score and updating status)
+        const { error: updateError } = await supabaseAdmin
+          .from('ballots')
+          .update({
+            recaptcha_score: calculatedScore,
+            is_valid: newIsValid,
+            voter_ip: voterIp,
+            voter_fingerprint: fingerprint || 'canvas_hash_mock_fingerprint',
+          })
+          .eq('id', existingBallot.id);
+
+        if (updateError) {
+          console.error('Database update error:', updateError);
+          return NextResponse.json(
+            { error: `Lỗi cập nhật phiếu bầu: ${updateError.message}` },
+            { status: 500 }
+          );
+        }
+
+        return NextResponse.json(
+          { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
+          { status: 429 }
+        );
+      }
+
+      // 5. First time voting today: Log a new valid ballot
       let calculatedScore = 1.0;
-      if (attemptCount === 2) {
-        calculatedScore = 0.85;
-      } else if (attemptCount === 3) {
-        calculatedScore = 0.65;
-      } else if (attemptCount === 4) {
-        calculatedScore = 0.40;
-      } else if (attemptCount >= 5) {
-        calculatedScore = Math.max(0.05, Number((1.0 - 0.20 * Math.pow(attemptCount - 1, 1.2)).toFixed(2)));
-      }
-
-      // Penalize IP spamming if > 3 votes in 10 sec
       if (isSuspiciousIp) {
-        calculatedScore = Math.min(calculatedScore, 0.20);
+        calculatedScore = 0.20;
       }
+      const isValidBallot = calculatedScore >= 0.30;
 
-      // Automatically invalidate if score < 0.30 or if repeat attempt > 1 when valid vote already recorded
-      const alreadyHasValidVote = (previousAttempts || []).some((b: any) => b.is_valid);
-      const isValidBallot = calculatedScore >= 0.30 && !alreadyHasValidVote;
-
-      // Always log ballot to audit log for admin tracking
       const { error: insertError } = await supabaseAdmin.from('ballots').insert({
         team_id: teamId,
         voter_ip: voterIp,
@@ -144,17 +178,10 @@ export async function POST(req: NextRequest) {
       }
 
       if (!isValidBallot) {
-        if (alreadyHasValidVote) {
-          return NextResponse.json(
-            { error: 'Bạn đã bình chọn cho tiết mục này hôm nay rồi. Vui lòng quay lại vào ngày mai!' },
-            { status: 429 }
-          );
-        } else {
-          return NextResponse.json(
-            { error: 'Phát hiện thao tác bình chọn bất thường từ địa chỉ IP/Thiết bị này.' },
-            { status: 429 }
-          );
-        }
+        return NextResponse.json(
+          { error: 'Phát hiện thao tác bình chọn bất thường từ địa chỉ IP/Thiết bị này.' },
+          { status: 429 }
+        );
       }
 
       return NextResponse.json({ success: true });
