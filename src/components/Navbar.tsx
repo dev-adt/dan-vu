@@ -26,7 +26,6 @@ export default function Navbar() {
     { name: 'Trang Chủ', href: '/', icon: Compass },
     { name: 'Cổng Bình Chọn', href: '/vote', icon: Music },
     { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
-    { name: 'Video & Clips', href: '/videos', icon: Video },
     { name: 'Cổng Đội Thi', href: hasTeamSession ? '/team/dashboard' : '/team/login', icon: Users },
   ];
 
