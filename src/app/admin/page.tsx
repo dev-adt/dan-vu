@@ -6,7 +6,8 @@ import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
   ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
-  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon, Upload
+  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon, Upload,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -1057,12 +1058,18 @@ export default function AdminDashboard() {
     if (!text) return '';
     let html = text;
 
+    // Parse Markdown images: ![alt](url) — must come before raw URL detection
+    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-4"><img src="$2" alt="$1" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
+
+    // Caption syntax: _Chú thích ảnh_ on its own line (entire line wrapped in _)
+    // Place figcaption inside previous figure if possible, otherwise standalone
+    html = html.replace(/<\/figure>\n_([^_\n]+)_/g, '<figcaption class="text-[11px] text-slate-500 italic text-center mt-1 mb-3">$1</figcaption></figure>');
+    // Standalone _ caption _ line (not after figure)
+    html = html.replace(/^_([^_\n]+)_$/gim, '<p class="text-[11px] text-slate-500 italic text-center -mt-2 mb-3">$1</p>');
+
     // Detect and replace raw Supabase image URLs or standard image URLs that are not inside src/href tags
     const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
-    html = html.replace(rawImageRegex, '<img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
-
-    // Parse Markdown images: ![alt](url)
-    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
+    html = html.replace(rawImageRegex, '<figure class="my-4"><img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
 
     // Parse Markdown links: [text](url)
     html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-opacity-80 font-semibold" target="_blank">$1</a>');
@@ -1071,6 +1078,13 @@ export default function AdminDashboard() {
     html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
+
+    // Parse text alignment shortcuts (Markdown extension)
+    // ->text<- = center, >>text = right align, <<text = left align, |text| = justify
+    html = html.replace(/^->(.*?)<-$/gim, '<p class="text-center leading-relaxed my-1">$1</p>');
+    html = html.replace(/^>>(.*$)/gim, '<p class="text-right leading-relaxed my-1">$1</p>');
+    html = html.replace(/^<<(.*$)/gim, '<p class="text-left leading-relaxed my-1">$1</p>');
+    html = html.replace(/^\|(.*?)\|$/gim, '<p class="text-justify leading-relaxed my-1">$1</p>');
 
     // Parse Unordered Lists (bullet points): lines starting with - or *
     html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
@@ -1081,8 +1095,7 @@ export default function AdminDashboard() {
     // Parse Italic: *text*
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // Paragraph and Line break formatting
-    html = html.replace(/\n\s*\n/g, '</p><p class="text-xs text-dark-slate/90 leading-relaxed mb-3">');
+    // Single newline → <br/> (preserve all linebreaks)
     html = html.replace(/\n/g, '<br/>');
 
     return html;
@@ -2091,6 +2104,73 @@ export default function AdminDashboard() {
                             </button>
 
                             {/* Font Color Dropdown */}
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+
+                            {/* Alignment Buttons */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('justifyLeft');
+                                else if (postFormat === 'markdown') insertTag('<<', '');
+                                else insertTag('<div style="text-align:left">', '</div>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Căn trái"
+                            >
+                              <AlignLeft className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('justifyCenter');
+                                else if (postFormat === 'markdown') insertTag('->', '<-');
+                                else insertTag('<div style="text-align:center">', '</div>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Căn giữa"
+                            >
+                              <AlignCenter className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('justifyRight');
+                                else if (postFormat === 'markdown') insertTag('>>', '');
+                                else insertTag('<div style="text-align:right">', '</div>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Căn phải"
+                            >
+                              <AlignRight className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('justifyFull');
+                                else if (postFormat === 'markdown') insertTag('|', '|');
+                                else insertTag('<div style="text-align:justify">', '</div>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Căn đều 2 bên"
+                            >
+                              <AlignJustify className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Caption helper (Markdown/Text mode) */}
+                            {postFormat !== 'html' && (
+                              <>
+                                <div className="w-px h-6 bg-slate-200 mx-1" />
+                                <button
+                                  type="button"
+                                  onClick={() => insertTag('_', '_')}
+                                  className="px-2 py-1 hover:bg-slate-200 rounded text-slate-500 text-[10px] font-bold cursor-pointer"
+                                  title="Chú thích ảnh (đặt dòng _nội dung chú thích_ ngay dưới ảnh)"
+                                >
+                                  𝑖📷
+                                </button>
+                              </>
+                            )}
+
                             <div className="w-px h-6 bg-slate-200 mx-1" />
                             <select
                               onChange={(e) => {
