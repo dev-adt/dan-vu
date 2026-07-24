@@ -7,6 +7,10 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Timeline from '@/components/Timeline';
+import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
+import VideoModal, { VideoItem } from '@/components/VideoModal';
+import { parseVideoUrl } from '@/lib/videoUtils';
+
 
 interface Post {
   id: string;
@@ -22,51 +26,6 @@ interface Post {
   source?: string;
 }
 
-const parseMarkdownToHtml = (text: string): string => {
-  if (!text) return '';
-  let html = text;
-
-  // Parse Markdown images: ![alt](url) — must come before raw URL detection
-  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-4"><img src="$2" alt="$1" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
-
-  // Caption syntax: _Chú thích ảnh_ on its own line immediately after image
-  html = html.replace(/<\/figure>\n_([^_\n]+)_/g, '<figcaption class="text-[11px] text-slate-500 italic text-center mt-1 mb-3">$1</figcaption></figure>');
-  // Standalone _ caption _ line (not after figure)
-  html = html.replace(/^_([^_\n]+)_$/gim, '<p class="text-[11px] text-slate-500 italic text-center -mt-2 mb-3">$1</p>');
-
-  // Detect and replace raw Supabase image URLs or standard image URLs that are not inside src/href tags
-  const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
-  html = html.replace(rawImageRegex, '<figure class="my-4"><img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
-
-  // Parse Markdown links: [text](url)
-  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-opacity-80 font-semibold" target="_blank">$1</a>');
-
-  // Parse Headers
-  html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">$1</h3>');
-  html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
-
-  // Parse text alignment shortcuts (Markdown extension)
-  // ->text<- = center, >>text = right align, <<text = left align, |text| = justify
-  html = html.replace(/^->(.*?)<-$/gim, '<p class="text-center leading-relaxed my-1">$1</p>');
-  html = html.replace(/^>>(.*$)/gim, '<p class="text-right leading-relaxed my-1">$1</p>');
-  html = html.replace(/^<<(.*$)/gim, '<p class="text-left leading-relaxed my-1">$1</p>');
-  html = html.replace(/^\|(.*?)\|$/gim, '<p class="text-justify leading-relaxed my-1">$1</p>');
-
-  // Parse Unordered Lists (bullet points): lines starting with - or *
-  html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
-
-  // Parse Bold: **text**
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-  // Parse Italic: *text*
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-  // Single newline → <br/> (preserve all linebreaks)
-  html = html.replace(/\n/g, '<br/>');
-
-  return html;
-};
 
 const bgImages = [
   '/images/hero-bg-1.png',
@@ -77,7 +36,10 @@ const bgImages = [
 export default function HomeClient() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [posts, setPosts] = React.useState<Post[]>([]);
+  const [videos, setVideos] = React.useState<VideoItem[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = React.useState(true);
+  const [isLoadingVideos, setIsLoadingVideos] = React.useState(true);
+  const [selectedVideo, setSelectedVideo] = React.useState<VideoItem | null>(null);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -100,7 +62,23 @@ export default function HomeClient() {
         setIsLoadingPosts(false);
       }
     };
+
+    const fetchHomeVideos = async () => {
+      try {
+        const res = await fetch('/api/videos?limit=3');
+        if (res.ok) {
+          const data = await res.json();
+          setVideos(data.videos || []);
+        }
+      } catch (err) {
+        console.error('Failed to load videos:', err);
+      } finally {
+        setIsLoadingVideos(false);
+      }
+    };
+
     fetchHomePosts();
+    fetchHomeVideos();
   }, []);
 
   return (
@@ -560,7 +538,111 @@ export default function HomeClient() {
         </div>
       </section>
 
+      {/* Video & Clips Section */}
+      <section className="py-20 px-4 max-w-7xl mx-auto space-y-12 relative z-10 border-t border-slate-200/40">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200/60 pb-6">
+          <div>
+            <span className="text-xs uppercase tracking-[0.2em] font-bold text-accent">
+              Thư Viện Video & Clips
+            </span>
+            <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-dark-obsidian mt-1">
+              Video Nổi Bật
+            </h2>
+          </div>
 
+          <Link
+            href="/videos"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-dark-obsidian font-bold text-xs rounded-xl hover:border-accent hover:text-accent transition-all shadow-sm group w-fit"
+          >
+            Xem tất cả Video
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        {/* Video Cards Grid — max 3 videos */}
+        {isLoadingVideos ? (
+          <div className="text-center py-16">
+            <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải video mới nhất...</p>
+          </div>
+        ) : videos.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {videos.slice(0, 3).map((vid) => {
+              const parsed = parseVideoUrl(vid.video_url, vid.thumbnail_url);
+              return (
+                <div
+                  key={vid.id}
+                  className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                  onClick={() => setSelectedVideo(vid)}
+                >
+                  {/* Thumbnail & Play Overlay */}
+                  <div className="relative h-48 w-full overflow-hidden bg-slate-900 select-none">
+                    {parsed.thumbnailUrl ? (
+                      <img
+                        src={parsed.thumbnailUrl}
+                        alt={vid.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-white/40">
+                        <Play className="w-16 h-16" />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-accent/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-accent transition-all duration-300">
+                        <Play className="w-6 h-6 fill-current ml-0.5" />
+                      </div>
+                    </div>
+
+                    {vid.is_featured && (
+                      <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md z-10">
+                        NỔI BẬT ★
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="p-6 flex-grow flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] group-hover:text-accent transition-colors">
+                        {vid.title}
+                      </h3>
+                      {vid.summary && (
+                        <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">{vid.summary}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                      <span className="text-[10px] text-dark-slate/50 font-medium">
+                        {new Date(vid.created_at).toLocaleDateString('vi-VN')}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVideo(vid);
+                        }}
+                        className="flex items-center gap-1 px-4 py-2 bg-accent text-white hover:bg-opacity-95 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm cursor-pointer"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        Xem Video
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+            <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có video nào được xuất bản.</p>
+          </div>
+        )}
+      </section>
+
+      {/* Video Modal Popup */}
+      <VideoModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />
 
       <Footer />
     </div>

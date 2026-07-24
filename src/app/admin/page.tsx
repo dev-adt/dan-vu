@@ -7,9 +7,13 @@ import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
   ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
   BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon, Upload,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify
+  AlignLeft, AlignCenter, AlignRight, AlignJustify, Video, Play, Film
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
+import VideoModal, { VideoItem } from '@/components/VideoModal';
+import { parseVideoUrl } from '@/lib/videoUtils';
+
 
 interface Post {
   id: string;
@@ -73,7 +77,8 @@ export default function AdminDashboard() {
   const [authHeader, setAuthHeader] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings' | 'posts'>('monitoring');
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings' | 'posts' | 'videos'>('monitoring');
+
 
   // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
@@ -140,12 +145,31 @@ export default function AdminDashboard() {
   const [postIsFeatured, setPostIsFeatured] = useState(false);
   const [postAuthor, setPostAuthor] = useState('Ban Tổ Chức');
   const [isSavingPost, setIsSavingPost] = useState(false);
-  const [postFormat, setPostFormat] = useState<'html' | 'text' | 'markdown'>('html');
+  const [postFormat, setPostFormat] = useState<'html' | 'text' | 'markdown'>('markdown');
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [isUploadingInline, setIsUploadingInline] = useState(false);
   const [postSummary, setPostSummary] = useState('');
   const [postSource, setPostSource] = useState('');
   const editorRef = React.useRef<HTMLDivElement>(null);
+
+  // Video management states
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [videoSearch, setVideoSearch] = useState('');
+  const [videoStatusFilter, setVideoStatusFilter] = useState<string>('all');
+  const [videoPage, setVideoPage] = useState(1);
+  const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
+  const [isWritingNewVideo, setIsWritingNewVideo] = useState(false);
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState('');
+  const [videoSummary, setVideoSummary] = useState('');
+  const [videoSource, setVideoSource] = useState('');
+  const [videoStatus, setVideoStatus] = useState<'draft' | 'published'>('published');
+  const [videoIsFeatured, setVideoIsFeatured] = useState(false);
+  const [isSavingVideo, setIsSavingVideo] = useState(false);
+  const [isUploadingVideoThumbnail, setIsUploadingVideoThumbnail] = useState(false);
+  const [previewingAdminVideo, setPreviewingAdminVideo] = useState<VideoItem | null>(null);
+
 
   const pageSize = 10;
 
@@ -205,8 +229,10 @@ export default function AdminDashboard() {
       fetchJudges();
       fetchRankings();
       fetchPosts();
+      fetchVideos();
     }
   }, [isAdminLoggedIn, authHeader, activeTab]);
+
 
   // Fetch Blog/News Posts
   const fetchPosts = async () => {
@@ -266,9 +292,9 @@ export default function AdminDashboard() {
         setPostPhotoUrl('');
         setPostStatus('draft');
         setPostIsFeatured(false);
-        setPostAuthor('Ban Tổ Chức');
-        setPostFormat('html');
+        setPostFormat('markdown');
         setPostSummary('');
+        setPostSource('');
         setPostSource('');
         if (editorRef.current) {
           editorRef.current.innerHTML = '';
@@ -593,6 +619,184 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error deleting post:', err);
+    }
+  };
+
+  // ── Video Management Functions ──────────────────────────────────────────────
+  const fetchVideos = async () => {
+    try {
+      const res = await fetch('/api/admin/videos', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setVideos(data.videos || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch videos:', err);
+    }
+  };
+
+  const resetVideoForm = () => {
+    setEditingVideo(null);
+    setIsWritingNewVideo(false);
+    setVideoTitle('');
+    setVideoUrl('');
+    setVideoThumbnailUrl('');
+    setVideoSummary('');
+    setVideoSource('');
+    setVideoStatus('published');
+    setVideoIsFeatured(false);
+  };
+
+  const handleSaveVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoTitle || !videoUrl) {
+      alert('Tiêu đề và đường link Video (URL) không được để trống.');
+      return;
+    }
+    setIsSavingVideo(true);
+    try {
+      const isEdit = !!editingVideo;
+      const url = '/api/admin/videos';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          id: editingVideo?.id,
+          title: videoTitle,
+          video_url: videoUrl,
+          thumbnail_url: videoThumbnailUrl,
+          summary: videoSummary,
+          source: videoSource,
+          status: videoStatus,
+          is_featured: videoIsFeatured,
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(isEdit ? 'Cập nhật video thành công!' : 'Tạo video mới thành công!');
+        resetVideoForm();
+        fetchVideos();
+      } else {
+        alert(result.error || 'Lỗi khi lưu video.');
+      }
+    } catch (err) {
+      console.error('Error saving video:', err);
+      alert('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsSavingVideo(false);
+    }
+  };
+
+  const handleDeleteVideo = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa video này? Thao tác không thể hoàn tác.')) return;
+    try {
+      const res = await fetch(`/api/admin/videos?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader },
+      });
+      const result = await res.json();
+      if (res.ok) {
+        alert('Đã xóa video thành công.');
+        fetchVideos();
+      } else {
+        alert(result.error || 'Không thể xóa video.');
+      }
+    } catch (err) {
+      console.error('Error deleting video:', err);
+      alert('Lỗi khi gửi yêu cầu xóa.');
+    }
+  };
+
+  const handleToggleVideoFeatured = async (video: VideoItem) => {
+    try {
+      const res = await fetch('/api/admin/videos', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          id: video.id,
+          is_featured: !video.is_featured,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        fetchVideos();
+      } else {
+        alert(result.error || 'Không thể thay đổi thuộc tính nổi bật.');
+      }
+    } catch (err) {
+      console.error('Error toggling video featured:', err);
+    }
+  };
+
+  const handleToggleVideoStatus = async (video: VideoItem) => {
+    const newStatus = video.status === 'published' ? 'draft' : 'published';
+    try {
+      const res = await fetch('/api/admin/videos', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          id: video.id,
+          status: newStatus,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        fetchVideos();
+      } else {
+        alert(result.error || 'Không thể thay đổi trạng thái.');
+      }
+    } catch (err) {
+      console.error('Error toggling video status:', err);
+    }
+  };
+
+  const handleVideoThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVideoThumbnail(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const mockUrl = `https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80`;
+        setVideoThumbnailUrl(mockUrl);
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `videos/thumbnails/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      setVideoThumbnailUrl(publicUrl);
+    } catch (err: any) {
+      console.error('Error uploading video thumbnail:', err);
+      alert('Không thể tải ảnh lên: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingVideoThumbnail(false);
     }
   };
 
@@ -1053,54 +1257,6 @@ export default function AdminDashboard() {
     }, 0);
   };
 
-  // Parser to convert Markdown / styled text into structured HTML preview
-  const parseMarkdownToHtml = (text: string): string => {
-    if (!text) return '';
-    let html = text;
-
-    // Parse Markdown images: ![alt](url) — must come before raw URL detection
-    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-4"><img src="$2" alt="$1" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
-
-    // Caption syntax: _Chú thích ảnh_ on its own line (entire line wrapped in _)
-    // Place figcaption inside previous figure if possible, otherwise standalone
-    html = html.replace(/<\/figure>\n_([^_\n]+)_/g, '<figcaption class="text-[11px] text-slate-500 italic text-center mt-1 mb-3">$1</figcaption></figure>');
-    // Standalone _ caption _ line (not after figure)
-    html = html.replace(/^_([^_\n]+)_$/gim, '<p class="text-[11px] text-slate-500 italic text-center -mt-2 mb-3">$1</p>');
-
-    // Detect and replace raw Supabase image URLs or standard image URLs that are not inside src/href tags
-    const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
-    html = html.replace(rawImageRegex, '<figure class="my-4"><img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl shadow-sm max-w-lg block border border-slate-200" /></figure>');
-
-    // Parse Markdown links: [text](url)
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-opacity-80 font-semibold" target="_blank">$1</a>');
-
-    // Parse Headers
-    html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
-
-    // Parse text alignment shortcuts (Markdown extension)
-    // ->text<- = center, >>text = right align, <<text = left align, |text| = justify
-    html = html.replace(/^->(.*?)<-$/gim, '<p class="text-center leading-relaxed my-1">$1</p>');
-    html = html.replace(/^>>(.*$)/gim, '<p class="text-right leading-relaxed my-1">$1</p>');
-    html = html.replace(/^<<(.*$)/gim, '<p class="text-left leading-relaxed my-1">$1</p>');
-    html = html.replace(/^\|(.*?)\|$/gim, '<p class="text-justify leading-relaxed my-1">$1</p>');
-
-    // Parse Unordered Lists (bullet points): lines starting with - or *
-    html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
-
-    // Parse Bold: **text**
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Parse Italic: *text*
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Single newline → <br/> (preserve all linebreaks)
-    html = html.replace(/\n/g, '<br/>');
-
-    return html;
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
       <div className="print:hidden">
@@ -1295,7 +1451,17 @@ export default function AdminDashboard() {
                 <Newspaper className="w-4 h-4" />
                 Tin Tức & Bài Viết ({posts.length})
               </button>
+              <button
+                onClick={() => setActiveTab('videos')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'videos' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                Video & Clips ({videos.length})
+              </button>
             </div>
+
 
             {/* Content for Monitoring Tab */}
             {activeTab === 'monitoring' && (
@@ -2516,6 +2682,365 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* Content for Video & Clips Management Tab */}
+            {activeTab === 'videos' && (
+              <div className="space-y-6">
+                {(isWritingNewVideo || editingVideo) ? (
+                  /* Form Editor View */
+                  <form onSubmit={handleSaveVideo} className="space-y-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-4">
+                      <div>
+                        <h2 className="font-heading font-bold text-xl text-slate-900">
+                          {editingVideo ? 'Hiệu chỉnh Video & Clip' : 'Thêm Video & Clip Mới'}
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Hỗ trợ link từ YouTube, Google Drive, Vimeo hoặc đường link MP4 trực tiếp.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={resetVideoForm}
+                          className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          Hủy bỏ
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSavingVideo}
+                          className="inline-flex items-center gap-1.5 px-6 py-2 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                        >
+                          <Save className="w-4 h-4" />
+                          {isSavingVideo ? 'Đang lưu...' : 'Lưu Video'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      <div className="lg:col-span-8 space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Tiêu đề Video *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={videoTitle}
+                            onChange={(e) => setVideoTitle(e.target.value)}
+                            placeholder="Nhập tiêu đề video..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors font-bold"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Đường link Video (URL) *
+                          </label>
+                          <input
+                            type="url"
+                            required
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                            placeholder="Ví dụ: https://www.youtube.com/watch?v=... hoặc Google Drive, Vimeo..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors font-mono"
+                          />
+                          <p className="text-[10px] text-slate-400 italic mt-1">
+                            Link YouTube sẽ tự động lấy ảnh bìa HD mặc định nếu không tải ảnh riêng.
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Tóm tắt ngắn video (Không bắt buộc)
+                          </label>
+                          <textarea
+                            value={videoSummary}
+                            onChange={(e) => setVideoSummary(e.target.value)}
+                            rows={3}
+                            placeholder="Mô tả nội dung chính hoặc ý nghĩa của video clip..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors resize-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="lg:col-span-4 space-y-4 bg-slate-50/60 p-4 rounded-xl border border-slate-200/60">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Ảnh bìa Video (Thumbnail)
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={videoThumbnailUrl}
+                              onChange={(e) => setVideoThumbnailUrl(e.target.value)}
+                              placeholder="Link URL ảnh bìa hoặc tải lên..."
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                            />
+                            <label className="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer flex items-center gap-1 shrink-0">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{isUploadingVideoThumbnail ? 'Đang tải...' : 'Tải lên'}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleVideoThumbnailUpload}
+                              />
+                            </label>
+                          </div>
+                          {videoThumbnailUrl && (
+                            <div className="mt-2 relative h-32 rounded-xl overflow-hidden border border-slate-200 bg-black">
+                              <img src={videoThumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Nguồn tin / Đơn vị sản xuất (Không bắt buộc)
+                          </label>
+                          <input
+                            type="text"
+                            value={videoSource}
+                            onChange={(e) => setVideoSource(e.target.value)}
+                            placeholder="Ví dụ: VTV, BTC Festival, Đài truyền hình..."
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="pt-2 space-y-3">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={videoIsFeatured}
+                              onChange={(e) => setVideoIsFeatured(e.target.checked)}
+                              className="w-4 h-4 rounded text-secondary focus:ring-secondary cursor-pointer"
+                            />
+                            <span className="text-xs font-bold text-slate-700">Ghim Nổi Bật (Tối đa 3 video)</span>
+                          </label>
+
+                          <div className="flex items-center gap-4">
+                            <label className="text-xs font-bold text-slate-600">Trạng thái:</label>
+                            <div className="flex items-center gap-3">
+                              <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="videoStatus"
+                                  checked={videoStatus === 'published'}
+                                  onChange={() => setVideoStatus('published')}
+                                  className="text-primary"
+                                />
+                                <span>Đăng công khai</span>
+                              </label>
+                              <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="videoStatus"
+                                  checked={videoStatus === 'draft'}
+                                  onChange={() => setVideoStatus('draft')}
+                                  className="text-slate-500"
+                                />
+                                <span>Lưu nháp</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                ) : (
+                  /* Table List View */
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <h2 className="font-heading font-bold text-xl text-slate-900">Quản Lý Thư Viện Video & Clips</h2>
+                      <button
+                        onClick={() => {
+                          resetVideoForm();
+                          setIsWritingNewVideo(true);
+                        }}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        Đăng Video Mới
+                      </button>
+                    </div>
+
+                    {/* Filter & Search */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="w-full sm:flex-1">
+                        <input
+                          type="text"
+                          placeholder="Tìm kiếm theo Tiêu đề, Tóm tắt, Nguồn..."
+                          value={videoSearch}
+                          onChange={(e) => {
+                            setVideoSearch(e.target.value);
+                            setVideoPage(1);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                        />
+                      </div>
+                      <div className="w-full sm:w-48">
+                        <select
+                          value={videoStatusFilter}
+                          onChange={(e) => {
+                            setVideoStatusFilter(e.target.value);
+                            setVideoPage(1);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                        >
+                          <option value="all">Tất cả trạng thái</option>
+                          <option value="published">Đã đăng</option>
+                          <option value="draft">Bản nháp</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Videos Table */}
+                    {(() => {
+                      const filtered = videos.filter((v) => {
+                        const matchSearch = !videoSearch || (v.title + (v.summary || '') + (v.source || '')).toLowerCase().includes(videoSearch.toLowerCase());
+                        const matchStatus = videoStatusFilter === 'all' || v.status === videoStatusFilter;
+                        return matchSearch && matchStatus;
+                      });
+                      const paginated = filtered.slice((videoPage - 1) * pageSize, videoPage * pageSize);
+
+                      return (
+                        <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm border-collapse">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                                <tr>
+                                  <th className="px-6 py-4 w-20">Ảnh bìa</th>
+                                  <th className="px-6 py-4">Tiêu đề Video</th>
+                                  <th className="px-6 py-4">Nguồn</th>
+                                  <th className="px-6 py-4">Ngày đăng</th>
+                                  <th className="px-6 py-4 text-center">Nổi bật</th>
+                                  <th className="px-6 py-4 text-center">Trạng thái</th>
+                                  <th className="px-6 py-4 text-right">Thao tác</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 text-xs">
+                                {paginated.length > 0 ? (
+                                  paginated.map((vid) => {
+                                    const parsed = parseVideoUrl(vid.video_url, vid.thumbnail_url);
+                                    return (
+                                      <tr key={vid.id} className="hover:bg-slate-50/60 transition-colors">
+                                        <td className="px-6 py-4">
+                                          <div
+                                            className="relative w-16 h-10 rounded-lg overflow-hidden bg-slate-900 cursor-pointer group flex items-center justify-center border border-slate-200"
+                                            onClick={() => setPreviewingAdminVideo(vid)}
+                                          >
+                                            {parsed.thumbnailUrl ? (
+                                              <img src={parsed.thumbnailUrl} alt={vid.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                            ) : (
+                                              <Film className="w-4 h-4 text-white/50" />
+                                            )}
+                                            <Play className="absolute w-4 h-4 text-white fill-current shadow-md group-hover:scale-110 transition-transform" />
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4 max-w-xs">
+                                          <span
+                                            className="font-bold text-slate-900 block line-clamp-2 hover:text-accent cursor-pointer"
+                                            onClick={() => setPreviewingAdminVideo(vid)}
+                                          >
+                                            {vid.title}
+                                          </span>
+                                          {vid.summary && (
+                                            <span className="text-[10px] text-slate-500 line-clamp-1 italic mt-0.5">{vid.summary}</span>
+                                          )}
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 font-medium">
+                                          {vid.source || 'Ban Tổ Chức'}
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-500">
+                                          {new Date(vid.created_at).toLocaleDateString('vi-VN')}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                          <button
+                                            onClick={() => handleToggleVideoFeatured(vid)}
+                                            className="cursor-pointer"
+                                            title="Click để bật/tắt nổi bật"
+                                          >
+                                            {vid.is_featured ? (
+                                              <span className="bg-secondary/20 border border-secondary text-secondary-dark text-[9px] font-bold px-2 py-0.5 rounded-md">
+                                                NỔI BẬT ★
+                                              </span>
+                                            ) : (
+                                              <span className="text-slate-300 hover:text-slate-500 text-xs">Bình thường</span>
+                                            )}
+                                          </button>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                          <button
+                                            onClick={() => handleToggleVideoStatus(vid)}
+                                            className="cursor-pointer"
+                                            title="Click để thay đổi trạng thái"
+                                          >
+                                            {vid.status === 'published' ? (
+                                              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
+                                                Đã đăng
+                                              </span>
+                                            ) : (
+                                              <span className="bg-slate-100 text-slate-800 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
+                                                Bản nháp
+                                              </span>
+                                            )}
+                                          </button>
+                                        </td>
+                                        <td className="px-6 py-4 text-right space-x-2">
+                                          <button
+                                            onClick={() => setPreviewingAdminVideo(vid)}
+                                            className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
+                                            title="Xem trước Video"
+                                          >
+                                            <Play className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              setEditingVideo(vid);
+                                              setIsWritingNewVideo(true);
+                                              setVideoTitle(vid.title);
+                                              setVideoUrl(vid.video_url);
+                                              setVideoThumbnailUrl(vid.thumbnail_url || '');
+                                              setVideoSummary(vid.summary || '');
+                                              setVideoSource(vid.source || '');
+                                              setVideoStatus(vid.status);
+                                              setVideoIsFeatured(vid.is_featured);
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
+                                            title="Chỉnh sửa video"
+                                          >
+                                            <Edit3 className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteVideo(vid.id)}
+                                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
+                                            title="Xóa video"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
+                                ) : (
+                                  <tr>
+                                    <td colSpan={7} className="text-center py-12 text-slate-400 italic">
+                                      Chưa có video nào phù hợp với bộ lọc tìm kiếm.
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                          {renderPagination(videoPage, filtered.length, pageSize, setVideoPage)}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Content for Rankings Tab */}
             {activeTab === 'rankings' && (
               <div className="space-y-4">
@@ -2784,6 +3309,9 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Admin Video Modal Preview */}
+      <VideoModal video={previewingAdminVideo} onClose={() => setPreviewingAdminVideo(null)} />
 
       <div className="print:hidden">
         <Footer />

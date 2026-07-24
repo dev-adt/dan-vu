@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Newspaper, ChevronRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
 
 interface Post {
   id: string;
@@ -22,32 +23,6 @@ interface Post {
   source?: string;
 }
 
-const parseMarkdownToHtml = (text: string): string => {
-  if (!text) return '';
-  let html = text;
-
-  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-6 mx-auto max-w-2xl"><img src="$2" alt="$1" class="w-full h-auto rounded-2xl shadow-md border border-slate-200" /></figure>');
-  html = html.replace(/<\/figure>\n_([^_\n]+)_/g, '<figcaption class="text-xs text-slate-500 italic text-center mt-2 mb-4">$1</figcaption></figure>');
-  html = html.replace(/^_([^_\n]+)_$/gim, '<p class="text-xs text-slate-500 italic text-center -mt-3 mb-4">$1</p>');
-
-  const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
-  html = html.replace(rawImageRegex, '<figure class="my-6 mx-auto max-w-2xl"><img src="$1" alt="Hình ảnh" class="w-full h-auto rounded-2xl shadow-md border border-slate-200" /></figure>');
-
-  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 underline hover:text-blue-800 font-semibold transition-colors" target="_blank" rel="noopener">$1</a>');
-  html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-xl text-slate-800 mt-8 mb-3 leading-snug">$1</h3>');
-  html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-2xl text-slate-900 mt-10 mb-4 leading-snug border-b border-slate-200 pb-2">$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-3xl text-slate-900 leading-tight my-6">$1</h1>');
-  html = html.replace(/^->(.*?)<-$/gim, '<p class="text-center leading-relaxed my-2">$1</p>');
-  html = html.replace(/^>>(.*$)/gim, '<p class="text-right leading-relaxed my-2">$1</p>');
-  html = html.replace(/^<<(.*$)/gim, '<p class="text-left leading-relaxed my-2">$1</p>');
-  html = html.replace(/^\|(.*?)\|$/gim, '<p class="text-justify leading-relaxed my-2">$1</p>');
-  html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="text-base text-slate-700 list-disc ml-6 my-1.5 leading-relaxed">$1</li>');
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
-  html = html.replace(/\*(.*?)\*/g, '<em class="italic text-slate-700">$1</em>');
-  html = html.replace(/\n/g, '<br/>');
-
-  return html;
-};
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -166,7 +141,7 @@ export default function PostDetailPage() {
               <div
                 className="leading-loose text-dark-slate/90 space-y-3 text-base prose prose-slate max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: post.format === 'html' ? post.content : parseMarkdownToHtml(post.content),
+                  __html: post.format === 'html' ? post.content : parseMarkdownToHtml(post.content, { size: 'md' }),
                 }}
               />
 
