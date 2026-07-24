@@ -26,11 +26,80 @@ export default function JudgePortal() {
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [judgeName, setJudgeName] = useState('Ban Giám Khảo');
 
+  // Search, Filters & Pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [catFilter, setCatFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   // Stats computed dynamically
   const stats = {
     completed: gradingList.filter((g) => g.status === 'submitted').length,
     draft: gradingList.filter((g) => g.status === 'draft').length,
     pending: gradingList.filter((g) => g.status === 'pending').length,
+  };
+
+  const filteredGradingList = gradingList.filter((perf) => {
+    const matchesSearch =
+      perf.performanceTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      perf.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      perf.id.substring(0, 8).toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCat = catFilter === 'all' ? true : perf.category === catFilter;
+    const matchesStatus = statusFilter === 'all' ? true : perf.status === statusFilter;
+    
+    return matchesSearch && matchesCat && matchesStatus;
+  });
+
+  const paginatedList = filteredGradingList.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const renderPagination = (page: number, totalItems: number, size: number, onPageChange: (p: number) => void) => {
+    const totalPages = Math.ceil(totalItems / size);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs font-semibold text-slate-500">
+        <div>
+          Hiển thị từ {((page - 1) * size) + 1} đến {Math.min(page * size, totalItems)} trong tổng số {totalItems} tiết mục
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={page === 1}
+            onClick={() => onPageChange(page - 1)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+          >
+            Trước
+          </button>
+          {Array.from({ length: totalPages }, (_, idx) => {
+            const pageNum = idx + 1;
+            return (
+              <button
+                key={pageNum}
+                type="button"
+                onClick={() => onPageChange(pageNum)}
+                className={`w-8 h-8 rounded-lg border font-bold flex items-center justify-center cursor-pointer transition-all ${
+                  page === pageNum
+                    ? 'border-accent bg-accent text-white'
+                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            disabled={page === totalPages}
+            onClick={() => onPageChange(page + 1)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+          >
+            Sau
+          </button>
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -217,7 +286,52 @@ export default function JudgePortal() {
               </div>
             </div>
 
-            <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md bg-white">
+            {/* Filters Row */}
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+              <div className="w-full md:flex-1">
+                <input
+                  type="text"
+                  placeholder="Tìm tiết mục theo tên, đội thi, mã số..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                />
+              </div>
+              <div className="w-full md:w-48">
+                <select
+                  value={catFilter}
+                  onChange={(e) => {
+                    setCatFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                >
+                  <option value="all">Tất cả Thể loại</option>
+                  <option value="dan_ca">Dân Ca</option>
+                  <option value="dan_vu">Dân Vũ</option>
+                </select>
+              </div>
+              <div className="w-full md:w-48">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                >
+                  <option value="all">Tất cả Trạng thái</option>
+                  <option value="pending">Chưa chấm</option>
+                  <option value="draft">Đang chấm nháp</option>
+                  <option value="submitted">Đã hoàn thành</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-md bg-white p-4">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
@@ -237,8 +351,8 @@ export default function JudgePortal() {
                           Đang nạp danh sách chấm điểm...
                         </td>
                       </tr>
-                    ) : gradingList.length > 0 ? (
-                      gradingList.map((perf) => {
+                    ) : paginatedList.length > 0 ? (
+                      paginatedList.map((perf) => {
                         const isSubmitted = perf.status === 'submitted';
                         const isDraft = perf.status === 'draft';
 
@@ -298,13 +412,14 @@ export default function JudgePortal() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="text-center py-10 text-slate-400 italic">
-                          Chưa có đội thi nào được duyệt để chấm điểm.
+                          Không tìm thấy tiết mục nào phù hợp với bộ tìm kiếm.
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+              {renderPagination(currentPage, filteredGradingList.length, pageSize, setCurrentPage)}
             </div>
           </div>
         )}

@@ -29,6 +29,8 @@ export default function VoteDiscovery() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'dan_ca' | 'dan_vu'>('all');
   const [activeSort, setActiveSort] = useState<'votes' | 'newest'>('votes');
   const [votedId, setVotedId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
 
   // Authenticated user state
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -168,6 +170,8 @@ export default function VoteDiscovery() {
       return 0; // Default
     });
 
+  const paginatedCandidates = filteredCandidates.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-dark-obsidian relative overflow-x-clip w-full">
       <Navbar />
@@ -278,7 +282,10 @@ export default function VoteDiscovery() {
               type="text"
               placeholder="Nhập tên đội hoặc mã số..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full bg-light-cream border border-slate-300/50 rounded-xl pl-10 pr-4 py-2 text-xs focus:border-secondary focus:outline-none transition-colors text-dark-obsidian placeholder-dark-slate/40"
             />
           </div>
@@ -287,7 +294,10 @@ export default function VoteDiscovery() {
           <div className="flex flex-wrap items-center justify-end gap-3 w-full md:w-auto">
             <div className="flex bg-light-cream border border-slate-300/50 p-1 rounded-lg">
               <button
-                onClick={() => setActiveCategory('all')}
+                onClick={() => {
+                  setActiveCategory('all');
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   activeCategory === 'all' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
@@ -295,7 +305,10 @@ export default function VoteDiscovery() {
                 Tất cả
               </button>
               <button
-                onClick={() => setActiveCategory('dan_ca')}
+                onClick={() => {
+                  setActiveCategory('dan_ca');
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   activeCategory === 'dan_ca' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
@@ -303,7 +316,10 @@ export default function VoteDiscovery() {
                 Dân ca
               </button>
               <button
-                onClick={() => setActiveCategory('dan_vu')}
+                onClick={() => {
+                  setActiveCategory('dan_vu');
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   activeCategory === 'dan_vu' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
@@ -314,7 +330,10 @@ export default function VoteDiscovery() {
 
             <div className="flex bg-light-cream border border-slate-300/50 p-1 rounded-lg">
               <button
-                onClick={() => setActiveSort('votes')}
+                onClick={() => {
+                  setActiveSort('votes');
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   activeSort === 'votes' ? 'bg-secondary text-[#111827] shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
@@ -331,19 +350,65 @@ export default function VoteDiscovery() {
             <p className="text-xs text-dark-slate/60 animate-pulse">Đang nạp danh sách bình chọn...</p>
           </div>
         ) : filteredCandidates.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredCandidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                id={candidate.id}
-                teamName={candidate.teamName}
-                performanceTitle={candidate.performanceTitle}
-                category={candidate.category}
-                votesCount={candidate.votesCount}
-                thumbnailUrl={candidate.photoUrl}
-                onVote={handleVote}
-              />
-            ))}
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {paginatedCandidates.map((candidate) => (
+                <CandidateCard
+                  key={candidate.id}
+                  id={candidate.id}
+                  teamName={candidate.teamName}
+                  performanceTitle={candidate.performanceTitle}
+                  category={candidate.category}
+                  votesCount={candidate.votesCount}
+                  thumbnailUrl={candidate.photoUrl}
+                  onVote={handleVote}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {Math.ceil(filteredCandidates.length / pageSize) > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200/50 text-xs font-semibold text-dark-slate/70">
+                <div>
+                  Hiển thị từ {((currentPage - 1) * pageSize) + 1} đến {Math.min(currentPage * pageSize, filteredCandidates.length)} trong tổng số {filteredCandidates.length} tiết mục dự thi
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="px-3 py-2 rounded-xl border border-slate-300/50 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-dark-obsidian cursor-pointer transition-all"
+                  >
+                    Trước
+                  </button>
+                  {Array.from({ length: Math.ceil(filteredCandidates.length / pageSize) }, (_, idx) => {
+                    const pageNum = idx + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-9 h-9 rounded-xl border font-bold flex items-center justify-center cursor-pointer transition-all ${
+                          currentPage === pageNum
+                            ? 'border-accent bg-accent text-white shadow-sm'
+                            : 'border-slate-300/50 bg-white hover:bg-slate-50 text-dark-obsidian'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    disabled={currentPage === Math.ceil(filteredCandidates.length / pageSize)}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="px-3 py-2 rounded-xl border border-slate-300/50 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-dark-obsidian cursor-pointer transition-all"
+                  >
+                    Sau
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-20 bg-light-cream/40 rounded-2xl border border-slate-300/30 space-y-2">

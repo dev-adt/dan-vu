@@ -82,6 +82,81 @@ export default function AdminDashboard() {
   const [isCreatingJudge, setIsCreatingJudge] = useState(false);
   const [judgeError, setJudgeError] = useState('');
 
+  // Search & Filter & Pagination states
+  // 1. Monitoring / logs
+  const [monSearch, setMonSearch] = useState('');
+  const [monFilter, setMonFilter] = useState<'all' | 'valid' | 'flagged' | 'voided'>('all');
+  const [monPage, setMonPage] = useState(1);
+
+  // 2. Teams
+  const [teamSearch, setTeamSearch] = useState('');
+  const [teamCatFilter, setTeamCatFilter] = useState<string>('all');
+  const [teamStatusFilter, setTeamStatusFilter] = useState<string>('all');
+  const [teamPage, setTeamPage] = useState(1);
+
+  // 3. Pending updates
+  const [pendingSearch, setPendingSearch] = useState('');
+  const [pendingPage, setPendingPage] = useState(1);
+
+  // 4. Rankings
+  const [rankSearch, setRankSearch] = useState('');
+  const [rankCatFilter, setRankCatFilter] = useState<string>('all');
+  const [rankPage, setRankPage] = useState(1);
+
+  // 5. Judges
+  const [judgeSearch, setJudgeSearch] = useState('');
+  const [judgePage, setJudgePage] = useState(1);
+
+  const pageSize = 10;
+
+  const renderPagination = (currentPage: number, totalItems: number, currentPageSize: number, onPageChange: (p: number) => void) => {
+    const totalPages = Math.ceil(totalItems / currentPageSize);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs font-semibold text-slate-500">
+        <div>
+          Hiển thị từ {((currentPage - 1) * currentPageSize) + 1} đến {Math.min(currentPage * currentPageSize, totalItems)} trong tổng số {totalItems} dòng
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+          >
+            Trước
+          </button>
+          {Array.from({ length: totalPages }, (_, idx) => {
+            const pageNum = idx + 1;
+            return (
+              <button
+                key={pageNum}
+                type="button"
+                onClick={() => onPageChange(pageNum)}
+                className={`w-8 h-8 rounded-lg border font-bold flex items-center justify-center cursor-pointer transition-all ${
+                  currentPage === pageNum
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+          >
+            Sau
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // Load state from API when logged in
   useEffect(() => {
     if (isAdminLoggedIn && authHeader) {
@@ -462,6 +537,60 @@ export default function AdminDashboard() {
     }
   };
 
+  // 1. Logs / Monitoring Filter & Paginate
+  const filteredLogs = logs.filter((log) => {
+    const matchesSearch =
+      log.teamName.toLowerCase().includes(monSearch.toLowerCase()) ||
+      log.ip.toLowerCase().includes(monSearch.toLowerCase()) ||
+      log.fingerprint.toLowerCase().includes(monSearch.toLowerCase());
+    const matchesFilter = monFilter === 'all' ? true : log.status === monFilter;
+    return matchesSearch && matchesFilter;
+  });
+  const paginatedLogs = filteredLogs.slice((monPage - 1) * pageSize, monPage * pageSize);
+
+  // 2. Teams Filter & Paginate
+  const filteredTeams = teams.filter((t) => {
+    const matchesSearch =
+      t.team_name.toLowerCase().includes(teamSearch.toLowerCase()) ||
+      (t.representative_name || '').toLowerCase().includes(teamSearch.toLowerCase()) ||
+      (t.email || '').toLowerCase().includes(teamSearch.toLowerCase()) ||
+      (t.phone || '').toLowerCase().includes(teamSearch.toLowerCase()) ||
+      (t.performance_title || '').toLowerCase().includes(teamSearch.toLowerCase());
+    const matchesCat = teamCatFilter === 'all' ? true : t.category === teamCatFilter;
+    const matchesStatus = teamStatusFilter === 'all' ? true : t.status === teamStatusFilter;
+    return matchesSearch && matchesCat && matchesStatus;
+  });
+  const paginatedTeams = filteredTeams.slice((teamPage - 1) * pageSize, teamPage * pageSize);
+
+  // 3. Pending updates Filter & Paginate
+  const pendingTeams = teams.filter((t) => t.has_pending_update);
+  const filteredPending = pendingTeams.filter((t) => {
+    return (
+      t.team_name.toLowerCase().includes(pendingSearch.toLowerCase()) ||
+      (t.representative_name || '').toLowerCase().includes(pendingSearch.toLowerCase())
+    );
+  });
+  const paginatedPending = filteredPending.slice((pendingPage - 1) * pageSize, pendingPage * pageSize);
+
+  // 4. Rankings Filter & Paginate
+  const filteredRankings = rankings.filter((r) => {
+    const matchesSearch =
+      r.teamName.toLowerCase().includes(rankSearch.toLowerCase()) ||
+      (r.performanceTitle || '').toLowerCase().includes(rankSearch.toLowerCase());
+    const matchesCat = rankCatFilter === 'all' ? true : r.category === rankCatFilter;
+    return matchesSearch && matchesCat;
+  });
+  const paginatedRankings = filteredRankings.slice((rankPage - 1) * pageSize, rankPage * pageSize);
+
+  // 5. Judges Filter & Paginate
+  const filteredJudges = judges.filter((j) => {
+    return (
+      j.full_name.toLowerCase().includes(judgeSearch.toLowerCase()) ||
+      (j.email || '').toLowerCase().includes(judgeSearch.toLowerCase())
+    );
+  });
+  const paginatedJudges = filteredJudges.slice((judgePage - 1) * pageSize, judgePage * pageSize);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
       <div className="print:hidden">
@@ -657,16 +786,40 @@ export default function AdminDashboard() {
                     <ShieldAlert className="w-5 h-5 text-secondary" />
                     <h2 className="font-heading font-bold text-xl text-slate-900">Nhật ký Giám sát Bình chọn bất thường</h2>
                   </div>
-
-                  <button
-                    onClick={handleClearAllVotes}
-                    className="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase tracking-wider border border-red-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" /> Xóa Dữ Liệu Vote Thử Nghiệm
-                  </button>
                 </div>
 
-                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                {/* Filters Row */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                  <div className="w-full sm:flex-1">
+                    <input
+                      type="text"
+                      placeholder="Tìm theo Tiết mục, IP, Fingerprint..."
+                      value={monSearch}
+                      onChange={(e) => {
+                        setMonSearch(e.target.value);
+                        setMonPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    />
+                  </div>
+                  <div className="w-full sm:w-48">
+                    <select
+                      value={monFilter}
+                      onChange={(e) => {
+                        setMonFilter(e.target.value as any);
+                        setMonPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    >
+                      <option value="all">Tất cả Trạng thái</option>
+                      <option value="valid">Hợp lệ</option>
+                      <option value="flagged">Nghi vấn</option>
+                      <option value="voided">Đã hủy</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
@@ -681,8 +834,8 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-xs">
-                        {logs.length > 0 ? (
-                          logs.map((log) => {
+                        {paginatedLogs.length > 0 ? (
+                          paginatedLogs.map((log) => {
                             const isFlagged = log.status === 'flagged';
                             const isVoided = log.status === 'voided';
                             const isLowScore = log.score < 0.3;
@@ -743,13 +896,14 @@ export default function AdminDashboard() {
                         ) : (
                           <tr>
                             <td colSpan={7} className="text-center py-10 text-slate-400 italic">
-                              Chưa ghi nhận phiếu bầu nào trong hệ thống.
+                              Chưa ghi nhận phiếu bầu nào phù hợp với bộ lọc.
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </table>
                   </div>
+                  {renderPagination(monPage, filteredLogs.length, pageSize, setMonPage)}
                 </div>
               </div>
             )}
@@ -759,7 +913,53 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <h2 className="font-heading font-bold text-xl text-slate-900">Quản Lý Hồ Sơ Đăng Ký</h2>
 
-                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                {/* Filters Row */}
+                <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                  <div className="w-full md:flex-1">
+                    <input
+                      type="text"
+                      placeholder="Tìm theo Tên Đội, Mã Số, Đại Diện, SĐT, Email..."
+                      value={teamSearch}
+                      onChange={(e) => {
+                        setTeamSearch(e.target.value);
+                        setTeamPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    />
+                  </div>
+                  <div className="w-full md:w-48">
+                    <select
+                      value={teamCatFilter}
+                      onChange={(e) => {
+                        setTeamCatFilter(e.target.value);
+                        setTeamPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    >
+                      <option value="all">Tất cả Thể loại</option>
+                      <option value="dan_ca">Dân Ca</option>
+                      <option value="dan_vu">Dân Vũ</option>
+                      <option value="both">Cả hai</option>
+                    </select>
+                  </div>
+                  <div className="w-full md:w-48">
+                    <select
+                      value={teamStatusFilter}
+                      onChange={(e) => {
+                        setTeamStatusFilter(e.target.value);
+                        setTeamPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    >
+                      <option value="all">Tất cả Trạng thái</option>
+                      <option value="submitted">Chờ Duyệt</option>
+                      <option value="approved">Đã Duyệt</option>
+                      <option value="rejected">Từ Chối</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
@@ -773,8 +973,8 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-xs">
-                        {teams.length > 0 ? (
-                          teams.map((team) => {
+                        {paginatedTeams.length > 0 ? (
+                          paginatedTeams.map((team) => {
                             const isSubmitted = team.status === 'submitted';
                             const isApproved = team.status === 'approved';
                             const isRejected = team.status === 'rejected';
@@ -851,13 +1051,14 @@ export default function AdminDashboard() {
                         ) : (
                           <tr>
                             <td colSpan={6} className="text-center py-10 text-slate-400 italic">
-                              Không tìm thấy đội đăng ký nào trong hệ thống.
+                              Không tìm thấy đội đăng ký nào phù hợp với bộ lọc.
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </table>
                   </div>
+                  {renderPagination(teamPage, filteredTeams.length, pageSize, setTeamPage)}
                 </div>
               </div>
             )}
@@ -865,7 +1066,7 @@ export default function AdminDashboard() {
             {/* Content for Pending Updates Tab */}
             {activeTab === 'pending_updates' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="space-y-1">
                     <h2 className="font-heading font-bold text-xl text-slate-900 flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-amber-600" /> Danh Sách Yêu Cầu Thay Đổi Thông Tin Hồ Sơ
@@ -876,16 +1077,29 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {teams.filter((t) => t.has_pending_update).length === 0 ? (
+                {/* Filters Row */}
+                <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                  <input
+                    type="text"
+                    placeholder="Tìm theo Tên Đội, Trưởng đoàn..."
+                    value={pendingSearch}
+                    onChange={(e) => {
+                      setPendingSearch(e.target.value);
+                      setPendingPage(1);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                  />
+                </div>
+
+                {filteredPending.length === 0 ? (
                   <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 space-y-2">
                     <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto opacity-50" />
-                    <p className="font-semibold text-sm text-slate-600">Hiện tại không có yêu cầu thay đổi thông tin nào cần xử lý.</p>
+                    <p className="font-semibold text-sm text-slate-600">Hiện tại không có yêu cầu thay đổi thông tin nào phù hợp.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {teams
-                      .filter((t) => t.has_pending_update)
-                      .map((team) => {
+                  <div className="space-y-6 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                    <div className="space-y-6">
+                      {paginatedPending.map((team) => {
                         const pending = team.pending_changes || {};
                         return (
                           <div key={team.id} className="bg-white border-2 border-amber-300 rounded-2xl p-6 shadow-md space-y-4">
@@ -965,6 +1179,8 @@ export default function AdminDashboard() {
                           </div>
                         );
                       })}
+                    </div>
+                    {renderPagination(pendingPage, filteredPending.length, pageSize, setPendingPage)}
                   </div>
                 )}
               </div>
@@ -977,7 +1193,21 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-8 space-y-4">
                   <h2 className="font-heading font-bold text-xl text-slate-900">Danh Sách Giám Khảo</h2>
 
-                  <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                  {/* Filters Row */}
+                  <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                    <input
+                      type="text"
+                      placeholder="Tìm theo Tên Giám khảo, Email..."
+                      value={judgeSearch}
+                      onChange={(e) => {
+                        setJudgeSearch(e.target.value);
+                        setJudgePage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
@@ -989,8 +1219,8 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-xs">
-                          {judges.length > 0 ? (
-                            judges.map((judge) => (
+                          {paginatedJudges.length > 0 ? (
+                            paginatedJudges.map((judge) => (
                               <tr key={judge.id} className="hover:bg-slate-50/60 transition-colors">
                                 <td className="px-6 py-4 font-semibold text-slate-800">
                                   {judge.full_name}
@@ -1015,13 +1245,14 @@ export default function AdminDashboard() {
                           ) : (
                             <tr>
                               <td colSpan={4} className="text-center py-10 text-slate-400 italic">
-                                Chưa có tài khoản giám khảo nào.
+                                Chưa có tài khoản giám khảo nào phù hợp với bộ tìm kiếm.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
                     </div>
+                    {renderPagination(judgePage, filteredJudges.length, pageSize, setJudgePage)}
                   </div>
                 </div>
 
@@ -1093,7 +1324,38 @@ export default function AdminDashboard() {
                   <span className="text-xs text-slate-500 font-medium">Sắp xếp theo Điểm Trung Bình giảm dần</span>
                 </div>
 
-                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white print:border-none print:shadow-none print:bg-white print:text-black">
+                {/* Filters Row */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm print:hidden">
+                  <div className="w-full sm:flex-1">
+                    <input
+                      type="text"
+                      placeholder="Tìm theo Tên Đội, Tiết mục..."
+                      value={rankSearch}
+                      onChange={(e) => {
+                        setRankSearch(e.target.value);
+                        setRankPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    />
+                  </div>
+                  <div className="w-full sm:w-48">
+                    <select
+                      value={rankCatFilter}
+                      onChange={(e) => {
+                        setRankCatFilter(e.target.value);
+                        setRankPage(1);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                    >
+                      <option value="all">Tất cả Thể loại</option>
+                      <option value="dan_ca">Dân Ca</option>
+                      <option value="dan_vu">Dân Vũ</option>
+                      <option value="both">Cả hai</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4 print:border-none print:shadow-none print:bg-white print:text-black">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm border-collapse">
                       <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold print:bg-white print:text-black print:border-b-2 print:border-black">
@@ -1114,12 +1376,13 @@ export default function AdminDashboard() {
                               Đang tính toán bảng điểm và xếp hạng...
                             </td>
                           </tr>
-                        ) : rankings.length > 0 ? (
-                          rankings.map((row, index) => {
+                        ) : paginatedRankings.length > 0 ? (
+                          paginatedRankings.map((row) => {
+                            const globalRank = rankings.findIndex(r => r.id === row.id) + 1;
                             return (
                               <tr key={row.id} className="hover:bg-slate-50/60 transition-colors print:hover:bg-transparent">
                                 <td className="px-6 py-4 text-center font-bold text-sm text-slate-700 print:text-black">
-                                  {index + 1}
+                                  {globalRank}
                                 </td>
                                 <td className="px-6 py-4 font-mono font-semibold text-slate-500 print:text-black">
                                   {row.id.substring(0, 8).toUpperCase()}
@@ -1157,12 +1420,15 @@ export default function AdminDashboard() {
                         ) : (
                           <tr>
                             <td colSpan={7} className="text-center py-10 text-slate-400 italic">
-                              Chưa có đội thi nào được duyệt để xếp hạng.
+                              Chưa có đội thi nào phù hợp với bộ tìm kiếm.
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="print:hidden">
+                    {renderPagination(rankPage, filteredRankings.length, pageSize, setRankPage)}
                   </div>
                 </div>
 
