@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Music, ArrowRight, Star, Heart, Award, Calendar, User, Newspaper, X } from 'lucide-react';
+import { Play, Music, ArrowRight, Star, Heart, Award, Calendar, User, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -77,7 +77,6 @@ const bgImages = [
 export default function HomeClient() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [posts, setPosts] = React.useState<Post[]>([]);
-  const [selectedPost, setSelectedPost] = React.useState<Post | null>(null);
   const [isLoadingPosts, setIsLoadingPosts] = React.useState(true);
 
   React.useEffect(() => {
@@ -477,75 +476,82 @@ export default function HomeClient() {
             </div>
           </div>
 
-          {/* Cards Grid */}
+          {/* Cards Grid — max 3 bài, ưu tiên nổi bật rồi mới nhất */}
           {isLoadingPosts ? (
             <div className="text-center py-16">
               <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải tin tức mới nhất...</p>
             </div>
           ) : posts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {posts.slice(0, 6).map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                >
-                  {/* Image Container */}
-                  <div className="relative h-48 w-full overflow-hidden bg-slate-100 select-none">
-                    {post.photo_url ? (
-                      <img
-                        src={post.photo_url}
-                        alt={post.title}
-                        className="w-full h-full object-cover hover:scale-102 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center text-primary/30">
-                        <Newspaper className="w-12 h-12" />
-                      </div>
-                    )}
-                    
-                    {/* Featured Gold Badge */}
-                    {post.is_featured && (
-                      <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
-                        NỔI BẬT ★
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-6 flex-grow flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <h3 
-                        className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => setSelectedPost(post)}
-                      >
-                        {post.title}
-                      </h3>
-                      
-                      {/* Author / Source */}
-                      <div className="flex items-center gap-2 text-[10px] text-dark-slate/70">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-[9px]">
-                          {post.author ? post.author.substring(0, 2).toUpperCase() : 'BTC'}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {posts.slice(0, 3).map((post) => (
+                  <div
+                    key={post.id}
+                    className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between"
+                  >
+                    {/* Image Container */}
+                    <Link href={`/posts/${post.id}`} className="block relative h-48 w-full overflow-hidden bg-slate-100 select-none">
+                      {post.photo_url ? (
+                        <img
+                          src={post.photo_url}
+                          alt={post.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center text-primary/30">
+                          <Newspaper className="w-12 h-12" />
                         </div>
-                        <span className="font-semibold">{post.author || 'Ban Tổ Chức'}</span>
+                      )}
+                      {post.is_featured && (
+                        <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
+                          NỔI BẬT ★
+                        </span>
+                      )}
+                    </Link>
+
+                    {/* Body Content */}
+                    <div className="p-6 flex-grow flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <Link href={`/posts/${post.id}`}>
+                          <h3 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] hover:text-primary transition-colors cursor-pointer">
+                            {post.title}
+                          </h3>
+                        </Link>
+                        <div className="flex items-center gap-2 text-[10px] text-dark-slate/70">
+                          <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-[9px]">
+                            {post.author ? post.author.substring(0, 2).toUpperCase() : 'BTC'}
+                          </div>
+                          <span className="font-semibold">{post.author || 'Ban Tổ Chức'}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <span className="text-[10px] text-dark-slate/50 font-medium">
+                          {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                        </span>
+                        <Link
+                          href={`/posts/${post.id}`}
+                          className="px-4 py-2 bg-[#0074DA] text-white hover:bg-opacity-90 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm"
+                        >
+                          Đọc bài
+                        </Link>
                       </div>
                     </div>
-
-                    {/* Footer elements */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                      <span className="text-[10px] text-dark-slate/50 font-medium">
-                        {new Date(post.created_at).toLocaleDateString('vi-VN')}
-                      </span>
-                      <button
-                        onClick={() => setSelectedPost(post)}
-                        className="px-4 py-2 bg-[#0074DA] text-white hover:bg-opacity-95 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm cursor-pointer"
-                      >
-                        Đọc bài
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Xem tất cả button */}
+              <div className="flex justify-center mt-10">
+                <Link
+                  href="/posts"
+                  className="inline-flex items-center gap-2 px-7 py-3 bg-dark-obsidian text-white font-bold text-sm rounded-2xl hover:bg-opacity-85 transition-all shadow-md group"
+                >
+                  Xem tất cả tin tức
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
               <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có bài viết tin tức nào được xuất bản.</p>
@@ -554,111 +560,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Full Article Reader Modal popup */}
-      <AnimatePresence>
-        {selectedPost && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-dark-obsidian/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedPost(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', duration: 0.5 }}
-              className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Banner */}
-              <div className="relative h-56 sm:h-64 w-full bg-slate-100">
-                {selectedPost.photo_url ? (
-                  <img
-                    src={selectedPost.photo_url}
-                    alt={selectedPost.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center text-primary/30">
-                    <Newspaper className="w-16 h-16" />
-                  </div>
-                )}
-                <button
-                  onClick={() => setSelectedPost(null)}
-                  className="absolute top-4 right-4 bg-white/90 hover:bg-white text-dark-obsidian p-2 rounded-full shadow-md transition-colors cursor-pointer border border-slate-200/50"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              {/* Modal Body */}
-              <div className="p-6 sm:p-8 space-y-6">
-                <div className="space-y-3">
-                  {selectedPost.is_featured && (
-                    <span className="inline-block bg-secondary/20 border border-secondary text-secondary-dark text-[9px] font-bold px-2 py-0.5 rounded-md">
-                      NỔI BẬT ★
-                    </span>
-                  )}
-                  <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-dark-obsidian leading-snug">
-                    {selectedPost.title}
-                  </h1>
-
-                  {/* Meta info */}
-                  <div className="flex items-center gap-2 border-y border-slate-200/60 py-3 text-[10px] text-dark-slate/60 font-semibold">
-                    <span className="bg-primary/10 text-primary font-bold px-2.5 py-1 rounded-full uppercase">
-                      {selectedPost.author || 'Ban Tổ Chức'}
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(selectedPost.created_at).toLocaleDateString('vi-VN')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Post Summary (if exists) */}
-                {selectedPost.summary && (
-                  <div className="text-xs text-dark-slate/70 italic border-l-2 border-slate-300 pl-3 py-0.5 my-2 text-left">
-                    {selectedPost.summary}
-                  </div>
-                )}
-
-                {/* Main scrollable body */}
-                {selectedPost.format === 'html' ? (
-                  <div
-                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal text-left"
-                    dangerouslySetInnerHTML={{ __html: selectedPost.content }}
-                  />
-                ) : (
-                  <div
-                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal text-left"
-                    dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(selectedPost.content) }}
-                  />
-                )}
-
-                {/* Post Source (if exists) */}
-                {selectedPost.source && (
-                  <div className="text-[10px] text-dark-slate/40 font-semibold mt-4 text-right">
-                    Nguồn: {selectedPost.source}
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                <button
-                  onClick={() => setSelectedPost(null)}
-                  className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-                >
-                  Đóng bài viết
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <Footer />
     </div>
