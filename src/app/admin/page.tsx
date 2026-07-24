@@ -355,6 +355,67 @@ export default function AdminDashboard() {
     }
   };
 
+  // Handle Paste event on post textarea to intercept copy-pasted images
+  const handleTextareaPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    let imageFile: File | null = null;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          imageFile = file;
+          break;
+        }
+      }
+    }
+
+    if (imageFile) {
+      e.preventDefault();
+      setIsUploadingInline(true);
+      try {
+        if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          const mockUrl = `https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=600&auto=format&fit=crop&q=80`;
+          if (postFormat === 'html') {
+            insertTag(`<img src="${mockUrl}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+          } else {
+            insertTag(mockUrl, '');
+          }
+          return;
+        }
+
+        const fileExt = imageFile.name ? imageFile.name.split('.').pop() : 'png';
+        const fileName = `pasted_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `posts/inline/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('photos')
+          .upload(filePath, imageFile, { cacheControl: '3600', upsert: true });
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('photos')
+          .getPublicUrl(filePath);
+
+        if (postFormat === 'html') {
+          insertTag(`<img src="${publicUrl}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+        } else {
+          insertTag(publicUrl, '');
+        }
+      } catch (err: any) {
+        console.error('Error uploading pasted image:', err);
+        alert('Không thể tải ảnh chèn trực tiếp lên: ' + (err.message || 'Lỗi kết nối'));
+      } finally {
+        setIsUploadingInline(false);
+      }
+    }
+  };
+
   // Delete Blog Post
   const handleDeletePost = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này vĩnh viễn?')) return;
@@ -1862,6 +1923,7 @@ export default function AdminDashboard() {
                             required
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
+                            onPaste={handleTextareaPaste}
                             rows={12}
                             placeholder={
                               postFormat === 'html'
