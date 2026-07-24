@@ -17,43 +17,44 @@ interface Post {
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
-  format?: 'html' | 'text';
+  format?: 'html' | 'text' | 'markdown';
   summary?: string;
   source?: string;
 }
 
-const renderFormattedText = (text: string) => {
-  if (!text) return null;
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map((part, index) => {
-    if (urlRegex.test(part)) {
-      const isImage = /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(part) || part.includes('supabase.co/storage/v1/object/public/photos/');
-      if (isImage) {
-        return (
-          <img
-            key={index}
-            src={part}
-            alt="Hình ảnh bài viết"
-            className="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200"
-          />
-        );
-      } else {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent underline break-all hover:text-opacity-80 font-semibold"
-          >
-            {part}
-          </a>
-        );
-      }
-    }
-    return part;
-  });
+const parseMarkdownToHtml = (text: string): string => {
+  if (!text) return '';
+  let html = text;
+
+  // Detect and replace raw Supabase image URLs or standard image URLs that are not inside src/href tags
+  const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
+  html = html.replace(rawImageRegex, '<img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
+
+  // Parse Markdown images: ![alt](url)
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
+
+  // Parse Markdown links: [text](url)
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-opacity-80 font-semibold" target="_blank">$1</a>');
+
+  // Parse Headers
+  html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
+
+  // Parse Bold: **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Parse Italic: *text*
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // Parse Unordered Lists (bullet points): lines starting with -
+  html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
+
+  // Paragraph and Line break formatting
+  html = html.replace(/\n\s*\n/g, '</p><p class="text-xs text-dark-slate/90 leading-relaxed mb-3">');
+  html = html.replace(/\n/g, '<br/>');
+
+  return html;
 };
 
 const bgImages = [
@@ -614,14 +615,15 @@ export default function HomeClient() {
                 )}
 
                 {/* Main scrollable body */}
-                {selectedPost.format === 'text' ? (
-                  <div className="text-xs leading-relaxed text-dark-slate/90 font-normal text-left">
-                    {renderFormattedText(selectedPost.content)}
-                  </div>
-                ) : (
+                {selectedPost.format === 'html' ? (
                   <div
                     className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal text-left"
                     dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                  />
+                ) : (
+                  <div
+                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal text-left"
+                    dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(selectedPost.content) }}
                   />
                 )}
 

@@ -19,7 +19,7 @@ interface Post {
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
-  format?: 'html' | 'text';
+  format?: 'html' | 'text' | 'markdown';
   summary?: string;
   source?: string;
 }
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
   const [postIsFeatured, setPostIsFeatured] = useState(false);
   const [postAuthor, setPostAuthor] = useState('Ban Tổ Chức');
   const [isSavingPost, setIsSavingPost] = useState(false);
-  const [postFormat, setPostFormat] = useState<'html' | 'text'>('html');
+  const [postFormat, setPostFormat] = useState<'html' | 'text' | 'markdown'>('html');
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [isUploadingInline, setIsUploadingInline] = useState(false);
   const [postSummary, setPostSummary] = useState('');
@@ -476,6 +476,36 @@ export default function AdminDashboard() {
       }
     } else {
       insertTag(src, '');
+    }
+  };
+
+  // Change font color for selection depending on format
+  const applyTextColor = (colorHex: string) => {
+    if (!colorHex) return;
+    if (postFormat === 'html') {
+      handleEditorCommand('foreColor', colorHex);
+    } else {
+      insertTag(`<span style="color: ${colorHex}">`, '</span>');
+    }
+  };
+
+  // Change font size for selection depending on format
+  const applyTextSize = (sizePx: string) => {
+    if (!sizePx) return;
+    if (postFormat === 'html') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.fontSize = sizePx;
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+        if (editorRef.current) {
+          setPostContent(editorRef.current.innerHTML);
+        }
+      }
+    } else {
+      insertTag(`<span style="font-size: ${sizePx}">`, '</span>');
     }
   };
 
@@ -1022,39 +1052,40 @@ export default function AdminDashboard() {
     }, 0);
   };
 
-  // Helper to parse image URLs and render them as actual images in preview
-  const renderFormattedText = (text: string) => {
-    if (!text) return null;
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    return parts.map((part, index) => {
-      if (urlRegex.test(part)) {
-        const isImage = /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(part) || part.includes('supabase.co/storage/v1/object/public/photos/');
-        if (isImage) {
-          return (
-            <img
-              key={index}
-              src={part}
-              alt="Hình ảnh bài viết"
-              className="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200"
-            />
-          );
-        } else {
-          return (
-            <a
-              key={index}
-              href={part}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline break-all hover:text-opacity-80 font-semibold"
-            >
-              {part}
-            </a>
-          );
-        }
-      }
-      return part;
-    });
+  // Parser to convert Markdown / styled text into structured HTML preview
+  const parseMarkdownToHtml = (text: string): string => {
+    if (!text) return '';
+    let html = text;
+
+    // Detect and replace raw Supabase image URLs or standard image URLs that are not inside src/href tags
+    const rawImageRegex = /(?<!src=")(https?:\/\/[^\s'"]+(?:\.(?:jpeg|jpg|gif|png|webp|svg)|supabase\.co\/storage\/v1\/object\/public\/photos\/)[^\s'"]*)/gi;
+    html = html.replace(rawImageRegex, '<img src="$1" alt="Hình ảnh bài viết" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
+
+    // Parse Markdown images: ![alt](url)
+    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200" />');
+
+    // Parse Markdown links: [text](url)
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-opacity-80 font-semibold" target="_blank">$1</a>');
+
+    // Parse Headers
+    html = html.replace(/^### (.*$)/gim, '<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
+
+    // Parse Bold: **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Parse Italic: *text*
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Parse Unordered Lists (bullet points): lines starting with -
+    html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
+
+    // Paragraph and Line break formatting
+    html = html.replace(/\n\s*\n/g, '</p><p class="text-xs text-dark-slate/90 leading-relaxed mb-3">');
+    html = html.replace(/\n/g, '<br/>');
+
+    return html;
   };
 
   return (
@@ -1916,14 +1947,25 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setPostFormat('text')}
+                                onClick={() => setPostFormat('markdown')}
                                 className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
-                                  postFormat === 'text'
+                                  postFormat === 'markdown'
                                     ? 'bg-slate-600 text-white shadow-sm'
                                     : 'text-slate-500 hover:text-slate-800'
                                 }`}
                               >
-                                Văn bản thường (Sao hiện vậy)
+                                Markdown
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPostFormat('text')}
+                                className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                  postFormat === 'text'
+                                    ? 'bg-[#1E293B] text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                Văn bản thường
                               </button>
                             </div>
                           </div>
@@ -1970,124 +2012,150 @@ export default function AdminDashboard() {
                         {/* Editor Toolbar & Visual/Text Container */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                            {postFormat === 'html' ? 'Nội dung bài viết (HTML) *' : 'Nội dung bài viết (Văn bản thường) *'}
+                            {postFormat === 'html' ? 'Nội dung bài viết (HTML) *' : postFormat === 'markdown' ? 'Nội dung bài viết (Markdown) *' : 'Nội dung bài viết (Văn bản thường) *'}
                           </label>
 
-                          {postFormat === 'html' ? (
-                            <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('bold')}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
-                                title="In đậm"
-                              >
-                                <Bold className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('italic')}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
-                                title="In nghiêng"
-                              >
-                                <Italic className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('underline')}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
-                                title="Gạch chân"
-                              >
-                                <Underline className="w-3.5 h-3.5" />
-                              </button>
-                              <div className="w-px h-6 bg-slate-200 mx-1" />
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('formatBlock', 'H2')}
-                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                                title="Tiêu đề 2"
-                              >
-                                H2
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('formatBlock', 'H3')}
-                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                                title="Tiêu đề 3"
-                              >
-                                H3
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('formatBlock', 'P')}
-                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                                title="Đoạn văn"
-                              >
-                                P
-                              </button>
-                              <div className="w-px h-6 bg-slate-200 mx-1" />
-                              <button
-                                type="button"
-                                onClick={() => handleEditorCommand('insertUnorderedList')}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                                title="Danh sách hoa thị"
-                              >
-                                <List className="w-3.5 h-3.5" />
-                              </button>
-                              <div className="w-px h-6 bg-slate-200 mx-1" />
-                              <button
-                                type="button"
-                                onClick={handleInsertLink}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                                title="Chèn liên kết"
-                              >
-                                <LinkIcon className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleInsertImage}
-                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                                title="Chèn hình ảnh từ URL"
-                              >
-                                <ImageIcon className="w-3.5 h-3.5" />
-                              </button>
-                              <div className="w-px h-6 bg-slate-200 mx-1" />
-                              <label className="p-2 hover:bg-slate-200 rounded text-accent cursor-pointer flex items-center gap-1 text-xs font-semibold" title="Tải ảnh chèn vào bài">
-                                <Upload className="w-3.5 h-3.5" />
-                                <span>{isUploadingInline ? 'Đang tải...' : 'Tải lên ảnh'}</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={handleInlineUpload}
-                                  disabled={isUploadingInline}
-                                />
-                              </label>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap items-center gap-3 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl text-xs font-semibold text-slate-500">
-                              <span>Bộ công cụ văn bản:</span>
-                              <label className="p-1.5 hover:bg-slate-200 rounded text-accent cursor-pointer flex items-center gap-1 font-bold" title="Tải ảnh chèn vào bài">
-                                <Upload className="w-3.5 h-3.5" />
-                                <span>{isUploadingInline ? 'Đang tải...' : 'Tải lên & chèn ảnh'}</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={handleInlineUpload}
-                                  disabled={isUploadingInline}
-                                />
-                              </label>
-                              <button
-                                type="button"
-                                onClick={handleInsertLink}
-                                className="p-1.5 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 cursor-pointer font-bold"
-                                title="Chèn liên kết"
-                              >
-                                <LinkIcon className="w-3.5 h-3.5" />
-                                <span>Chèn link</span>
-                              </button>
-                            </div>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('bold');
+                                else if (postFormat === 'markdown') insertTag('**', '**');
+                                else insertTag('<strong>', '</strong>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
+                              title="In đậm"
+                            >
+                              <Bold className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('italic');
+                                else if (postFormat === 'markdown') insertTag('*', '*');
+                                else insertTag('<em>', '</em>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
+                              title="In nghiêng"
+                            >
+                              <Italic className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('underline');
+                                else insertTag('<u>', '</u>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
+                              title="Gạch chân"
+                            >
+                              <Underline className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('formatBlock', 'H2');
+                                else if (postFormat === 'markdown') insertTag('## ', '');
+                                else insertTag('<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">', '</h2>');
+                              }}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                              title="Tiêu đề 2"
+                            >
+                              H2
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('formatBlock', 'H3');
+                                else if (postFormat === 'markdown') insertTag('### ', '');
+                                else insertTag('<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">', '</h3>');
+                              }}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                              title="Tiêu đề 3"
+                            >
+                              H3
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (postFormat === 'html') handleEditorCommand('insertUnorderedList');
+                                else if (postFormat === 'markdown') insertTag('- ', '');
+                                else insertTag('<li class="list-disc ml-5 my-1">', '</li>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Danh sách hoa thị"
+                            >
+                              <List className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Font Color Dropdown */}
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <select
+                              onChange={(e) => {
+                                applyTextColor(e.target.value);
+                                e.target.value = '';
+                              }}
+                              defaultValue=""
+                              className="bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-[10px] font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                            >
+                              <option value="" disabled>Màu chữ</option>
+                              <option value="#EF4444" className="text-red-500 font-bold">Đỏ</option>
+                              <option value="#10B981" className="text-emerald-500 font-bold">Xanh lá</option>
+                              <option value="#3B82F6" className="text-blue-500 font-bold">Xanh dương</option>
+                              <option value="#F59E0B" className="text-amber-500 font-bold">Vàng</option>
+                              <option value="#64748B" className="text-slate-500 font-bold">Xám</option>
+                              <option value="#334155" className="text-slate-800 font-bold">Đen</option>
+                            </select>
+
+                            {/* Font Size Dropdown */}
+                            <select
+                              onChange={(e) => {
+                                applyTextSize(e.target.value);
+                                e.target.value = '';
+                              }}
+                              defaultValue=""
+                              className="bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-[10px] font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                            >
+                              <option value="" disabled>Cỡ chữ</option>
+                              <option value="11px">Nhỏ</option>
+                              <option value="13px">Vừa</option>
+                              <option value="16px">Lớn</option>
+                              <option value="20px">Rất lớn</option>
+                              <option value="24px">Khổng lồ</option>
+                            </select>
+
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={handleInsertLink}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Chèn liên kết"
+                            >
+                              <LinkIcon className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleInsertImage}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Chèn hình ảnh từ URL"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <label className="p-2 hover:bg-slate-200 rounded text-accent cursor-pointer flex items-center gap-1 text-xs font-semibold" title="Tải ảnh chèn vào bài">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{isUploadingInline ? 'Đang tải...' : 'Tải lên ảnh'}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleInlineUpload}
+                                disabled={isUploadingInline}
+                              />
+                            </label>
+                          </div>
 
                           {postFormat === 'html' ? (
                             /* Visual contentEditable Editor */
@@ -2101,7 +2169,7 @@ export default function AdminDashboard() {
                               style={{ outline: 'none' }}
                             />
                           ) : (
-                            /* Plain textarea for Text mode */
+                            /* Plain textarea for Markdown / Text mode */
                             <textarea
                               id="post-content-textarea"
                               required
@@ -2109,7 +2177,11 @@ export default function AdminDashboard() {
                               onChange={(e) => setPostContent(e.target.value)}
                               onPaste={handleTextareaPaste}
                               rows={12}
-                              placeholder="Nhập nội dung văn bản thường. Bạn gõ thế nào, xuống dòng ra sao thì hệ thống sẽ hiển thị y hệt như vậy ở trang chủ."
+                              placeholder={
+                                postFormat === 'markdown'
+                                  ? "Nhập nội dung bài viết bằng Markdown (ví dụ: **chữ đậm**, *chữ nghiêng*, # Tiêu đề). Bạn có thể dùng thanh công cụ trên để soạn nhanh."
+                                  : "Nhập nội dung văn bản thường. Bạn gõ thế nào, xuống dòng ra sao thì hệ thống sẽ hiển thị y hệt như vậy ở trang chủ. Bạn vẫn có thể định dạng màu sắc/kích thước bằng thanh công cụ trên."
+                              }
                               className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all font-mono"
                             />
                           )}
@@ -2174,9 +2246,12 @@ export default function AdminDashboard() {
                               }}
                             />
                           ) : (
-                            <div className="text-xs leading-relaxed text-slate-800 font-normal whitespace-pre-wrap text-left">
-                              {renderFormattedText(postContent) || <span className="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</span>}
-                            </div>
+                            <div
+                              className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3 text-left"
+                              dangerouslySetInnerHTML={{
+                                __html: parseMarkdownToHtml(postContent) || '<p class="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</p>'
+                              }}
+                            />
                           )}
 
                           {/* Post Source Preview (New) */}
