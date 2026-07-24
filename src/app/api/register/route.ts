@@ -102,10 +102,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      const mailOptions = {
+      const mailOptions: any = {
         from: process.env.SMTP_FROM || `"Festival Dân Ca Dân Vũ 2026" <${process.env.SMTP_USER}>`,
         to: email,
         subject: `[Festival 2026] Xác nhận đăng ký hồ sơ dự thi & Tài khoản Cổng Đội Thi - ${teamName}`,
+        bcc: process.env.SMTP_BCC || undefined,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
             <div style="text-align: center; margin-bottom: 25px;">

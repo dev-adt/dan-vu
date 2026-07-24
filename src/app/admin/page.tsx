@@ -1072,14 +1072,14 @@ export default function AdminDashboard() {
     html = html.replace(/^## (.*$)/gim, '<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1 class="font-heading font-extrabold text-xl text-slate-900 leading-snug my-4">$1</h1>');
 
+    // Parse Unordered Lists (bullet points): lines starting with - or *
+    html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
+
     // Parse Bold: **text**
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
     // Parse Italic: *text*
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Parse Unordered Lists (bullet points): lines starting with -
-    html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="text-xs text-dark-slate/90 list-disc ml-5 my-1">$1</li>');
 
     // Paragraph and Line break formatting
     html = html.replace(/\n\s*\n/g, '</p><p class="text-xs text-dark-slate/90 leading-relaxed mb-3">');
