@@ -340,14 +340,14 @@ export default function HomeClient() {
                 <li className="flex items-start gap-3 bg-amber-50/80 p-3.5 rounded-xl border border-amber-200/60">
                   <span className="font-bold text-amber-900 shrink-0">01 Giải Nhất:</span>
                   <div>
-                    <strong className="text-amber-900 text-base">10.000.000 VNĐ</strong> + Giấy chứng nhận của Ban Tổ chức.
+                    <strong className="text-amber-900 text-base">20.000.000 VNĐ</strong> + Chuyến du lịch nước ngoài.
                     <p className="text-[11px] text-slate-600 mt-0.5">Tác phẩm đạt giải sẽ được lựa chọn làm Logo chính thức của Festival.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                   <span className="font-bold text-slate-800 shrink-0">02 Giải Khuyến Khích:</span>
                   <div>
-                    <strong className="text-slate-900 text-base">5.000.000 VNĐ / giải</strong> + Giấy chứng nhận của Ban Tổ chức.
+                    <strong className="text-slate-900 text-base">5.000.000 VNĐ / giải</strong> + Chuyến du lịch Điện Biên.
                   </div>
                 </li>
               </ul>
