@@ -18,7 +18,43 @@ interface Post {
   is_featured: boolean;
   author: string;
   format?: 'html' | 'text';
+  summary?: string;
+  source?: string;
 }
+
+const renderFormattedText = (text: string) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      const isImage = /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(part) || part.includes('supabase.co/storage/v1/object/public/photos/');
+      if (isImage) {
+        return (
+          <img
+            key={index}
+            src={part}
+            alt="Hình ảnh bài viết"
+            className="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200"
+          />
+        );
+      } else {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent underline break-all hover:text-opacity-80 font-semibold"
+          >
+            {part}
+          </a>
+        );
+      }
+    }
+    return part;
+  });
+};
 
 const bgImages = [
   '/images/hero-bg-1.png',
@@ -424,7 +460,7 @@ export default function HomeClient() {
                 TIN TỨC & HOẠT ĐỘNG
               </span>
               <h2 className="font-heading font-extrabold text-3xl text-dark-obsidian mt-1.5">
-                Dự án kết nối nổi bật
+                Tin nổi bật
               </h2>
             </div>
           </div>
@@ -570,16 +606,30 @@ export default function HomeClient() {
                   </div>
                 </div>
 
+                {/* Post Summary (if exists) */}
+                {selectedPost.summary && (
+                  <div className="text-xs text-dark-slate/70 italic border-l-2 border-slate-300 pl-3 py-0.5 my-2 text-left">
+                    {selectedPost.summary}
+                  </div>
+                )}
+
                 {/* Main scrollable body */}
                 {selectedPost.format === 'text' ? (
-                  <div className="text-xs leading-relaxed text-dark-slate/90 whitespace-pre-wrap font-normal">
-                    {selectedPost.content}
+                  <div className="text-xs leading-relaxed text-dark-slate/90 font-normal text-left">
+                    {renderFormattedText(selectedPost.content)}
                   </div>
                 ) : (
                   <div
-                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal"
+                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal text-left"
                     dangerouslySetInnerHTML={{ __html: selectedPost.content }}
                   />
+                )}
+
+                {/* Post Source (if exists) */}
+                {selectedPost.source && (
+                  <div className="text-[10px] text-dark-slate/40 font-semibold mt-4 text-right">
+                    Nguồn: {selectedPost.source}
+                  </div>
                 )}
               </div>
 

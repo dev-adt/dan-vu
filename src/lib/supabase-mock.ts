@@ -209,7 +209,9 @@ export function getGlobalDb() {
       status: 'published',
       is_featured: true,
       author: 'Ban Tổ Chức',
-      format: 'html'
+      format: 'html',
+      summary: 'Khai mạc lễ hội dân ca dân vũ quốc tế quy tụ nhiều đoàn nghệ thuật trong nước và quốc tế.',
+      source: 'BTC Festival 2026'
     },
     {
       id: 'post-2',
@@ -220,7 +222,9 @@ export function getGlobalDb() {
       status: 'published',
       is_featured: true,
       author: 'Ban Tổ Chức',
-      format: 'html'
+      format: 'html',
+      summary: 'Công bố cơ cấu giải thưởng chính thức với tổng trị giá giải thưởng lên tới hàng trăm triệu đồng.',
+      source: 'Ban Tổ Chức'
     },
     {
       id: 'post-3',
@@ -231,7 +235,9 @@ export function getGlobalDb() {
       status: 'published',
       is_featured: false,
       author: 'Ban Tổ Chức',
-      format: 'html'
+      format: 'html',
+      summary: 'Chi tiết các bước đăng nhập và tiến hành bình chọn trực tuyến cho các đội thi bạn yêu thích.',
+      source: 'Ban Công Nghệ'
     }
   ];
 

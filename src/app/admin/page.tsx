@@ -20,6 +20,8 @@ interface Post {
   is_featured: boolean;
   author: string;
   format?: 'html' | 'text';
+  summary?: string;
+  source?: string;
 }
 
 interface FraudLog {
@@ -140,6 +142,9 @@ export default function AdminDashboard() {
   const [postFormat, setPostFormat] = useState<'html' | 'text'>('html');
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [isUploadingInline, setIsUploadingInline] = useState(false);
+  const [postSummary, setPostSummary] = useState('');
+  const [postSource, setPostSource] = useState('');
+  const editorRef = React.useRef<HTMLDivElement>(null);
 
   const pageSize = 10;
 
@@ -244,7 +249,9 @@ export default function AdminDashboard() {
           status: postStatus,
           is_featured: postIsFeatured,
           author: postAuthor,
-          format: postFormat
+          format: postFormat,
+          summary: postSummary,
+          source: postSource
         }),
       });
 
@@ -260,6 +267,11 @@ export default function AdminDashboard() {
         setPostIsFeatured(false);
         setPostAuthor('Ban Tổ Chức');
         setPostFormat('html');
+        setPostSummary('');
+        setPostSource('');
+        if (editorRef.current) {
+          editorRef.current.innerHTML = '';
+        }
         fetchPosts();
       } else {
         alert(result.error || 'Lỗi khi lưu bài viết.');
@@ -409,6 +421,124 @@ export default function AdminDashboard() {
         }
       } catch (err: any) {
         console.error('Error uploading pasted image:', err);
+        alert('Không thể tải ảnh chèn trực tiếp lên: ' + (err.message || 'Lỗi kết nối'));
+      } finally {
+        setIsUploadingInline(false);
+      }
+    }
+  };
+
+  // Sync state to contentEditable container initial value (prevents cursor jump)
+  useEffect(() => {
+    if (postFormat === 'html' && editorRef.current) {
+      if (editorRef.current.innerHTML !== postContent) {
+        editorRef.current.innerHTML = postContent;
+      }
+    }
+  }, [editingPost, isWritingNewPost, postFormat]);
+
+  // Execute browser commands for contentEditable HTML mode
+  const handleEditorCommand = (command: string, value: string = '') => {
+    if (postFormat === 'html') {
+      document.execCommand(command, false, value);
+      if (editorRef.current) {
+        setPostContent(editorRef.current.innerHTML);
+      }
+    }
+  };
+
+  // Insert link inside contentEditable or textarea depending on format
+  const handleInsertLink = () => {
+    const url = prompt('Nhập địa chỉ liên kết (URL):');
+    if (!url) return;
+    if (postFormat === 'html') {
+      document.execCommand('createLink', false, url);
+      if (editorRef.current) {
+        setPostContent(editorRef.current.innerHTML);
+      }
+    } else {
+      insertTag(url, '');
+    }
+  };
+
+  // Insert image inside contentEditable or textarea depending on format
+  const handleInsertImage = () => {
+    const src = prompt('Nhập địa chỉ hình ảnh (URL):');
+    if (!src) return;
+    if (postFormat === 'html') {
+      document.execCommand('insertImage', false, src);
+      if (editorRef.current) {
+        const imgs = editorRef.current.querySelectorAll(`img[src="${src}"]`);
+        imgs.forEach((img) => {
+          img.className = "w-full h-auto rounded-xl my-4 shadow-sm inline-block max-w-lg";
+        });
+        setPostContent(editorRef.current.innerHTML);
+      }
+    } else {
+      insertTag(src, '');
+    }
+  };
+
+  // Intercept paste event on visual editor for pasted image files
+  const handleContentEditablePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    let imageFile: File | null = null;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          imageFile = file;
+          break;
+        }
+      }
+    }
+
+    if (imageFile) {
+      e.preventDefault();
+      setIsUploadingInline(true);
+      try {
+        if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          const mockUrl = `https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=600&auto=format&fit=crop&q=80`;
+          document.execCommand('insertImage', false, mockUrl);
+          if (editorRef.current) {
+            const imgs = editorRef.current.querySelectorAll(`img[src="${mockUrl}"]`);
+            imgs.forEach((img) => {
+              img.className = "w-full h-auto rounded-xl my-4 shadow-sm inline-block max-w-lg";
+            });
+            setPostContent(editorRef.current.innerHTML);
+          }
+          return;
+        }
+
+        const fileExt = imageFile.name ? imageFile.name.split('.').pop() : 'png';
+        const fileName = `pasted_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `posts/inline/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('photos')
+          .upload(filePath, imageFile, { cacheControl: '3600', upsert: true });
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('photos')
+          .getPublicUrl(filePath);
+
+        document.execCommand('insertImage', false, publicUrl);
+        if (editorRef.current) {
+          const imgs = editorRef.current.querySelectorAll(`img[src="${publicUrl}"]`);
+          imgs.forEach((img) => {
+            img.className = "w-full h-auto rounded-xl my-4 shadow-sm inline-block max-w-lg";
+          });
+          setPostContent(editorRef.current.innerHTML);
+        }
+      } catch (err: any) {
+        console.error('Error pasting image in editor:', err);
         alert('Không thể tải ảnh chèn trực tiếp lên: ' + (err.message || 'Lỗi kết nối'));
       } finally {
         setIsUploadingInline(false);
@@ -890,6 +1020,41 @@ export default function AdminDashboard() {
       textarea.focus();
       textarea.setSelectionRange(start + tagOpen.length, start + tagOpen.length + selected.length);
     }, 0);
+  };
+
+  // Helper to parse image URLs and render them as actual images in preview
+  const renderFormattedText = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        const isImage = /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(part) || part.includes('supabase.co/storage/v1/object/public/photos/');
+        if (isImage) {
+          return (
+            <img
+              key={index}
+              src={part}
+              alt="Hình ảnh bài viết"
+              className="w-full h-auto rounded-xl my-4 shadow-sm max-w-lg block border border-slate-200"
+            />
+          );
+        } else {
+          return (
+            <a
+              key={index}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline break-all hover:text-opacity-80 font-semibold"
+            >
+              {part}
+            </a>
+          );
+        }
+      }
+      return part;
+    });
   };
 
   return (
@@ -1673,8 +1838,21 @@ export default function AdminDashboard() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1">
+                        {/* Summary (New Field) */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tóm tắt bài viết (Không bắt buộc)</label>
+                          <textarea
+                            value={postSummary}
+                            onChange={(e) => setPostSummary(e.target.value)}
+                            placeholder="Tóm tắt ngắn gọn nội dung bài viết hiển thị ở danh sách tin..."
+                            rows={2}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all resize-none"
+                          />
+                        </div>
+
+                        {/* Grid with 3 columns (New Layout including source) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="space-y-1 sm:col-span-1">
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Link ảnh bìa (URL)</label>
                               <label className="text-[10px] font-bold text-accent hover:underline cursor-pointer flex items-center gap-1">
@@ -1697,7 +1875,7 @@ export default function AdminDashboard() {
                               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
                             />
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1 sm:col-span-1">
                             <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tác giả người viết</label>
                             <input
                               type="text"
@@ -1705,6 +1883,16 @@ export default function AdminDashboard() {
                               value={postAuthor}
                               onChange={(e) => setPostAuthor(e.target.value)}
                               placeholder="Ban Tổ Chức"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
+                            />
+                          </div>
+                          <div className="space-y-1 sm:col-span-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nguồn tin bài (Không bắt buộc)</label>
+                            <input
+                              type="text"
+                              value={postSource}
+                              onChange={(e) => setPostSource(e.target.value)}
+                              placeholder="Ví dụ: Báo Nhân Dân, VOV..."
                               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
                             />
                           </div>
@@ -1724,7 +1912,7 @@ export default function AdminDashboard() {
                                     : 'text-slate-500 hover:text-slate-800'
                                 }`}
                               >
-                                HTML
+                                HTML (Soạn trực quan)
                               </button>
                               <button
                                 type="button"
@@ -1779,7 +1967,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {/* Editor Toolbar & Textarea */}
+                        {/* Editor Toolbar & Visual/Text Container */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                             {postFormat === 'html' ? 'Nội dung bài viết (HTML) *' : 'Nội dung bài viết (Văn bản thường) *'}
@@ -1789,7 +1977,7 @@ export default function AdminDashboard() {
                             <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
                               <button
                                 type="button"
-                                onClick={() => insertTag('<strong>', '</strong>')}
+                                onClick={() => handleEditorCommand('bold')}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
                                 title="In đậm"
                               >
@@ -1797,7 +1985,7 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => insertTag('<em>', '</em>')}
+                                onClick={() => handleEditorCommand('italic')}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
                                 title="In nghiêng"
                               >
@@ -1805,7 +1993,7 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => insertTag('<u>', '</u>')}
+                                onClick={() => handleEditorCommand('underline')}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
                                 title="Gạch chân"
                               >
@@ -1814,7 +2002,7 @@ export default function AdminDashboard() {
                               <div className="w-px h-6 bg-slate-200 mx-1" />
                               <button
                                 type="button"
-                                onClick={() => insertTag('<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">', '</h2>')}
+                                onClick={() => handleEditorCommand('formatBlock', 'H2')}
                                 className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
                                 title="Tiêu đề 2"
                               >
@@ -1822,7 +2010,7 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => insertTag('<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">', '</h3>')}
+                                onClick={() => handleEditorCommand('formatBlock', 'H3')}
                                 className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
                                 title="Tiêu đề 3"
                               >
@@ -1830,7 +2018,7 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => insertTag('<p class="text-xs text-dark-slate/90 leading-relaxed mb-3">', '</p>')}
+                                onClick={() => handleEditorCommand('formatBlock', 'P')}
                                 className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
                                 title="Đoạn văn"
                               >
@@ -1839,27 +2027,16 @@ export default function AdminDashboard() {
                               <div className="w-px h-6 bg-slate-200 mx-1" />
                               <button
                                 type="button"
-                                onClick={() => insertTag('<ul class="list-disc pl-5 my-2 space-y-1 text-xs text-dark-slate">', '</ul>')}
+                                onClick={() => handleEditorCommand('insertUnorderedList')}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
                                 title="Danh sách hoa thị"
                               >
                                 <List className="w-3.5 h-3.5" />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => insertTag('<li>', '</li>')}
-                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-[10px] font-bold cursor-pointer"
-                                title="Mục danh sách"
-                              >
-                                LI
-                              </button>
                               <div className="w-px h-6 bg-slate-200 mx-1" />
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const url = prompt('Nhập địa chỉ liên kết (URL):');
-                                  if (url) insertTag(`<a href="${url}" class="text-accent underline hover:text-opacity-80" target="_blank">`, '</a>');
-                                }}
+                                onClick={handleInsertLink}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
                                 title="Chèn liên kết"
                               >
@@ -1867,12 +2044,9 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const src = prompt('Nhập địa chỉ hình ảnh (URL):');
-                                  if (src) insertTag(`<img src="${src}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
-                                }}
+                                onClick={handleInsertImage}
                                 className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                                title="Chèn hình ảnh"
+                                title="Chèn hình ảnh từ URL"
                               >
                                 <ImageIcon className="w-3.5 h-3.5" />
                               </button>
@@ -1905,10 +2079,7 @@ export default function AdminDashboard() {
                               </label>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const url = prompt('Nhập địa chỉ liên kết (URL):');
-                                  if (url) insertTag(url, '');
-                                }}
+                                onClick={handleInsertLink}
                                 className="p-1.5 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 cursor-pointer font-bold"
                                 title="Chèn liên kết"
                               >
@@ -1918,20 +2089,30 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
-                          <textarea
-                            id="post-content-textarea"
-                            required
-                            value={postContent}
-                            onChange={(e) => setPostContent(e.target.value)}
-                            onPaste={handleTextareaPaste}
-                            rows={12}
-                            placeholder={
-                              postFormat === 'html'
-                                ? 'Nhập nội dung bài viết. Bạn có thể sử dụng các nút ở thanh công cụ trên để định dạng.'
-                                : 'Nhập nội dung văn bản thường. Bạn gõ thế nào, xuống dòng ra sao thì hệ thống sẽ hiển thị y hệt như vậy ở trang chủ.'
-                            }
-                            className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all font-mono"
-                          />
+                          {postFormat === 'html' ? (
+                            /* Visual contentEditable Editor */
+                            <div
+                              ref={editorRef}
+                              contentEditable
+                              onPaste={handleContentEditablePaste}
+                              onBlur={(e) => setPostContent(e.currentTarget.innerHTML)}
+                              onInput={(e) => setPostContent(e.currentTarget.innerHTML)}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all min-h-[300px] max-h-[500px] overflow-y-auto prose prose-slate prose-sm max-w-none text-left"
+                              style={{ outline: 'none' }}
+                            />
+                          ) : (
+                            /* Plain textarea for Text mode */
+                            <textarea
+                              id="post-content-textarea"
+                              required
+                              value={postContent}
+                              onChange={(e) => setPostContent(e.target.value)}
+                              onPaste={handleTextareaPaste}
+                              rows={12}
+                              placeholder="Nhập nội dung văn bản thường. Bạn gõ thế nào, xuống dòng ra sao thì hệ thống sẽ hiển thị y hệt như vậy ở trang chủ."
+                              className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all font-mono"
+                            />
+                          )}
                         </div>
                       </div>
 
@@ -1977,17 +2158,31 @@ export default function AdminDashboard() {
                             <span>{new Date().toLocaleDateString('vi-VN')}</span>
                           </div>
 
+                          {/* Post Summary Preview (New) */}
+                          {postSummary && (
+                            <div className="text-xs text-slate-500 italic border-l-2 border-slate-300 pl-3 py-0.5 my-3 text-left">
+                              {postSummary}
+                            </div>
+                          )}
+
                           {/* Content Rendered safely depending on format */}
                           {postFormat === 'html' ? (
                             <div
-                              className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3"
+                              className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3 text-left"
                               dangerouslySetInnerHTML={{
                                 __html: postContent || '<p class="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</p>'
                               }}
                             />
                           ) : (
-                            <div className="text-xs leading-relaxed text-slate-800 font-normal whitespace-pre-wrap">
-                              {postContent || <span className="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</span>}
+                            <div className="text-xs leading-relaxed text-slate-800 font-normal whitespace-pre-wrap text-left">
+                              {renderFormattedText(postContent) || <span className="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</span>}
+                            </div>
+                          )}
+
+                          {/* Post Source Preview (New) */}
+                          {postSource && (
+                            <div className="text-[10px] text-slate-400 font-semibold mt-4 text-right">
+                              Nguồn: {postSource}
                             </div>
                           )}
                         </div>
@@ -2131,6 +2326,8 @@ export default function AdminDashboard() {
                                         setPostIsFeatured(post.is_featured);
                                         setPostAuthor(post.author || 'Ban Tổ Chức');
                                         setPostFormat(post.format || 'html');
+                                        setPostSummary(post.summary || '');
+                                        setPostSource(post.source || '');
                                       }}
                                       className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
                                       title="Chỉnh sửa bài viết"
