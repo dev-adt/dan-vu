@@ -539,106 +539,114 @@ export default function HomeClient() {
       </section>
 
       {/* Video & Clips Section */}
-      <section className="py-20 px-4 max-w-7xl mx-auto space-y-12 relative z-10 border-t border-slate-200/40">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200/60 pb-6">
-          <div>
-            <span className="text-xs uppercase tracking-[0.2em] font-bold text-accent">
-              Thư Viện Video & Clips
-            </span>
-            <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-dark-obsidian mt-1">
-              Video Nổi Bật
-            </h2>
+      <section className="py-24 px-4 border-t border-slate-200/40 relative z-10">
+        <div className="max-w-7xl mx-auto space-y-12">
+          {/* Header Row */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200/60 pb-6 gap-4 text-left">
+            <div>
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent block">
+                THƯ VIỆN VIDEO & CLIPS
+              </span>
+              <h2 className="font-heading font-extrabold text-3xl text-dark-obsidian mt-1.5">
+                Video nổi bật
+              </h2>
+            </div>
           </div>
 
-          <Link
-            href="/videos"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-dark-obsidian font-bold text-xs rounded-xl hover:border-accent hover:text-accent transition-all shadow-sm group w-fit"
-          >
-            Xem tất cả Video
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+          {/* Video Cards Grid — max 3 videos */}
+          {isLoadingVideos ? (
+            <div className="text-center py-16">
+              <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải video mới nhất...</p>
+            </div>
+          ) : videos.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {videos.slice(0, 3).map((vid) => {
+                  const parsed = parseVideoUrl(vid.video_url, vid.thumbnail_url);
+                  return (
+                    <div
+                      key={vid.id}
+                      className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group cursor-pointer text-left"
+                      onClick={() => setSelectedVideo(vid)}
+                    >
+                      {/* Thumbnail & Play Overlay */}
+                      <div className="relative h-48 w-full overflow-hidden bg-slate-900 select-none">
+                        {parsed.thumbnailUrl ? (
+                          <img
+                            src={parsed.thumbnailUrl}
+                            alt={vid.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-white/40">
+                            <Play className="w-16 h-16" />
+                          </div>
+                        )}
 
-        {/* Video Cards Grid — max 3 videos */}
-        {isLoadingVideos ? (
-          <div className="text-center py-16">
-            <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải video mới nhất...</p>
-          </div>
-        ) : videos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {videos.slice(0, 3).map((vid) => {
-              const parsed = parseVideoUrl(vid.video_url, vid.thumbnail_url);
-              return (
-                <div
-                  key={vid.id}
-                  className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
-                  onClick={() => setSelectedVideo(vid)}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full bg-accent/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-accent transition-all duration-300">
+                            <Play className="w-6 h-6 fill-current ml-0.5" />
+                          </div>
+                        </div>
+
+                        {vid.is_featured && (
+                          <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md z-10">
+                            NỔI BẬT ★
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Body Content */}
+                      <div className="p-6 flex-grow flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <h3 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] group-hover:text-accent transition-colors">
+                            {vid.title}
+                          </h3>
+                          {vid.summary && (
+                            <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">{vid.summary}</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                          <span className="text-[10px] text-dark-slate/50 font-medium">
+                            {new Date(vid.created_at).toLocaleDateString('vi-VN')}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedVideo(vid);
+                            }}
+                            className="flex items-center gap-1 px-4 py-2 bg-[#0074DA] text-white hover:bg-opacity-90 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                            Xem Video
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Xem tất cả Video button */}
+              <div className="flex justify-center mt-10">
+                <Link
+                  href="/videos"
+                  className="inline-flex items-center gap-2 px-7 py-3 bg-dark-obsidian text-white font-bold text-sm rounded-2xl hover:bg-opacity-85 transition-all shadow-md group"
                 >
-                  {/* Thumbnail & Play Overlay */}
-                  <div className="relative h-48 w-full overflow-hidden bg-slate-900 select-none">
-                    {parsed.thumbnailUrl ? (
-                      <img
-                        src={parsed.thumbnailUrl}
-                        alt={vid.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-white/40">
-                        <Play className="w-16 h-16" />
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-accent/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-accent transition-all duration-300">
-                        <Play className="w-6 h-6 fill-current ml-0.5" />
-                      </div>
-                    </div>
-
-                    {vid.is_featured && (
-                      <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md z-10">
-                        NỔI BẬT ★
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-6 flex-grow flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] group-hover:text-accent transition-colors">
-                        {vid.title}
-                      </h3>
-                      {vid.summary && (
-                        <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">{vid.summary}</p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                      <span className="text-[10px] text-dark-slate/50 font-medium">
-                        {new Date(vid.created_at).toLocaleDateString('vi-VN')}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedVideo(vid);
-                        }}
-                        className="flex items-center gap-1 px-4 py-2 bg-accent text-white hover:bg-opacity-95 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm cursor-pointer"
-                      >
-                        <Play className="w-3 h-3 fill-current" />
-                        Xem Video
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-            <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có video nào được xuất bản.</p>
-          </div>
-        )}
+                  Xem tất cả Video
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+              <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có video nào được xuất bản.</p>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Video Modal Popup */}
