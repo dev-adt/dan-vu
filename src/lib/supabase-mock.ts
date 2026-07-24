@@ -199,11 +199,45 @@ export function getGlobalDb() {
     });
   }
 
+  const initialPosts = [
+    {
+      id: 'post-1',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      title: 'Khai mạc Festival Dân Ca Dân Vũ Quốc Tế 2026',
+      content: '<p>Festival Dân Ca Dân Vũ Quốc Tế 2026 chính thức khai mạc với sự tham gia của hơn 50 đoàn nghệ thuật trong và ngoài nước. Đêm hội tụ văn hóa đậm đà bản sắc dân tộc.</p>',
+      photo_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
+      status: 'published',
+      is_featured: true,
+      author: 'Ban Tổ Chức'
+    },
+    {
+      id: 'post-2',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      title: 'Công báo Hệ thống giải thưởng Nhịp Bước Việt Nam 2026',
+      content: '<p>Cơ cấu giải thưởng năm nay lên tới hàng trăm triệu đồng cùng nhiều hạng mục vinh danh chuyên đề sáng tạo mới mẻ.</p>',
+      photo_url: 'https://images.unsplash.com/photo-1531050171654-7d6b379c54e2?w=800&auto=format&fit=crop&q=60',
+      status: 'published',
+      is_featured: true,
+      author: 'Ban Tổ Chức'
+    },
+    {
+      id: 'post-3',
+      created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+      title: 'Hướng dẫn tham gia Cổng bình chọn trực tuyến khán giả',
+      content: '<p>Khán giả có thể đăng nhập bằng tài khoản Google để tham gia bình chọn Đội thi được yêu thích nhất mỗi ngày.</p>',
+      photo_url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd6a?w=800&auto=format&fit=crop&q=60',
+      status: 'published',
+      is_featured: false,
+      author: 'Ban Tổ Chức'
+    }
+  ];
+
   globalDb = {
     teams: initialTeams,
     judges: initialJudges,
     scorecards: initialScorecards,
-    ballots: initialBallots
+    ballots: initialBallots,
+    posts: initialPosts
   };
 
   return globalDb;

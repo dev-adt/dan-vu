@@ -5,8 +5,20 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
-  ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle
+  ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
+  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon
 } from 'lucide-react';
+
+interface Post {
+  id: string;
+  created_at: string;
+  title: string;
+  content: string;
+  photo_url?: string;
+  status: 'draft' | 'published';
+  is_featured: boolean;
+  author: string;
+}
 
 interface FraudLog {
   id: string;
@@ -56,7 +68,7 @@ export default function AdminDashboard() {
   const [authHeader, setAuthHeader] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings'>('monitoring');
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings' | 'posts'>('monitoring');
 
   // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
@@ -106,6 +118,23 @@ export default function AdminDashboard() {
   // 5. Judges
   const [judgeSearch, setJudgeSearch] = useState('');
   const [judgePage, setJudgePage] = useState(1);
+
+  // 6. Posts
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postSearch, setPostSearch] = useState('');
+  const [postStatusFilter, setPostStatusFilter] = useState<string>('all');
+  const [postPage, setPostPage] = useState(1);
+
+  // Form states for creating/editing posts
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [isWritingNewPost, setIsWritingNewPost] = useState(false);
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [postPhotoUrl, setPostPhotoUrl] = useState('');
+  const [postStatus, setPostStatus] = useState<'draft' | 'published'>('draft');
+  const [postIsFeatured, setPostIsFeatured] = useState(false);
+  const [postAuthor, setPostAuthor] = useState('Ban Tổ Chức');
+  const [isSavingPost, setIsSavingPost] = useState(false);
 
   const pageSize = 10;
 
@@ -164,8 +193,96 @@ export default function AdminDashboard() {
       fetchTeams();
       fetchJudges();
       fetchRankings();
+      fetchPosts();
     }
   }, [isAdminLoggedIn, authHeader, activeTab]);
+
+  // Fetch Blog/News Posts
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch('/api/admin/posts', {
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data.posts || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch posts:', err);
+    }
+  };
+
+  // Create or Update Blog Post
+  const handleSavePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!postTitle || !postContent) {
+      alert('Tiêu đề và nội dung bài viết không được để trống.');
+      return;
+    }
+    setIsSavingPost(true);
+    try {
+      const isEdit = !!editingPost;
+      const url = '/api/admin/posts';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          id: editingPost?.id,
+          title: postTitle,
+          content: postContent,
+          photo_url: postPhotoUrl,
+          status: postStatus,
+          is_featured: postIsFeatured,
+          author: postAuthor,
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(isEdit ? 'Cập nhật bài viết thành công!' : 'Tạo bài viết mới thành công!');
+        setEditingPost(null);
+        setIsWritingNewPost(false);
+        setPostTitle('');
+        setPostContent('');
+        setPostPhotoUrl('');
+        setPostStatus('draft');
+        setPostIsFeatured(false);
+        setPostAuthor('Ban Tổ Chức');
+        fetchPosts();
+      } else {
+        alert(result.error || 'Lỗi khi lưu bài viết.');
+      }
+    } catch (err) {
+      console.error('Error saving post:', err);
+      alert('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsSavingPost(false);
+    }
+  };
+
+  // Delete Blog Post
+  const handleDeletePost = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này vĩnh viễn?')) return;
+    try {
+      const res = await fetch(`/api/admin/posts?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader },
+      });
+      if (res.ok) {
+        alert('Xóa bài viết thành công!');
+        fetchPosts();
+      } else {
+        alert('Lỗi khi xóa bài viết.');
+      }
+    } catch (err) {
+      console.error('Error deleting post:', err);
+    }
+  };
 
   // Fetch Rankings & Grades
   const fetchRankings = async () => {
@@ -591,6 +708,39 @@ export default function AdminDashboard() {
   });
   const paginatedJudges = filteredJudges.slice((judgePage - 1) * pageSize, judgePage * pageSize);
 
+  // 6. Posts Filter & Paginate
+  const filteredPosts = posts.filter((p) => {
+    const matchesSearch =
+      p.title.toLowerCase().includes(postSearch.toLowerCase()) ||
+      p.content.toLowerCase().includes(postSearch.toLowerCase()) ||
+      (p.author || '').toLowerCase().includes(postSearch.toLowerCase());
+    const matchesStatus = postStatusFilter === 'all' ? true :
+                          postStatusFilter === 'featured' ? p.is_featured :
+                          p.status === postStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+  const paginatedPosts = filteredPosts.slice((postPage - 1) * pageSize, postPage * pageSize);
+
+  // Rich Text Editor formatting helper
+  const insertTag = (tagOpen: string, tagClose: string) => {
+    const textarea = document.getElementById('post-content-textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const replacement = tagOpen + selected + tagClose;
+
+    const newValue = text.substring(0, start) + replacement + text.substring(end);
+    setPostContent(newValue);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + tagOpen.length, start + tagOpen.length + selected.length);
+    }, 0);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA] text-[#0F172A] relative">
       <div className="print:hidden">
@@ -775,6 +925,15 @@ export default function AdminDashboard() {
                 }`}
               >
                 Tài Khoản Giám Khảo
+              </button>
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`pb-4 px-2 font-heading font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'posts' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Newspaper className="w-4 h-4" />
+                Tin Tức & Bài Viết ({posts.length})
               </button>
             </div>
 
@@ -1313,6 +1472,445 @@ export default function AdminDashboard() {
                     </form>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Content for News & Posts Tab */}
+            {activeTab === 'posts' && (
+              <div className="space-y-6">
+                {(isWritingNewPost || editingPost) ? (
+                  /* Form Editor View */
+                  <form onSubmit={handleSavePost} className="space-y-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-4">
+                      <div>
+                        <h2 className="font-heading font-bold text-xl text-slate-900">
+                          {editingPost ? 'Hiệu chỉnh bài viết' : 'Viết bài tin tức mới'}
+                        </h2>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Soạn thảo bài viết, đính kèm banner hình ảnh và ghim nổi bật.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingPost(null);
+                          setIsWritingNewPost(false);
+                          // Clear fields
+                          setPostTitle('');
+                          setPostContent('');
+                          setPostPhotoUrl('');
+                          setPostStatus('draft');
+                          setPostIsFeatured(false);
+                          setPostAuthor('Ban Tổ Chức');
+                        }}
+                        className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                      >
+                        Quay lại danh sách
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                      {/* Left: Input Form & Editor */}
+                      <div className="lg:col-span-7 space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tiêu đề bài viết *</label>
+                          <input
+                            type="text"
+                            required
+                            value={postTitle}
+                            onChange={(e) => setPostTitle(e.target.value)}
+                            placeholder="Ví dụ: Đại nhạc hội khai mạc Festival Dân Vũ Quốc Tế..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Link ảnh bìa (URL)</label>
+                            <input
+                              type="text"
+                              value={postPhotoUrl}
+                              onChange={(e) => setPostPhotoUrl(e.target.value)}
+                              placeholder="https://images.unsplash.com/photo-..."
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tác giả người viết</label>
+                            <input
+                              type="text"
+                              required
+                              value={postAuthor}
+                              onChange={(e) => setPostAuthor(e.target.value)}
+                              placeholder="Ban Tổ Chức"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-6 py-2 bg-slate-50/50 px-4 rounded-xl border border-slate-200/60">
+                          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={postIsFeatured}
+                              onChange={(e) => setPostIsFeatured(e.target.checked)}
+                              className="w-4 h-4 rounded text-accent focus:ring-accent"
+                            />
+                            Ghim bài viết nổi bật (Tối đa 3 bài trên cùng)
+                          </label>
+
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Trạng thái:</span>
+                            <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
+                              <button
+                                type="button"
+                                onClick={() => setPostStatus('draft')}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                  postStatus === 'draft'
+                                    ? 'bg-slate-600 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                Lưu nháp
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPostStatus('published')}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                  postStatus === 'published'
+                                    ? 'bg-accent text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                Đăng bài
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Editor Toolbar & Textarea */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nội dung bài viết (HTML) *</label>
+                          <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<strong>', '</strong>')}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
+                              title="In đậm"
+                            >
+                              <Bold className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<em>', '</em>')}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
+                              title="In nghiêng"
+                            >
+                              <Italic className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<u>', '</u>')}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
+                              title="Gạch chân"
+                            >
+                              <Underline className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">', '</h2>')}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                              title="Tiêu đề 2"
+                            >
+                              H2
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">', '</h3>')}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                              title="Tiêu đề 3"
+                            >
+                              H3
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<p class="text-xs text-dark-slate/90 leading-relaxed mb-3">', '</p>')}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                              title="Đoạn văn"
+                            >
+                              P
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<ul class="list-disc pl-5 my-2 space-y-1 text-xs text-dark-slate">', '</ul>')}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Danh sách hoa thị"
+                            >
+                              <List className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertTag('<li>', '</li>')}
+                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-[10px] font-bold cursor-pointer"
+                              title="Mục danh sách"
+                            >
+                              LI
+                            </button>
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const url = prompt('Nhập địa chỉ liên kết (URL):');
+                                if (url) insertTag(`<a href="${url}" class="text-accent underline hover:text-opacity-80" target="_blank">`, '</a>');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Chèn liên kết"
+                            >
+                              <LinkIcon className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const src = prompt('Nhập địa chỉ hình ảnh (URL):');
+                                if (src) insertTag(`<img src="${src}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+                              }}
+                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                              title="Chèn hình ảnh"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <textarea
+                            id="post-content-textarea"
+                            required
+                            value={postContent}
+                            onChange={(e) => setPostContent(e.target.value)}
+                            rows={12}
+                            placeholder="Nhập nội dung bài viết. Bạn có thể sử dụng các thẻ HTML được hỗ trợ hoặc viết văn bản thường."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right: Live Preview Panel */}
+                      <div className="lg:col-span-5 space-y-4">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          <Eye className="w-4 h-4 text-slate-400" />
+                          Xem trước nội dung hiển thị (Live Preview)
+                        </div>
+
+                        <div className="border border-slate-200 rounded-2xl bg-slate-50 p-5 overflow-y-auto max-h-[580px] space-y-4">
+                          {/* Banner Image Preview */}
+                          {postPhotoUrl ? (
+                            <img
+                              src={postPhotoUrl}
+                              alt="Banner preview"
+                              className="w-full h-44 object-cover rounded-xl shadow-sm border border-slate-200/50"
+                            />
+                          ) : (
+                            <div className="w-full h-44 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-xs border border-dashed border-slate-300">
+                              Chưa có ảnh bìa
+                            </div>
+                          )}
+
+                          {/* Featured badge if featured */}
+                          {postIsFeatured && (
+                            <span className="inline-block bg-secondary/20 border border-secondary text-secondary-dark text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              NỔI BẬT ★
+                            </span>
+                          )}
+
+                          {/* Title */}
+                          <h1 className="font-heading font-extrabold text-xl text-slate-900 leading-snug">
+                            {postTitle || <span className="text-slate-400 italic">Tiêu đề bài viết...</span>}
+                          </h1>
+
+                          {/* Meta author & date */}
+                          <div className="flex items-center gap-2 border-y border-slate-200/60 py-2.5 text-[10px] text-slate-500 font-medium">
+                            <span className="bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
+                              {postAuthor || 'Ban Tổ Chức'}
+                            </span>
+                            <span>•</span>
+                            <span>{new Date().toLocaleDateString('vi-VN')}</span>
+                          </div>
+
+                          {/* Content Rendered safely */}
+                          <div
+                            className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3"
+                            dangerouslySetInnerHTML={{
+                              __html: postContent || '<p class="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</p>'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingPost(null);
+                          setIsWritingNewPost(false);
+                          setPostTitle('');
+                          setPostContent('');
+                          setPostPhotoUrl('');
+                          setPostStatus('draft');
+                          setPostIsFeatured(false);
+                          setPostAuthor('Ban Tổ Chức');
+                        }}
+                        className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
+                      >
+                        Hủy bỏ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingPost}
+                        className="inline-flex items-center gap-1.5 px-6 py-2 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        {isSavingPost ? 'Đang lưu...' : 'Lưu bài viết'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  /* Post Listing Table View */
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="w-full sm:flex-1">
+                        <input
+                          type="text"
+                          placeholder="Tìm theo tiêu đề bài viết, tác giả..."
+                          value={postSearch}
+                          onChange={(e) => {
+                            setPostSearch(e.target.value);
+                            setPostPage(1);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                        />
+                      </div>
+                      <div className="w-full sm:w-48">
+                        <select
+                          value={postStatusFilter}
+                          onChange={(e) => {
+                            setPostStatusFilter(e.target.value);
+                            setPostPage(1);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none"
+                        >
+                          <option value="all">Tất cả bài viết</option>
+                          <option value="draft">Bản nháp (Draft)</option>
+                          <option value="published">Đã đăng (Published)</option>
+                          <option value="featured">Đang nổi bật (Featured)</option>
+                        </select>
+                      </div>
+                      <button
+                        onClick={() => setIsWritingNewPost(true)}
+                        className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-accent hover:bg-opacity-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        <PlusCircle className="w-4 h-4" /> Viết bài mới
+                      </button>
+                    </div>
+
+                    <div className="glass-panel border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white p-4">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm border-collapse">
+                          <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                            <tr>
+                              <th className="px-6 py-4 w-24">Hình ảnh</th>
+                              <th className="px-6 py-4">Tiêu đề bài viết</th>
+                              <th className="px-6 py-4">Người viết</th>
+                              <th className="px-6 py-4">Ngày tạo</th>
+                              <th className="px-6 py-4 text-center">Nổi bật</th>
+                              <th className="px-6 py-4 text-center">Trạng thái</th>
+                              <th className="px-6 py-4 text-right">Thao tác</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-xs">
+                            {paginatedPosts.length > 0 ? (
+                              paginatedPosts.map((post) => (
+                                <tr key={post.id} className="hover:bg-slate-50/60 transition-colors">
+                                  <td className="px-6 py-4">
+                                    {post.photo_url ? (
+                                      <img
+                                        src={post.photo_url}
+                                        alt="thumbnail"
+                                        className="w-16 h-10 object-cover rounded-lg border border-slate-200"
+                                      />
+                                    ) : (
+                                      <div className="w-16 h-10 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-[9px]">
+                                        Không ảnh
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 font-semibold text-slate-900 max-w-sm truncate">
+                                    {post.title}
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-600">
+                                    {post.author}
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-500">
+                                    {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                                  </td>
+                                  <td className="px-6 py-4 text-center">
+                                    {post.is_featured ? (
+                                      <span className="bg-secondary/20 border border-secondary text-secondary-dark text-[9px] font-bold px-2 py-0.5 rounded-md">
+                                        NỔI BẬT ★
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 text-center">
+                                    {post.status === 'published' ? (
+                                      <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
+                                        Đã đăng
+                                      </span>
+                                    ) : (
+                                      <span className="bg-slate-100 text-slate-800 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
+                                        Bản nháp
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 text-right space-x-2">
+                                    <button
+                                      onClick={() => {
+                                        setEditingPost(post);
+                                        setPostTitle(post.title);
+                                        setPostContent(post.content);
+                                        setPostPhotoUrl(post.photo_url || '');
+                                        setPostStatus(post.status);
+                                        setPostIsFeatured(post.is_featured);
+                                        setPostAuthor(post.author || 'Ban Tổ Chức');
+                                      }}
+                                      className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
+                                      title="Chỉnh sửa bài viết"
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeletePost(post.id)}
+                                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
+                                      title="Xóa bài viết"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={7} className="text-center py-12 text-slate-400 italic">
+                                  Chưa có bài viết nào phù hợp với bộ lọc tìm kiếm.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      {renderPagination(postPage, filteredPosts.length, pageSize, setPostPage)}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
