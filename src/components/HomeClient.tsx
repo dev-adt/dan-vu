@@ -17,6 +17,7 @@ interface Post {
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
+  format?: 'html' | 'text';
 }
 
 const bgImages = [
@@ -570,10 +571,16 @@ export default function HomeClient() {
                 </div>
 
                 {/* Main scrollable body */}
-                <div
-                  className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal"
-                  dangerouslySetInnerHTML={{ __html: selectedPost.content }}
-                />
+                {selectedPost.format === 'text' ? (
+                  <div className="text-xs leading-relaxed text-dark-slate/90 whitespace-pre-wrap font-normal">
+                    {selectedPost.content}
+                  </div>
+                ) : (
+                  <div
+                    className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-dark-slate/90 space-y-4 font-normal"
+                    dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                  />
+                )}
               </div>
 
               {/* Modal Footer */}

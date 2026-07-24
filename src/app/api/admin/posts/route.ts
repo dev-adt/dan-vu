@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, content, photo_url, status, is_featured, author } = body;
+    const { title, content, photo_url, status, is_featured, author, format } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Tiêu đề và nội dung bài viết không được để trống.' }, { status: 400 });
@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
         photo_url,
         status: status || 'draft',
         is_featured: !!is_featured,
-        author: author || 'Ban Tổ Chức'
+        author: author || 'Ban Tổ Chức',
+        format: format || 'html'
       })
       .select()
       .single();
@@ -112,7 +113,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, title, content, photo_url, status, is_featured, author } = body;
+    const { id, title, content, photo_url, status, is_featured, author, format } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Mã bài viết (id) là bắt buộc.' }, { status: 400 });
@@ -143,7 +144,8 @@ export async function PATCH(req: NextRequest) {
         photo_url,
         status,
         is_featured: !!is_featured,
-        author
+        author,
+        format
       })
       .eq('id', id)
       .select()

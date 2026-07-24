@@ -208,7 +208,8 @@ export function getGlobalDb() {
       photo_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
       status: 'published',
       is_featured: true,
-      author: 'Ban Tổ Chức'
+      author: 'Ban Tổ Chức',
+      format: 'html'
     },
     {
       id: 'post-2',
@@ -218,7 +219,8 @@ export function getGlobalDb() {
       photo_url: 'https://images.unsplash.com/photo-1531050171654-7d6b379c54e2?w=800&auto=format&fit=crop&q=60',
       status: 'published',
       is_featured: true,
-      author: 'Ban Tổ Chức'
+      author: 'Ban Tổ Chức',
+      format: 'html'
     },
     {
       id: 'post-3',
@@ -228,7 +230,8 @@ export function getGlobalDb() {
       photo_url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd6a?w=800&auto=format&fit=crop&q=60',
       status: 'published',
       is_featured: false,
-      author: 'Ban Tổ Chức'
+      author: 'Ban Tổ Chức',
+      format: 'html'
     }
   ];
 

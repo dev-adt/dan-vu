@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
   ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
-  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon
+  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon, Upload
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface Post {
   id: string;
@@ -18,6 +19,7 @@ interface Post {
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
+  format?: 'html' | 'text';
 }
 
 interface FraudLog {
@@ -135,6 +137,9 @@ export default function AdminDashboard() {
   const [postIsFeatured, setPostIsFeatured] = useState(false);
   const [postAuthor, setPostAuthor] = useState('Ban Tổ Chức');
   const [isSavingPost, setIsSavingPost] = useState(false);
+  const [postFormat, setPostFormat] = useState<'html' | 'text'>('html');
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingInline, setIsUploadingInline] = useState(false);
 
   const pageSize = 10;
 
@@ -239,6 +244,7 @@ export default function AdminDashboard() {
           status: postStatus,
           is_featured: postIsFeatured,
           author: postAuthor,
+          format: postFormat
         }),
       });
 
@@ -253,6 +259,7 @@ export default function AdminDashboard() {
         setPostStatus('draft');
         setPostIsFeatured(false);
         setPostAuthor('Ban Tổ Chức');
+        setPostFormat('html');
         fetchPosts();
       } else {
         alert(result.error || 'Lỗi khi lưu bài viết.');
@@ -262,6 +269,89 @@ export default function AdminDashboard() {
       alert('Lỗi kết nối máy chủ.');
     } finally {
       setIsSavingPost(false);
+    }
+  };
+
+  // Handle Banner Image Upload to Supabase Storage
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const mockUrl = `https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&auto=format&fit=crop&q=80`;
+        setPostPhotoUrl(mockUrl);
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `posts/banners/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      setPostPhotoUrl(publicUrl);
+    } catch (err: any) {
+      console.error('Error uploading post banner:', err);
+      alert('Không thể tải ảnh lên: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  // Handle Inline Image Upload & Cursor Insertion
+  const handleInlineUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingInline(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const mockUrl = `https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=600&auto=format&fit=crop&q=80`;
+        
+        if (postFormat === 'html') {
+          insertTag(`<img src="${mockUrl}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+        } else {
+          insertTag(mockUrl, '');
+        }
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `posts/inline/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      if (postFormat === 'html') {
+        insertTag(`<img src="${publicUrl}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+      } else {
+        insertTag(publicUrl, '');
+      }
+    } catch (err: any) {
+      console.error('Error uploading inline image:', err);
+      alert('Không thể tải ảnh lên: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingInline(false);
     }
   };
 
@@ -1524,7 +1614,20 @@ export default function AdminDashboard() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Link ảnh bìa (URL)</label>
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Link ảnh bìa (URL)</label>
+                              <label className="text-[10px] font-bold text-accent hover:underline cursor-pointer flex items-center gap-1">
+                                <Upload className="w-3 h-3" />
+                                {isUploadingBanner ? 'Đang tải...' : 'Tải ảnh lên'}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleBannerUpload}
+                                  disabled={isUploadingBanner}
+                                />
+                              </label>
+                            </div>
                             <input
                               type="text"
                               value={postPhotoUrl}
@@ -1546,7 +1649,36 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
+                        {/* Format selector option row */}
                         <div className="flex flex-wrap items-center gap-6 py-2 bg-slate-50/50 px-4 rounded-xl border border-slate-200/60">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Chế độ viết bài:</span>
+                            <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
+                              <button
+                                type="button"
+                                onClick={() => setPostFormat('html')}
+                                className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                  postFormat === 'html'
+                                    ? 'bg-accent text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                HTML
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPostFormat('text')}
+                                className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                  postFormat === 'text'
+                                    ? 'bg-slate-600 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                Văn bản thường (Sao hiện vậy)
+                              </button>
+                            </div>
+                          </div>
+
                           <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                             <input
                               type="checkbox"
@@ -1554,16 +1686,16 @@ export default function AdminDashboard() {
                               onChange={(e) => setPostIsFeatured(e.target.checked)}
                               className="w-4 h-4 rounded text-accent focus:ring-accent"
                             />
-                            Ghim bài viết nổi bật (Tối đa 3 bài trên cùng)
+                            Ghim nổi bật
                           </label>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 ml-auto">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Trạng thái:</span>
                             <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
                               <button
                                 type="button"
                                 onClick={() => setPostStatus('draft')}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                                   postStatus === 'draft'
                                     ? 'bg-slate-600 text-white shadow-sm'
                                     : 'text-slate-500 hover:text-slate-800'
@@ -1574,7 +1706,7 @@ export default function AdminDashboard() {
                               <button
                                 type="button"
                                 onClick={() => setPostStatus('published')}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                                   postStatus === 'published'
                                     ? 'bg-accent text-white shadow-sm'
                                     : 'text-slate-500 hover:text-slate-800'
@@ -1588,105 +1720,154 @@ export default function AdminDashboard() {
 
                         {/* Editor Toolbar & Textarea */}
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nội dung bài viết (HTML) *</label>
-                          <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<strong>', '</strong>')}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
-                              title="In đậm"
-                            >
-                              <Bold className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<em>', '</em>')}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
-                              title="In nghiêng"
-                            >
-                              <Italic className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<u>', '</u>')}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
-                              title="Gạch chân"
-                            >
-                              <Underline className="w-3.5 h-3.5" />
-                            </button>
-                            <div className="w-px h-6 bg-slate-200 mx-1" />
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">', '</h2>')}
-                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                              title="Tiêu đề 2"
-                            >
-                              H2
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">', '</h3>')}
-                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                              title="Tiêu đề 3"
-                            >
-                              H3
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<p class="text-xs text-dark-slate/90 leading-relaxed mb-3">', '</p>')}
-                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
-                              title="Đoạn văn"
-                            >
-                              P
-                            </button>
-                            <div className="w-px h-6 bg-slate-200 mx-1" />
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<ul class="list-disc pl-5 my-2 space-y-1 text-xs text-dark-slate">', '</ul>')}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                              title="Danh sách hoa thị"
-                            >
-                              <List className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => insertTag('<li>', '</li>')}
-                              className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-[10px] font-bold cursor-pointer"
-                              title="Mục danh sách"
-                            >
-                              LI
-                            </button>
-                            <div className="w-px h-6 bg-slate-200 mx-1" />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const url = prompt('Nhập địa chỉ liên kết (URL):');
-                                if (url) insertTag(`<a href="${url}" class="text-accent underline hover:text-opacity-80" target="_blank">`, '</a>');
-                              }}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                              title="Chèn liên kết"
-                            >
-                              <LinkIcon className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const src = prompt('Nhập địa chỉ hình ảnh (URL):');
-                                if (src) insertTag(`<img src="${src}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
-                              }}
-                              className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
-                              title="Chèn hình ảnh"
-                            >
-                              <ImageIcon className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            {postFormat === 'html' ? 'Nội dung bài viết (HTML) *' : 'Nội dung bài viết (Văn bản thường) *'}
+                          </label>
+
+                          {postFormat === 'html' ? (
+                            <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<strong>', '</strong>')}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 font-bold text-xs cursor-pointer"
+                                title="In đậm"
+                              >
+                                <Bold className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<em>', '</em>')}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 italic text-xs cursor-pointer"
+                                title="In nghiêng"
+                              >
+                                <Italic className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<u>', '</u>')}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 underline text-xs cursor-pointer"
+                                title="Gạch chân"
+                              >
+                                <Underline className="w-3.5 h-3.5" />
+                              </button>
+                              <div className="w-px h-6 bg-slate-200 mx-1" />
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<h2 class="font-heading font-bold text-lg text-primary mt-5 mb-2">', '</h2>')}
+                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                                title="Tiêu đề 2"
+                              >
+                                H2
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<h3 class="font-heading font-semibold text-base text-dark-obsidian mt-4 mb-2">', '</h3>')}
+                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                                title="Tiêu đề 3"
+                              >
+                                H3
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<p class="text-xs text-dark-slate/90 leading-relaxed mb-3">', '</p>')}
+                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-xs font-bold cursor-pointer"
+                                title="Đoạn văn"
+                              >
+                                P
+                              </button>
+                              <div className="w-px h-6 bg-slate-200 mx-1" />
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<ul class="list-disc pl-5 my-2 space-y-1 text-xs text-dark-slate">', '</ul>')}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                                title="Danh sách hoa thị"
+                              >
+                                <List className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertTag('<li>', '</li>')}
+                                className="px-2 py-1 hover:bg-slate-200 rounded text-slate-700 text-[10px] font-bold cursor-pointer"
+                                title="Mục danh sách"
+                              >
+                                LI
+                              </button>
+                              <div className="w-px h-6 bg-slate-200 mx-1" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = prompt('Nhập địa chỉ liên kết (URL):');
+                                  if (url) insertTag(`<a href="${url}" class="text-accent underline hover:text-opacity-80" target="_blank">`, '</a>');
+                                }}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                                title="Chèn liên kết"
+                              >
+                                <LinkIcon className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const src = prompt('Nhập địa chỉ hình ảnh (URL):');
+                                  if (src) insertTag(`<img src="${src}" alt="Hình ảnh" class="w-full h-auto rounded-xl my-4 shadow-sm" />`, '');
+                                }}
+                                className="p-2 hover:bg-slate-200 rounded text-slate-700 text-xs cursor-pointer"
+                                title="Chèn hình ảnh"
+                              >
+                                <ImageIcon className="w-3.5 h-3.5" />
+                              </button>
+                              <div className="w-px h-6 bg-slate-200 mx-1" />
+                              <label className="p-2 hover:bg-slate-200 rounded text-accent cursor-pointer flex items-center gap-1 text-xs font-semibold" title="Tải ảnh chèn vào bài">
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>{isUploadingInline ? 'Đang tải...' : 'Tải lên ảnh'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleInlineUpload}
+                                  disabled={isUploadingInline}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-3 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl text-xs font-semibold text-slate-500">
+                              <span>Bộ công cụ văn bản:</span>
+                              <label className="p-1.5 hover:bg-slate-200 rounded text-accent cursor-pointer flex items-center gap-1 font-bold" title="Tải ảnh chèn vào bài">
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>{isUploadingInline ? 'Đang tải...' : 'Tải lên & chèn ảnh'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleInlineUpload}
+                                  disabled={isUploadingInline}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = prompt('Nhập địa chỉ liên kết (URL):');
+                                  if (url) insertTag(url, '');
+                                }}
+                                className="p-1.5 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 cursor-pointer font-bold"
+                                title="Chèn liên kết"
+                              >
+                                <LinkIcon className="w-3.5 h-3.5" />
+                                <span>Chèn link</span>
+                              </button>
+                            </div>
+                          )}
+
                           <textarea
                             id="post-content-textarea"
                             required
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
                             rows={12}
-                            placeholder="Nhập nội dung bài viết. Bạn có thể sử dụng các thẻ HTML được hỗ trợ hoặc viết văn bản thường."
+                            placeholder={
+                              postFormat === 'html'
+                                ? 'Nhập nội dung bài viết. Bạn có thể sử dụng các nút ở thanh công cụ trên để định dạng.'
+                                : 'Nhập nội dung văn bản thường. Bạn gõ thế nào, xuống dòng ra sao thì hệ thống sẽ hiển thị y hệt như vậy ở trang chủ.'
+                            }
                             className="w-full bg-slate-50 border border-slate-200 rounded-b-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none focus:bg-white transition-all font-mono"
                           />
                         </div>
@@ -1734,13 +1915,19 @@ export default function AdminDashboard() {
                             <span>{new Date().toLocaleDateString('vi-VN')}</span>
                           </div>
 
-                          {/* Content Rendered safely */}
-                          <div
-                            className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3"
-                            dangerouslySetInnerHTML={{
-                              __html: postContent || '<p class="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</p>'
-                            }}
-                          />
+                          {/* Content Rendered safely depending on format */}
+                          {postFormat === 'html' ? (
+                            <div
+                              className="prose prose-slate prose-sm text-xs leading-relaxed max-w-none text-slate-800 space-y-3"
+                              dangerouslySetInnerHTML={{
+                                __html: postContent || '<p class="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</p>'
+                              }}
+                            />
+                          ) : (
+                            <div className="text-xs leading-relaxed text-slate-800 font-normal whitespace-pre-wrap">
+                              {postContent || <span className="text-slate-400 italic">Nhập nội dung vào ô soạn thảo bên trái để hiển thị xem trước tại đây...</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1881,6 +2068,7 @@ export default function AdminDashboard() {
                                         setPostStatus(post.status);
                                         setPostIsFeatured(post.is_featured);
                                         setPostAuthor(post.author || 'Ban Tổ Chức');
+                                        setPostFormat(post.format || 'html');
                                       }}
                                       className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer inline-block"
                                       title="Chỉnh sửa bài viết"
