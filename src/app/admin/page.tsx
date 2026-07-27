@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
   ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
-  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, Image as ImageIcon, Upload,
+  BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, EyeOff, Key, Image as ImageIcon, Upload,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Video, Play, Film
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -100,9 +100,20 @@ export default function AdminDashboard() {
   // New Judge creation state
   const [newJudgeEmail, setNewJudgeEmail] = useState('');
   const [newJudgePassword, setNewJudgePassword] = useState('');
+  const [newJudgeConfirmPassword, setNewJudgeConfirmPassword] = useState('');
+  const [showNewJudgePassword, setShowNewJudgePassword] = useState(false);
+  const [showNewJudgeConfirmPassword, setShowNewJudgeConfirmPassword] = useState(false);
   const [newJudgeName, setNewJudgeName] = useState('');
   const [isCreatingJudge, setIsCreatingJudge] = useState(false);
   const [judgeError, setJudgeError] = useState('');
+
+  // Admin Change Judge Password modal state
+  const [changingPasswordJudge, setChangingPasswordJudge] = useState<Judge | null>(null);
+  const [adminJudgeNewPassword, setAdminJudgeNewPassword] = useState('');
+  const [adminJudgeConfirmPassword, setAdminJudgeConfirmPassword] = useState('');
+  const [showAdminJudgePassword, setShowAdminJudgePassword] = useState(false);
+  const [isUpdatingJudgePassword, setIsUpdatingJudgePassword] = useState(false);
+  const [adminJudgePassError, setAdminJudgePassError] = useState('');
 
   // Search & Filter & Pagination states
   // 1. Monitoring / logs
@@ -1070,6 +1081,17 @@ export default function AdminDashboard() {
   const handleCreateJudge = async (e: React.FormEvent) => {
     e.preventDefault();
     setJudgeError('');
+
+    if (newJudgePassword !== newJudgeConfirmPassword) {
+      setJudgeError('Mật khẩu xác nhận không trùng khớp.');
+      return;
+    }
+
+    if (newJudgePassword.length < 6) {
+      setJudgeError('Mật khẩu phải chứa ít nhất 6 ký tự.');
+      return;
+    }
+
     setIsCreatingJudge(true);
 
     try {
@@ -1090,6 +1112,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         setNewJudgeEmail('');
         setNewJudgePassword('');
+        setNewJudgeConfirmPassword('');
         setNewJudgeName('');
         fetchJudges();
         fetchStats();
@@ -1104,9 +1127,55 @@ export default function AdminDashboard() {
     }
   };
 
+  // Change password for a judge account by Admin
+  const handleAdminChangeJudgePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!changingPasswordJudge) return;
+
+    setAdminJudgePassError('');
+    if (adminJudgeNewPassword !== adminJudgeConfirmPassword) {
+      setAdminJudgePassError('Mật khẩu xác nhận không trùng khớp.');
+      return;
+    }
+
+    if (adminJudgeNewPassword.length < 6) {
+      setAdminJudgePassError('Mật khẩu mới phải từ 6 ký tự trở lên.');
+      return;
+    }
+
+    setIsUpdatingJudgePassword(true);
+    try {
+      const res = await fetch('/api/admin/judges', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          id: changingPasswordJudge.id,
+          password: adminJudgeNewPassword,
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(`Đổi mật khẩu cho giám khảo ${changingPasswordJudge.full_name} thành công!`);
+        setChangingPasswordJudge(null);
+        setAdminJudgeNewPassword('');
+        setAdminJudgeConfirmPassword('');
+      } else {
+        setAdminJudgePassError(result.error || 'Đổi mật khẩu thất bại.');
+      }
+    } catch (err) {
+      setAdminJudgePassError('Lỗi kết nối máy chủ.');
+    } finally {
+      setIsUpdatingJudgePassword(false);
+    }
+  };
+
   // Delete a judge account
   const handleDeleteJudge = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tài khoản giám khảo này?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa tài khoản giám khảo này? Thao tác này sẽ xóa vĩnh viễn quyền đăng nhập.')) return;
 
     try {
       const res = await fetch(`/api/admin/judges?id=${id}`, {
@@ -1114,14 +1183,17 @@ export default function AdminDashboard() {
         headers: { Authorization: authHeader },
       });
 
+      const result = await res.json();
       if (res.ok) {
+        alert(result.message || 'Đã xóa tài khoản giám khảo thành công.');
         fetchJudges();
         fetchStats();
       } else {
-        alert('Xóa tài khoản giám khảo thất bại.');
+        alert(result.error || 'Xóa tài khoản giám khảo thất bại.');
       }
     } catch (err) {
       console.error(err);
+      alert('Lỗi khi gửi yêu cầu xóa.');
     }
   };
 
@@ -1916,11 +1988,23 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4 text-slate-500">
                                   {new Date(judge.created_at).toLocaleDateString('vi-VN')}
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4 text-right space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      setChangingPasswordJudge(judge);
+                                      setAdminJudgeNewPassword('');
+                                      setAdminJudgeConfirmPassword('');
+                                      setAdminJudgePassError('');
+                                    }}
+                                    className="p-1.5 text-slate-500 hover:text-accent transition-colors cursor-pointer inline-block rounded-lg hover:bg-slate-100"
+                                    title="Đổi mật khẩu giám khảo"
+                                  >
+                                    <Key className="w-4 h-4" />
+                                  </button>
                                   <button
                                     onClick={() => handleDeleteJudge(judge.id)}
-                                    className="p-1 text-slate-400 hover:text-primary transition-colors cursor-pointer inline-block"
-                                    title="Xóa tài khoản"
+                                    className="p-1.5 text-slate-400 hover:text-primary transition-colors cursor-pointer inline-block rounded-lg hover:bg-slate-100"
+                                    title="Xóa tài khoản vĩnh viễn"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1977,14 +2061,44 @@ export default function AdminDashboard() {
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mật khẩu ban đầu *</label>
-                        <input
-                          type="password"
-                          required
-                          value={newJudgePassword}
-                          onChange={(e) => setNewJudgePassword(e.target.value)}
-                          placeholder="Mật khẩu ít nhất 6 ký tự"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showNewJudgePassword ? 'text' : 'password'}
+                            required
+                            value={newJudgePassword}
+                            onChange={(e) => setNewJudgePassword(e.target.value)}
+                            placeholder="Mật khẩu ít nhất 6 ký tự"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewJudgePassword(!showNewJudgePassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            {showNewJudgePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Xác nhận mật khẩu ban đầu *</label>
+                        <div className="relative">
+                          <input
+                            type={showNewJudgeConfirmPassword ? 'text' : 'password'}
+                            required
+                            value={newJudgeConfirmPassword}
+                            onChange={(e) => setNewJudgeConfirmPassword(e.target.value)}
+                            placeholder="Nhập lại mật khẩu ban đầu"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewJudgeConfirmPassword(!showNewJudgeConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            {showNewJudgeConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </div>
 
                       <button
@@ -1998,6 +2112,91 @@ export default function AdminDashboard() {
                     </form>
                   </div>
                 </div>
+
+                {/* Modal Admin Change Password for Judge */}
+                {changingPasswordJudge && (
+                  <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative border border-slate-200">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Key className="w-5 h-5 text-accent" />
+                          <h3 className="font-heading font-bold text-base text-slate-900">
+                            Đổi Mật Khẩu Giám Khảo
+                          </h3>
+                        </div>
+                        <button
+                          onClick={() => setChangingPasswordJudge(null)}
+                          className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                        <p className="text-slate-500">Giám khảo: <strong className="text-slate-800">{changingPasswordJudge.full_name}</strong></p>
+                        <p className="text-slate-500 font-mono mt-0.5">{changingPasswordJudge.email}</p>
+                      </div>
+
+                      {adminJudgePassError && (
+                        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl text-center font-semibold">
+                          {adminJudgePassError}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleAdminChangeJudgePassword} className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mật khẩu mới *</label>
+                          <div className="relative">
+                            <input
+                              type={showAdminJudgePassword ? 'text' : 'password'}
+                              required
+                              value={adminJudgeNewPassword}
+                              onChange={(e) => setAdminJudgeNewPassword(e.target.value)}
+                              placeholder="Mật khẩu mới tối thiểu 6 ký tự"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowAdminJudgePassword(!showAdminJudgePassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                              {showAdminJudgePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Xác nhận mật khẩu mới *</label>
+                          <input
+                            type={showAdminJudgePassword ? 'text' : 'password'}
+                            required
+                            value={adminJudgeConfirmPassword}
+                            onChange={(e) => setAdminJudgeConfirmPassword(e.target.value)}
+                            placeholder="Nhập lại mật khẩu mới"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setChangingPasswordJudge(null)}
+                            className="w-1/2 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                          >
+                            Hủy bỏ
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isUpdatingJudgePassword}
+                            className="w-1/2 py-2.5 bg-accent hover:bg-opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                          >
+                            {isUpdatingJudgePassword ? 'Đang cập nhật...' : 'Cập nhật'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

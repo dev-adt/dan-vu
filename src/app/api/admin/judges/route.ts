@@ -8,7 +8,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // Helper to authenticate admin using basic token or header matching
 function authenticateAdmin(req: NextRequest): boolean {
-  // Simple check for mock admin header or basic credentials in header
   const authHeader = req.headers.get('Authorization');
   if (authHeader) {
     const [type, credentials] = authHeader.split(' ');
@@ -55,9 +54,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Các thông tin Email, Mật khẩu, Họ tên là bắt buộc.' }, { status: 400 });
     }
 
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Mật khẩu phải chứa ít nhất 6 ký tự.' }, { status: 400 });
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+
     // 1. Create User in Supabase Auth via Admin Client
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: trimmedEmail,
       password,
       email_confirm: true,
       user_metadata: { role: 'judge', full_name: fullName }
@@ -73,9 +78,9 @@ export async function POST(req: NextRequest) {
     // 2. Insert profile info into public.judges table
     const { data: judgeData, error: profileError } = await supabaseAdmin
       .from('judges')
-      .insert({
+      .upsert({
         id: userId,
-        email,
+        email: trimmedEmail,
         full_name: fullName
       })
       .select()
@@ -95,7 +100,52 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE: Remove a judge account
+// PATCH: Update judge password or profile by Admin
+export async function PATCH(req: NextRequest) {
+  if (!authenticateAdmin(req)) {
+    return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
+  }
+
+  try {
+    const { id, password, fullName } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Mã giám khảo (id) là bắt buộc.' }, { status: 400 });
+    }
+
+    if (password) {
+      if (password.length < 6) {
+        return NextResponse.json({ error: 'Mật khẩu phải chứa ít nhất 6 ký tự.' }, { status: 400 });
+      }
+
+      // Update Auth Password
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, { password });
+      if (authError) {
+        console.error('Auth User Password Update Error:', authError);
+        return NextResponse.json({ error: 'Lỗi đổi mật khẩu auth: ' + authError.message }, { status: 500 });
+      }
+    }
+
+    if (fullName) {
+      const { error: profileError } = await supabaseAdmin
+        .from('judges')
+        .update({ full_name: fullName })
+        .eq('id', id);
+
+      if (profileError) {
+        console.error('Profile Update Error:', profileError);
+        return NextResponse.json({ error: 'Lỗi cập nhật tên giám khảo: ' + profileError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã cập nhật thông tin giám khảo thành công.' });
+  } catch (err: any) {
+    console.error('Internal Error in updating judge:', err);
+    return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });
+  }
+}
+
+// DELETE: Remove a judge account (safely handles FK & Auth User)
 export async function DELETE(req: NextRequest) {
   if (!authenticateAdmin(req)) {
     return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
@@ -109,15 +159,24 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Mã giám khảo (id) là bắt buộc.' }, { status: 400 });
     }
 
-    // Delete user from Supabase auth. This cascades and deletes the public.judges profile record
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    // 1. Delete associated scorecards if any to prevent foreign key errors
+    await supabaseAdmin.from('scorecards').delete().eq('judge_id', id);
 
-    if (error) {
-      console.error('Auth User Deletion Error:', error);
-      return NextResponse.json({ error: 'Lỗi xóa tài khoản đăng nhập: ' + error.message }, { status: 500 });
+    // 2. Delete profile entry from public.judges table
+    const { error: dbError } = await supabaseAdmin.from('judges').delete().eq('id', id);
+    if (dbError) {
+      console.error('Judges Table Deletion Error:', dbError);
     }
 
-    return NextResponse.json({ success: true });
+    // 3. Delete user from Supabase auth
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+
+    if (authError && !authError.message.includes('User not found')) {
+      console.error('Auth User Deletion Error:', authError);
+      return NextResponse.json({ error: 'Lỗi xóa tài khoản đăng nhập: ' + authError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã xóa tài khoản giám khảo thành công.' });
   } catch (err: any) {
     console.error('Internal Error in deleting judge:', err);
     return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });
