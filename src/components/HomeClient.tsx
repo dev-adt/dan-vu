@@ -32,6 +32,7 @@ const INTRO_VIDEO: VideoItem = {
   created_at: '2026-08-03T00:00:00Z',
   title: 'Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế "Nhịp Bước Việt Nam 2026"',
   video_url: 'https://drive.google.com/file/d/1x8eD-VUKpYNWY2_IibF9YMN6eAFHqS6_/view?usp=sharing',
+  thumbnail_url: '/images/video-intro-cover.png',
   summary: 'Video giới thiệu chính thức về Festival Dân ca Dân vũ Quốc tế "Nhịp Bước Việt Nam 2026" - Sự kiện văn hóa quy tụ các đoàn nghệ thuật dân gian trong nước và quốc tế.',
   status: 'published',
   is_featured: true,
@@ -51,6 +52,7 @@ export default function HomeClient() {
   const [isLoadingPosts, setIsLoadingPosts] = React.useState(true);
   const [isLoadingVideos, setIsLoadingVideos] = React.useState(true);
   const [selectedVideo, setSelectedVideo] = React.useState<VideoItem | null>(null);
+  const [isIntroPlayingInline, setIsIntroPlayingInline] = React.useState(false);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -300,24 +302,82 @@ export default function HomeClient() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/60 shadow-lg bg-black group"
+          className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/60 shadow-xl bg-black group"
         >
-          <iframe
-            src="https://drive.google.com/file/d/1x8eD-VUKpYNWY2_IibF9YMN6eAFHqS6_/preview"
-            title="Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế 2026"
-            className="w-full h-full border-0 relative z-10"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-          />
-          <div className="absolute bottom-3 right-3 z-20 pointer-events-auto">
-            <button
+          {isIntroPlayingInline ? (
+            <>
+              <iframe
+                src="https://drive.google.com/file/d/1x8eD-VUKpYNWY2_IibF9YMN6eAFHqS6_/preview"
+                title="Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế 2026"
+                className="w-full h-full border-0 relative z-10"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+              <div className="absolute bottom-3 right-3 z-20 pointer-events-auto flex items-center gap-2">
+                <button
+                  onClick={() => setIsIntroPlayingInline(false)}
+                  className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md"
+                >
+                  Hiện Ảnh Bìa
+                </button>
+                <button
+                  onClick={() => setSelectedVideo(INTRO_VIDEO)}
+                  className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  title="Xem video trong cửa sổ phóng to"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" /> Phóng To
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              className="relative w-full h-full cursor-pointer select-none group"
               onClick={() => setSelectedVideo(INTRO_VIDEO)}
-              className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-sm flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
-              title="Xem video trong cửa sổ phóng to"
             >
-              <Maximize2 className="w-3.5 h-3.5" /> Phóng To Video
-            </button>
-          </div>
+              <img
+                src="/images/video-intro-cover.png"
+                alt="Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế 2026"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-95 group-hover:brightness-100"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10 group-hover:from-black/60 transition-all" />
+
+              {/* Play Button & Tagline Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 space-y-3 z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsIntroPlayingInline(true);
+                  }}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_30px_rgba(244,180,0,0.6)] group-hover:shadow-[0_0_45px_rgba(244,180,0,0.9)] cursor-pointer"
+                  title="Phát video ngay tại đây"
+                >
+                  <Play className="w-8 h-8 fill-[#111827] ml-1" />
+                </button>
+                <div>
+                  <span className="inline-block px-3 py-1 bg-secondary text-[#111827] text-[10px] font-extrabold uppercase tracking-widest rounded-full mb-1 shadow-sm">
+                    Video Giới Thiệu Chân Thực
+                  </span>
+                  <p className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider drop-shadow-md">
+                    Xem Video Giới Thiệu Sự Kiện
+                  </p>
+                </div>
+              </div>
+
+              {/* Phóng to Button */}
+              <div className="absolute top-3 right-3 z-20">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedVideo(INTRO_VIDEO);
+                  }}
+                  className="bg-black/60 hover:bg-black/80 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  title="Xem trong cửa sổ phóng to"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" /> Phóng To Video
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
       </section>
 
