@@ -318,7 +318,7 @@ export default function HomeClient() {
                   onClick={() => setIsIntroPlayingInline(false)}
                   className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md"
                 >
-                  Hiện Ảnh Bìa
+                  Xem Ảnh Bìa
                 </button>
                 <button
                   onClick={() => setSelectedVideo(INTRO_VIDEO)}
@@ -355,11 +355,8 @@ export default function HomeClient() {
                 </button>
                 <div>
                   <span className="inline-block px-3 py-1 bg-secondary text-[#111827] text-[10px] font-extrabold uppercase tracking-widest rounded-full mb-1 shadow-sm">
-                    Video Giới Thiệu Chân Thực
-                  </span>
-                  <p className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider drop-shadow-md">
                     Xem Video Giới Thiệu Sự Kiện
-                  </p>
+                  </span>
                 </div>
               </div>
 
@@ -373,7 +370,7 @@ export default function HomeClient() {
                   className="bg-black/60 hover:bg-black/80 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
                   title="Xem trong cửa sổ phóng to"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" /> Phóng To Video
+                  <Maximize2 className="w-3.5 h-3.5" /> Phóng To
                 </button>
               </div>
             </div>
@@ -398,7 +395,10 @@ export default function HomeClient() {
             </div>
             <div className="bg-white/90 border border-amber-500/40 px-5 py-3.5 rounded-2xl text-center shadow-sm shrink-0">
               <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Thời gian tiếp nhận</span>
-              <span className="font-bold text-sm text-primary">21/07/2026 – 30/07/2026</span>
+              <span className="font-bold text-sm text-slate-700">21/07/2026 – 30/07/2026</span>
+              <span className="inline-block text-[10px] font-bold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full mt-1 uppercase">
+                ✓ Đã Kết Thúc Hồ Sơ
+              </span>
             </div>
           </div>
 
