@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Music, ArrowRight, Star, Heart, Award, Calendar, User, Newspaper } from 'lucide-react';
+import { Play, Music, ArrowRight, Star, Heart, Award, Calendar, User, Newspaper, Maximize2 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -26,6 +26,17 @@ interface Post {
   source?: string;
 }
 
+
+const INTRO_VIDEO: VideoItem = {
+  id: 'intro-event-video-2026',
+  created_at: '2026-08-03T00:00:00Z',
+  title: 'Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế "Nhịp Bước Việt Nam 2026"',
+  video_url: 'https://drive.google.com/file/d/1x8eD-VUKpYNWY2_IibF9YMN6eAFHqS6_/view?usp=sharing',
+  summary: 'Video giới thiệu chính thức về Festival Dân ca Dân vũ Quốc tế "Nhịp Bước Việt Nam 2026" - Sự kiện văn hóa quy tụ các đoàn nghệ thuật dân gian trong nước và quốc tế.',
+  status: 'published',
+  is_featured: true,
+  source: 'Ban Tổ Chức Festival 2026',
+};
 
 const bgImages = [
   '/images/hero-bg-1.png',
@@ -68,10 +79,14 @@ export default function HomeClient() {
         const res = await fetch('/api/videos?limit=3');
         if (res.ok) {
           const data = await res.json();
-          setVideos(data.videos || []);
+          const loadedVideos = data.videos || [];
+          setVideos(loadedVideos.length > 0 ? loadedVideos : [INTRO_VIDEO]);
+        } else {
+          setVideos([INTRO_VIDEO]);
         }
       } catch (err) {
         console.error('Failed to load videos:', err);
+        setVideos([INTRO_VIDEO]);
       } finally {
         setIsLoadingVideos(false);
       }
@@ -285,14 +300,23 @@ export default function HomeClient() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/60 group shadow-md flex items-center justify-center bg-light-cream/40"
+          className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-300/60 shadow-lg bg-black group"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-primary/5 mix-blend-overlay" />
-          <div className="z-10 text-center space-y-4">
-            <button className="w-16 h-16 rounded-full bg-secondary text-[#111827] flex items-center justify-center hover:scale-110 transition-transform shadow-md">
-              <Play className="w-6 h-6 fill-[#111827] ml-1" />
+          <iframe
+            src="https://drive.google.com/file/d/1x8eD-VUKpYNWY2_IibF9YMN6eAFHqS6_/preview"
+            title="Video Giới Thiệu Festival Dân Ca Dân Vũ Quốc Tế 2026"
+            className="w-full h-full border-0 relative z-10"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+          <div className="absolute bottom-3 right-3 z-20 pointer-events-auto">
+            <button
+              onClick={() => setSelectedVideo(INTRO_VIDEO)}
+              className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-sm flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+              title="Xem video trong cửa sổ phóng to"
+            >
+              <Maximize2 className="w-3.5 h-3.5" /> Phóng To Video
             </button>
-            <p className="text-xs font-bold uppercase tracking-wider text-dark-obsidian">Xem Video Giới Thiệu Sự Kiện</p>
           </div>
         </motion.div>
       </section>
