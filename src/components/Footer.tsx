@@ -58,7 +58,7 @@ export default function Footer() {
               <span className="text-light-alabaster/40">Du lịch:</span> 0375 860 238 (Ms Thúy - Phụ trách về tour: khách sạn, nhà hàng)
             </li>
             <li>
-              <span className="text-light-alabaster/40">Liên hệ BTC:</span> <a href="mailto:festval2026@dancadanvu.com" className="hover:underline hover:text-secondary transition-colors">festval2026@dancadanvu.com</a>
+              <span className="text-light-alabaster/40">Liên hệ BTC:</span> <a href="mailto:festival2026@dancadanvu.com" className="hover:underline hover:text-secondary transition-colors">festival2026@dancadanvu.com</a>
             </li>
             <li>
               <span className="text-light-alabaster/40">Văn phòng BTC tiếp nhận hồ sơ:</span> Số 53 Nguyễn Du, P. Hai Bà Trưng, TP. Hà Nội

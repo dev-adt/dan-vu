@@ -437,7 +437,7 @@ export default function HomeClient() {
                 <div className="mt-4 p-3.5 bg-slate-100/90 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 space-y-1.5">
                   <p><strong>Hồ sơ gửi về:</strong> Văn phòng Ban Tổ chức, số 53 Nguyễn Du, phường Hai Bà Trưng, thành phố Hà Nội.</p>
                   <p><strong>Trưởng Ban Truyền Thông:</strong> Mrs. Hương - 0966 925 606</p>
-                  <p><strong>Email chính thức:</strong> festval2026@dancadanvu.com</p>
+                  <p><strong>Email chính thức:</strong> festival2026@dancadanvu.com</p>
                 </div>
               </div>
             </div>
