@@ -10,6 +10,7 @@ import Timeline from '@/components/Timeline';
 import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
 import VideoModal, { VideoItem } from '@/components/VideoModal';
 import { parseVideoUrl } from '@/lib/videoUtils';
+import TourSlider from '@/components/TourSlider';
 
 
 interface Post {
@@ -522,6 +523,9 @@ export default function HomeClient() {
           </div>
         </div>
       </section>
+
+      {/* Dien Bien Tour Packages Slider Section */}
+      <TourSlider />
 
       {/* News & Events Section */}
       <section className="bg-gradient-to-b from-white to-light-cream/40 py-24 px-4 border-t border-slate-200/40 relative z-10">
