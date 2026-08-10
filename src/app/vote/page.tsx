@@ -54,8 +54,9 @@ export default function VoteDiscovery() {
   }, []);
 
   useEffect(() => {
+    let subscription: any = null;
+
     const checkVoterSession = (session: Session | null) => {
-      // Judge accounts are not voters
       if (session?.user && session.user.user_metadata?.role !== 'judge') {
         setUser(session.user);
       } else {
@@ -63,21 +64,26 @@ export default function VoteDiscovery() {
       }
     };
 
-    // Get session
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      checkVoterSession(session);
-    });
+    try {
+      supabase.auth.getSession().then(({ data }: any) => {
+        checkVoterSession(data?.session || null);
+      }).catch((err: any) => {
+        console.error('Supabase session fetch error:', err);
+      });
 
-    // Listen to auth state change
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      checkVoterSession(session);
-    });
+      const authRes = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+        checkVoterSession(session);
+      });
+      subscription = authRes?.data?.subscription;
+    } catch (err: any) {
+      console.error('Supabase auth init error:', err);
+    }
 
-    // Fetch approved teams list
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadApprovedTeams();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription?.unsubscribe) subscription.unsubscribe();
+    };
   }, [loadApprovedTeams]);
 
   const handleGoogleLogin = async () => {
