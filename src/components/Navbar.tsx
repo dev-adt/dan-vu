@@ -42,6 +42,9 @@ export default function Navbar() {
               <img
                 src="/favicon.png?v=3"
                 alt="Logo Festival Dân Ca Dân Vũ"
+                width={36}
+                height={36}
+                style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
                 className="w-9 h-9 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform"
               />
               <div className="flex flex-col">

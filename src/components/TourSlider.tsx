@@ -338,29 +338,335 @@ const TOUR_DATA: TourPackage[] = [
   }
 ];
 
+export function getLocalizedTourData(lang: 'vi' | 'en'): TourPackage[] {
+  if (lang === 'en') {
+    return [
+      {
+        id: 'tour-1-day',
+        badge: '1-Day Full Package',
+        badgeColor: 'bg-amber-500 text-white',
+        title: 'DIEN BIEN 1-DAY TOUR',
+        subtitle: 'Dien Bien Phu Impressions - Journey to Historical Land',
+        duration: '08:00 – 16:30 (1 Day)',
+        transport: 'Private Tourist Bus (16 – 29 seats)',
+        image: '/images/tour-1day.png',
+        highlights: [
+          'Dien Bien Phu Victory Museum & 360° Panorama Painting',
+          'A1 Hill & Legendary 1,000kg Explosive Crater',
+          'General De Castries Command Bunker (De Castries Bunker)',
+          'Dien Bien Phu Victory Monument (D1 Hill)',
+          'Thai Ethnic Cultural Village or Hot Air Balloon Flight',
+          'Savor authentic Northwestern Vietnamese specialty cuisine'
+        ],
+        menuHighlights: [
+          'Mac Khen Grilled Chicken',
+          'Grilled Stream Fish (Pa Pinh Top)',
+          'Dien Bien Sticky Rice',
+          'Fragrant Smoked Water Buffalo Meat',
+          'Seasonal Northwestern Wild Vegetables'
+        ],
+        itinerary: [
+          {
+            day: '08:00 | PICKUP & DEPARTURE',
+            title: 'Hotel Pickup in Dien Bien Phu City Center',
+            details: [
+              'Private bus & English guide pick up guests at central hotels in Dien Bien Phu City.',
+              'En route, tour guide provides an engaging overview of the legendary 1954 Dien Bien Phu Campaign.'
+            ]
+          },
+          {
+            day: '08:30 | DIEN BIEN PHU VICTORY MUSEUM',
+            title: 'Marvel at the hyper-realistic 360° Panorama Painting',
+            details: [
+              'Explore the state-of-the-art museum housing thousands of valuable historical artifacts.',
+              'Experience the electronic campaign map recreating the entire historic battle.',
+              'Admire the breathtaking 360° Panorama Painting depicting the Dien Bien Phu Battle - a unique masterwork of art.'
+            ]
+          },
+          {
+            day: '09:45 | A1 HILL HISTORICAL SITE',
+            title: 'Most crucial stronghold of French defense system',
+            details: [
+              'Discover the famous explosive crater where 1,000kg of TNT made military history.',
+              'Inspect French tanks, battle bunkers, and memorial monument at the peak of A1 Hill.'
+            ]
+          },
+          {
+            day: '10:45 | A1 MARTYRS CEMETERY',
+            title: 'Commemorate heroic fallen martyrs',
+            details: [
+              'Offer incense in tribute to heroes who gave their lives for national independence.',
+              'Solemn and moving atmosphere in the heart of Muong Thanh Valley.'
+            ]
+          },
+          {
+            day: '11:15 | DE CASTRIES COMMAND BUNKER',
+            title: 'Legendary General De Castries Bunker',
+            details: [
+              'Visit the underground headquarters of General De Castries and French military command.',
+              'Hear historic accounts of the afternoon of May 7, 1954, when victory flag flew over De Castries bunker.'
+            ]
+          },
+          {
+            day: '12:15 | SAVOR DIEN BIEN CUISINE',
+            title: 'Abundant Northwestern specialty lunch',
+            details: [
+              'Enjoy lunch at a premier local restaurant: Mac Khen grilled chicken, stream fish, sticky rice, smoked buffalo meat, and wild forest greens.'
+            ]
+          },
+          {
+            day: '14:00 | VICTORY MONUMENT (D1 HILL)',
+            title: 'Panoramic view of Dien Bien Phu City',
+            details: [
+              'Climb D1 Hill to visit Vietnam\'s largest Dien Bien Phu Victory Monument.',
+              'Enjoy breathtaking panoramic views of the vast Muong Thanh Valley from above.'
+            ]
+          },
+          {
+            day: '15:00 | FEATURED OPTIONAL EXPERIENCE',
+            title: 'Choose Thai Cultural Village or Hot Air Balloon',
+            details: [
+              'Option 1: Visit Thai Ethnic Cultural Village, stilt houses, brocade weaving, and local craft shopping.',
+              'Option 2: Experience Hot Air Balloon flight over Muong Thanh Valley (at guest\'s own expense).'
+            ]
+          },
+          {
+            day: '17:30 | END OF JOURNEY',
+            title: 'Drop-off at original pickup point',
+            details: ['Transfer back to hotel. End of memorable historical excursion.']
+          }
+        ],
+        inclusions: [
+          'Modern 16 – 29 seat tourist bus throughout the tour',
+          'Standard main meal (200,000 VND / person / meal)',
+          'Entrance tickets to all historical sites in program',
+          'Professional English-speaking guide knowledgeable in Dien Bien history',
+          'Drinking water: 02 bottles 500ml / guest / day',
+          'Maximum travel insurance & Welcome banner'
+        ],
+        exclusions: [
+          'Single hotel room supplement',
+          'VAT Tax 8% - 10%',
+          'Additional beverages ordered during meals',
+          'Personal expenses outside the itinerary',
+          'Hot Air Balloon ticket (if registered)'
+        ]
+      },
+      {
+        id: 'tour-5-days',
+        badge: 'Festival Hot Combo',
+        badgeColor: 'bg-primary text-white',
+        title: 'DIEN BIEN 5-DAY 4-NIGHT TOUR',
+        subtitle: 'Heroic Dien Bien - Complete International Folk Dance Festival 2026',
+        duration: '5 Days 4 Nights (Aug 28 – Sep 02, 2026)',
+        transport: 'Private Tourist Bus (16 – 29 seats)',
+        image: '/images/tour-5days.png',
+        highlights: [
+          'Immerse in Opening Ceremony & performance nights of International Folk Dance Festival 2026',
+          'Visit 360° Panorama Museum, A1 Hill, A1 Martyrs Cemetery',
+          'Dien Bien Phu Victory Monument on legendary D1 Hill',
+          'Experience Hot Air Balloon flight over Muong Thanh Valley',
+          'Discover Thai Ethnic Culture & brocade weaving village',
+          '3-star central hotel stay + Premium local cuisine set'
+        ],
+        menuHighlights: [
+          'Northwestern Mac Khen Grilled Chicken',
+          'Pa Pinh Top Stream Fish',
+          'Fragrant Dien Bien Sticky Rice',
+          'Savory Smoked Buffalo Meat',
+          'Wild Vegetable Mineral Hotpot'
+        ],
+        itinerary: [
+          {
+            day: 'DAY 1 (AUG 28): AIRPORT PICKUP - FESTIVAL OPENING NIGHT',
+            title: 'Airport Greeting & International Folk Dance Festival Opening',
+            details: [
+              'Morning: Meet & greet at Dien Bien Airport, transfer to 3-star central hotel for check-in and lunch.',
+              'Afternoon: Free time to relax and prepare for the grand festival opening.',
+              '17:30: Dinner at local restaurant. Bus transfers group to 7/5 Square for International Folk Dance Festival Opening Night.'
+            ]
+          },
+          {
+            day: 'DAY 2 (AUG 29): FOLK DANCE FESTIVAL EVENTS',
+            title: 'Immerse in vibrant international dance rhythms',
+            details: [
+              'Full breakfast, lunch, and dinner at specialty restaurants included.',
+              'Private shuttle transfers group to 7/5 Square to watch spectacular performances by Vietnamese & International troupes.'
+            ]
+          },
+          {
+            day: 'DAY 3 (AUG 30): INTERNATIONAL DANCE COMPETITIONS',
+            title: 'Enjoy world-class dance choreography',
+            details: [
+              'Full breakfast, lunch, and dinner included.',
+              'Bus transfers group to attend festival events, OCOP cultural trade fair, and artistic showcases.'
+            ]
+          },
+          {
+            day: 'DAY 4 (SEP 01): HISTORICAL EXPEDITION & FINALS NIGHT',
+            title: 'Panorama Museum - A1 Hill - Festival Finals & Awards',
+            details: [
+              '08:30: Visit Victory Museum (360° Panorama), A1 Hill (1,000kg crater), and A1 Martyrs Cemetery.',
+              '12:30: Dien Bien specialty lunch.',
+              '14:30: Experience Thai Ethnic Cultural Village or Dien Bien Hot Air Balloon flight.',
+              '18:00: Dinner. Transfer to 7/5 Square for Grand Finals & Award Ceremony of International Folk Dance Festival.'
+            ]
+          },
+          {
+            day: 'DAY 5 (SEP 02): D1 VICTORY MONUMENT - AIRPORT DROP-OFF',
+            title: 'Panoramic views of Muong Thanh Valley & Airport Farewell',
+            details: [
+              'Morning: Breakfast, visit Dien Bien Phu Victory Monument on D1 Hill for best valley panorama.',
+              'Noon: Lunch at restaurant, hotel check-out.',
+              'Private transfer to Dien Bien Airport. End of incredible 5D4N journey.'
+            ]
+          }
+        ],
+        inclusions: [
+          'Modern 16 – 29 seat tourist bus throughout the program',
+          '3-star central hotel accommodation (2 guests / room)',
+          'Breakfast: 50,000 VND/person | Main meals: 200,000 VND/person',
+          'Entrance tickets to all historical sites',
+          'Energetic English-speaking guide with deep historical & cultural knowledge',
+          'Drinking water: 02 bottles 500ml / guest / day',
+          'Premium travel insurance & Welcome banner'
+        ],
+        exclusions: [
+          'Single room supplement',
+          'VAT Tax 8% - 10%',
+          'Drinks during meals',
+          'Personal expenses outside itinerary',
+          'Hot Air Balloon flight ticket'
+        ]
+      },
+      {
+        id: 'tour-6-days',
+        badge: 'Complete Expedition',
+        badgeColor: 'bg-emerald-700 text-white',
+        title: 'DIEN BIEN 6-DAY 5-NIGHT TOUR',
+        subtitle: 'Heroic Dien Bien - Muong Phang Headquarters & U Va Hot Springs',
+        duration: '6 Days 5 Nights (Aug 27 – Sep 02, 2026)',
+        transport: 'Private Tourist Bus (16 – 29 seats)',
+        image: '/images/tour-6days.png',
+        highlights: [
+          'Visit Muong Phang Campaign Headquarters (General Vo Nguyen Giap Bunker)',
+          'Relax & rejuvenate at U Va Natural Hot Mineral Springs',
+          'Full series of International Folk Dance Festival 2026 events at 7/5 Square',
+          '360° Panorama Museum, A1 Hill, De Castries Bunker, D1 Monument',
+          'Muong Thanh Hot Air Balloon & Thai Ethnic Cultural Village',
+          '3-star central hotel + Complete Northwestern culinary set'
+        ],
+        menuHighlights: [
+          'Delicious Mac Khen Grilled Chicken',
+          'Famous Pa Pinh Top Stream Fish',
+          'Sweet Sticky Rice of Dien Bien',
+          'Muong Phang Smoked Buffalo Meat',
+          'Hot Spring Wild Veggie Soup'
+        ],
+        itinerary: [
+          {
+            day: 'DAY 1 (AUG 27): AIRPORT PICKUP - PANORAMA MUSEUM',
+            title: 'Welcome to Dien Bien & Victory Museum',
+            details: [
+              'Morning: Meet & greet at Dien Bien Airport, transfer to 3-star central hotel for check-in and lunch.',
+              '15:30: Visit Dien Bien Phu Victory Museum and marvel at the 360° Panorama Painting.',
+              '18:00: Dinner at restaurant. Free evening to explore city at night.'
+            ]
+          },
+          {
+            day: 'DAY 2 (AUG 28): A1 HILL - THAI VILLAGE / BALLOON - FESTIVAL OPENING',
+            title: 'A1 Hill Relics & Festival Opening Night',
+            details: [
+              '09:30: Visit A1 Hill (1,000kg crater, tank relics), A1 Martyrs Cemetery.',
+              '12:30: Lunch at restaurant.',
+              '14:30: Experience Thai Cultural Village or Hot Air Balloon flight.',
+              '17:30: Dinner. Transfer to 7/5 Square for Festival Opening Night.'
+            ]
+          },
+          {
+            day: 'DAY 3 (AUG 29): INTERNATIONAL FOLK DANCE FESTIVAL',
+            title: 'Explosion of colorful international folk dances',
+            details: [
+              'Full breakfast, lunch, and dinner provided.',
+              'Transfer to festival grounds to enjoy troupe performances and OCOP cultural fair.'
+            ]
+          },
+          {
+            day: 'DAY 4 (AUG 30): DANCE FESTIVAL & CULTURAL EXCHANGE',
+            title: 'Cheer for international performing troupes',
+            details: [
+              'Full breakfast, lunch, and dinner provided.',
+              'Transfer to festival venues for vibrant stage performances and international cultural exchanges.'
+            ]
+          },
+          {
+            day: 'DAY 5 (SEP 01): MUONG PHANG HEADQUARTERS - U VA HOT SPRINGS',
+            title: 'Muong Phang Forest & U Va Mineral Hot Springs',
+            details: [
+              '08:00: Depart for Dien Bien Phu Campaign Headquarters in Muong Phang (35km from center).',
+              '09:30: Visit General Vo Nguyen Giap Bunker, General Hoang Van Thai Bunker, and forest trenches.',
+              '12:00: Enjoy Muong Phang local lunch specialties.',
+              '14:00 – 16:30: Relax at U Va Natural Hot Mineral Springs (thermal bath, foot soak, body wellness).',
+              '18:00: Dinner. Transfer to 7/5 Square for Grand Finals & Festival Award Ceremony.'
+            ]
+          },
+          {
+            day: 'DAY 6 (SEP 02): D1 VICTORY MONUMENT - AIRPORT FAREWELL',
+            title: 'Conquer D1 Hill & Airport Departure',
+            details: [
+              'Morning: Breakfast, visit Dien Bien Phu Victory Monument on D1 Hill for city views.',
+              'Noon: Lunch at restaurant, hotel check-out.',
+              'Transfer to Dien Bien Airport. End of memorable 6D5N journey.'
+            ]
+          }
+        ],
+        inclusions: [
+          'Modern 16 – 29 seat tourist bus throughout program',
+          '3-star central hotel accommodation (2 guests / room)',
+          'Breakfast: 50,000 VND/person | Main meals: 200,000 VND/person',
+          'Entrance tickets to all relics & U Va Hot Mineral Springs entrance',
+          'Energetic English-speaking guide knowledgeable in history',
+          'Drinking water: 02 bottles 500ml / guest / day',
+          'Maximum travel insurance & Welcome banner'
+        ],
+        exclusions: [
+          'Single room supplement',
+          'VAT Tax 8% - 10%',
+          'Additional drinks during meals',
+          'Personal expenses outside itinerary',
+          'Hot Air Balloon flight ticket'
+        ]
+      }
+    ];
+  }
+  return TOUR_DATA;
+}
+
 export default function TourSlider() {
   const { t, language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
+  const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const tourList = getLocalizedTourData(language as 'vi' | 'en');
+  const currentTour = tourList[currentIndex] || tourList[0];
+  const activeSelectedTour = tourList.find((t) => t.id === selectedTourId) || null;
 
   // Auto slide interval
   useEffect(() => {
-    if (!isAutoPlaying || selectedTour !== null) return;
+    if (!isAutoPlaying || selectedTourId !== null) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % TOUR_DATA.length);
+      setCurrentIndex((prev) => (prev + 1) % tourList.length);
     }, 7000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, selectedTour]);
-
-  const currentTour = TOUR_DATA[currentIndex];
+  }, [isAutoPlaying, selectedTourId, tourList.length]);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? TOUR_DATA.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? tourList.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % TOUR_DATA.length);
+    setCurrentIndex((prev) => (prev + 1) % tourList.length);
   };
 
   return (
@@ -517,7 +823,7 @@ export default function TourSlider() {
               {/* Action Buttons & Hotline */}
               <div className="pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                 <button
-                  onClick={() => setSelectedTour(currentTour)}
+                  onClick={() => setSelectedTourId(currentTour.id)}
                   className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-[0_4px_15px_rgba(198,40,40,0.25)] transition-all cursor-pointer glow-crimson-hover"
                 >
                   <Calendar className="w-4 h-4" />
@@ -539,7 +845,7 @@ export default function TourSlider() {
 
       {/* Detailed Itinerary Modal Popup */}
       <AnimatePresence>
-        {selectedTour && (
+        {activeSelectedTour && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -551,18 +857,18 @@ export default function TourSlider() {
               {/* Modal Sticky Header */}
               <div className="sticky top-0 bg-white/95 backdrop-blur-md z-20 border-b border-slate-200 p-6 flex justify-between items-start gap-4">
                 <div>
-                  <span className={`px-3 py-1 rounded-lg text-[11px] font-bold tracking-wider uppercase inline-block mb-1 ${selectedTour.badgeColor}`}>
-                    {selectedTour.badge}
+                  <span className={`px-3 py-1 rounded-lg text-[11px] font-bold tracking-wider uppercase inline-block mb-1 ${activeSelectedTour.badgeColor}`}>
+                    {activeSelectedTour.badge}
                   </span>
                   <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900">
-                    {selectedTour.title}
+                    {activeSelectedTour.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                    {selectedTour.subtitle}
+                    {activeSelectedTour.subtitle}
                   </p>
                 </div>
                 <button
-                  onClick={() => setSelectedTour(null)}
+                  onClick={() => setSelectedTourId(null)}
                   className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                   title={t('common.close')}
                 >
@@ -578,14 +884,14 @@ export default function TourSlider() {
                     <Clock className="w-8 h-8 text-primary shrink-0" />
                     <div>
                       <span className="text-[10px] text-slate-500 uppercase font-semibold block">{t('tour.modal_time_label')}</span>
-                      <strong className="text-xs font-bold text-slate-900">{selectedTour.duration}</strong>
+                      <strong className="text-xs font-bold text-slate-900">{activeSelectedTour.duration}</strong>
                     </div>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
                     <Compass className="w-8 h-8 text-accent shrink-0" />
                     <div>
                       <span className="text-[10px] text-slate-500 uppercase font-semibold block">{t('tour.modal_transport_label')}</span>
-                      <strong className="text-xs font-bold text-slate-900">{selectedTour.transport}</strong>
+                      <strong className="text-xs font-bold text-slate-900">{activeSelectedTour.transport}</strong>
                     </div>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
@@ -604,7 +910,7 @@ export default function TourSlider() {
                   </h4>
 
                   <div className="space-y-6 relative before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
-                    {selectedTour.itinerary.map((item, idx) => (
+                    {activeSelectedTour.itinerary.map((item, idx) => (
                       <div key={idx} className="relative pl-8 space-y-1">
                         <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center shadow-sm">
                           {idx + 1}
@@ -636,7 +942,7 @@ export default function TourSlider() {
                       <ShieldCheck className="w-4 h-4 text-emerald-600" /> {t('tour.modal_inclusions_label')}
                     </h5>
                     <ul className="space-y-2 text-xs text-slate-800">
-                      {selectedTour.inclusions.map((inc, i) => (
+                      {activeSelectedTour.inclusions.map((inc, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                           <span>{inc}</span>
@@ -651,7 +957,7 @@ export default function TourSlider() {
                       <X className="w-4 h-4 text-rose-600" /> {t('tour.modal_exclusions_label')}
                     </h5>
                     <ul className="space-y-2 text-xs text-slate-800">
-                      {selectedTour.exclusions.map((exc, eIdx) => (
+                      {activeSelectedTour.exclusions.map((exc, eIdx) => (
                         <li key={eIdx} className="flex items-start gap-2">
                           <span className="text-rose-500 font-bold shrink-0">✕</span>
                           <span>{exc}</span>
