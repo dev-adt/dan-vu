@@ -11,6 +11,7 @@ import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
 import VideoModal, { VideoItem } from '@/components/VideoModal';
 import { parseVideoUrl } from '@/lib/videoUtils';
 import TourSlider from '@/components/TourSlider';
+import { useLanguage } from '@/context/LanguageContext';
 
 
 interface Post {
@@ -47,6 +48,7 @@ const bgImages = [
 ];
 
 export default function HomeClient() {
+  const { t } = useLanguage();
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [videos, setVideos] = React.useState<VideoItem[]>([]);
@@ -216,17 +218,17 @@ export default function HomeClient() {
             className="space-y-4"
           >
             <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-semibold tracking-wider uppercase">
-              <Star className="w-3.5 h-3.5 fill-primary" /> Festival Dân Ca Dân Vũ Quốc Tế 2026
+              <Star className="w-3.5 h-3.5 fill-primary" /> {t('brand.hero_badge', 'Festival Dân Ca Dân Vũ Quốc Tế 2026')}
             </span>
             <h1 className="font-heading font-extrabold text-4xl sm:text-6xl md:text-7xl text-dark-obsidian leading-tight tracking-wide">
-              NHỊP BƯỚC VIỆT NAM
+              {t('brand.title', 'NHỊP BƯỚC VIỆT NAM')}
             </h1>
             <p className="text-base sm:text-xl text-primary font-bold tracking-wide max-w-3xl mx-auto">
-              Chủ đề: &ldquo;Kết nối văn hóa - Lan tỏa hòa bình - Vươn tầm hội nhập&rdquo;
+              {t('brand.theme')}
             </p>
             <div className="pt-2">
               <span className="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl backdrop-blur-sm shadow-sm">
-                📍 Từ 28/08 đến 02/09/2026 tại Quảng trường 7/5, phường Điện Biên Phủ, tỉnh Điện Biên
+                {t('brand.event_details')}
               </span>
             </div>
           </motion.div>
@@ -241,21 +243,21 @@ export default function HomeClient() {
               href="/register"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-opacity-95 text-white font-bold text-sm uppercase tracking-wider px-8 py-4 rounded-xl shadow-[0_4px_20px_rgba(198,40,40,0.25)] transition-all glow-crimson-hover"
             >
-              Đăng Ký Dự Thi
+              {t('hero.register_btn')}
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/vote"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent hover:bg-opacity-95 text-white font-bold text-sm uppercase tracking-wider px-8 py-4 rounded-xl shadow-[0_4px_20px_rgba(0,105,92,0.25)] transition-all"
             >
-              Bình Chọn Tiết Mục
+              {t('hero.vote_btn')}
             </Link>
             <a
               href="/files/the-le-chi-tiet.pdf"
               download="The_le_chi_tiet_Nhip_buoc_Viet_Nam_2026.pdf"
               className="text-xs font-semibold text-dark-slate/60 hover:text-primary underline underline-offset-4 mt-2 sm:mt-0"
             >
-              Tải Thể Lệ Chi Tiết (PDF)
+              {t('hero.download_rules')}
             </a>
           </motion.div>
         </div>
@@ -273,27 +275,27 @@ export default function HomeClient() {
           <div className="flex items-center gap-2">
             <span className="w-3 h-6 bg-accent rounded-full" />
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent">
-              Văn Hóa & Sứ Mệnh
+              {t('narrative.tag')}
             </span>
           </div>
           <h2 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian leading-tight">
-            Giao thoa giữa di sản ngàn năm & vũ điệu đương đại
+            {t('narrative.title')}
           </h2>
           <p className="text-dark-slate/95 leading-relaxed text-sm">
-            Festival Dân ca Dân vũ Quốc tế &ldquo;Nhịp Bước Việt Nam 2026&rdquo; chào mừng 81 năm Quốc khánh (02/9/1945 - 02/9/2026). Đây là ngày hội văn hóa quy tụ các đoàn nghệ thuật dân gian, dân vũ trong nước và quốc tế (Lào, Thái Lan, Trung Quốc,...), kết nối di sản văn hóa phi vật thể và quảng bá hình ảnh đất nước, con người Việt Nam cùng tỉnh Điện Biên.
+            {t('narrative.description')}
           </p>
           <div className="grid grid-cols-3 gap-3 pt-4">
             <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
-              <span className="block text-xl sm:text-2xl font-bold text-primary">50-100</span>
-              <span className="text-[11px] text-dark-slate/70 font-medium">Đoàn NT & CLB dự thi</span>
+              <span className="block text-xl sm:text-2xl font-bold text-primary">{t('narrative.stat1_value')}</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">{t('narrative.stat1_label')}</span>
             </div>
             <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
-              <span className="block text-xl sm:text-2xl font-bold text-accent">300</span>
-              <span className="text-[11px] text-dark-slate/70 font-medium">Gian hàng hội chợ & OCOP</span>
+              <span className="block text-xl sm:text-2xl font-bold text-accent">{t('narrative.stat2_value')}</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">{t('narrative.stat2_label')}</span>
             </div>
             <div className="p-4 bg-light-alabaster/80 rounded-xl border border-slate-300/40 shadow-sm backdrop-blur-sm">
-              <span className="block text-xl sm:text-2xl font-bold text-amber-600">Khinh Khí Cầu</span>
-              <span className="text-[11px] text-dark-slate/70 font-medium">Trình diễn độc đáo</span>
+              <span className="block text-xl sm:text-2xl font-bold text-amber-600">{t('narrative.stat3_value')}</span>
+              <span className="text-[11px] text-dark-slate/70 font-medium">{t('narrative.stat3_label')}</span>
             </div>
           </div>
         </motion.div>
@@ -319,14 +321,14 @@ export default function HomeClient() {
                   onClick={() => setIsIntroPlayingInline(false)}
                   className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md"
                 >
-                  Xem Ảnh Bìa
+                  {t('narrative.video_preview_cover')}
                 </button>
                 <button
                   onClick={() => setSelectedVideo(INTRO_VIDEO)}
                   className="bg-black/75 hover:bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
                   title="Xem video trong cửa sổ phóng to"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" /> Phóng To
+                  <Maximize2 className="w-3.5 h-3.5" /> {t('narrative.video_fullscreen')}
                 </button>
               </div>
             </>

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Play, Heart, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CandidateCardProps {
   id: string;
@@ -24,9 +25,11 @@ export default function CandidateCard({
   thumbnailUrl,
   onVote,
 }: CandidateCardProps) {
+  const { t } = useLanguage();
+
   const categoryLabel = 
-    category === 'dan_ca' ? 'Dân Ca' : 
-    category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ';
+    category === 'dan_ca' ? t('vote.cat_danca', 'Dân Ca') : 
+    category === 'dan_vu' ? t('vote.cat_danvu', 'Dân Vũ') : `${t('vote.cat_danca', 'Dân Ca')} & ${t('vote.cat_danvu', 'Dân Vũ')}`;
 
   return (
     <motion.div
@@ -60,7 +63,7 @@ export default function CandidateCard({
       {/* Content */}
       <div className="p-5 flex flex-col flex-grow">
         <span className="text-[10px] font-bold text-accent uppercase tracking-widest leading-none">
-          Mã số: {id.substring(0, 5).toUpperCase()}
+          Code: {id.substring(0, 5).toUpperCase()}
         </span>
         <h3 className="font-heading font-semibold text-lg text-slate-900 mt-2 line-clamp-1 group-hover:text-primary transition-colors">
           {performanceTitle}
@@ -74,7 +77,7 @@ export default function CandidateCard({
           <div className="flex items-center gap-1.5 text-sm">
             <Heart className="w-4 h-4 text-primary fill-primary/10 animate-pulse" />
             <span className="font-bold text-slate-800">{votesCount.toLocaleString()}</span>
-            <span className="text-[11px] text-slate-400 font-normal">lượt</span>
+            <span className="text-[11px] text-slate-400 font-normal">{t('vote.votes_count', 'lượt')}</span>
           </div>
 
           <div className="flex gap-2">
@@ -82,13 +85,13 @@ export default function CandidateCard({
               href={`/vote/${id}`}
               className="text-[11px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600"
             >
-              Chi Tiết
+              {t('card.view_detail', 'Chi Tiết')}
             </Link>
             <button
               onClick={() => onVote?.(id)}
               className="text-[11px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg bg-accent text-white hover:bg-opacity-90 transition-all glow-gold-hover"
             >
-              Bình Chọn
+              {t('vote.btn_vote', 'Bình Chọn')}
             </button>
           </div>
         </div>
@@ -96,3 +99,4 @@ export default function CandidateCard({
     </motion.div>
   );
 }
+

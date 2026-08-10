@@ -21,6 +21,8 @@ import {
   Flame
 } from 'lucide-react';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 export interface TourPackage {
   id: string;
   badge: string;

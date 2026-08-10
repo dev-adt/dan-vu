@@ -3,63 +3,85 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, UserPlus, Film, Award, CheckCircle, Flame } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Stage {
+  titleKey: string;
   title: string;
+  titleEn: string;
   dateDisplay: string;
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   description: string;
+  descriptionEn: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const stages: Stage[] = [
   {
+    titleKey: 'timeline.stage1',
     title: 'Phát động Cuộc thi Thiết kế Logo & Bộ nhận diện',
+    titleEn: 'Official Logo & Brand Identity Contest Launch',
     dateDisplay: '21/07/2026 - 30/07/2026',
     startDate: '2026-07-21',
     endDate: '2026-07-30',
     description: 'Tiếp nhận hồ sơ dự thi thiết kế logo chính thức tại Văn phòng Ban Tổ chức, 53 Nguyễn Du, Hà Nội.',
+    descriptionEn: 'Receiving logo design contest entries at the Organizing Committee Office, 53 Nguyen Du, Hanoi.',
     icon: Award,
   },
   {
+    titleKey: 'timeline.stage2',
     title: 'Mở tiếp nhận Đăng ký dự thi Festival',
+    titleEn: 'Festival Registration Portal Opens',
     dateDisplay: '21/07/2026 - 15/08/2026',
     startDate: '2026-07-21',
     endDate: '2026-08-15',
     description: 'Các đoàn nghệ thuật, câu lạc bộ dân ca dân vũ nộp hồ sơ đăng ký & video tiết mục online.',
+    descriptionEn: 'Arts troupes and folk dance clubs submit online registration profiles and video performances.',
     icon: UserPlus,
   },
   {
+    titleKey: 'timeline.stage3',
     title: 'Chấm Sơ khảo & Thẩm định kỹ thuật',
+    titleEn: 'Preliminary Round Judging & Evaluation',
     dateDisplay: '20/08/2026 - 25/08/2026',
     startDate: '2026-08-20',
     endDate: '2026-08-25',
     description: 'Ban Giám Khảo làm việc trên hệ thống scoring online để đánh giá và tuyển chọn các tiết mục chính thức.',
+    descriptionEn: 'The Jury Panel operates on the online scoring portal to evaluate and select finalists.',
     icon: Film,
   },
   {
+    titleKey: 'timeline.stage4',
     title: 'Lễ Khai mạc & Khởi động Festival',
+    titleEn: 'Opening Ceremony & Festival Launch',
     dateDisplay: '28/08/2026',
     startDate: '2026-08-28',
     endDate: '2026-08-28',
     description: 'Bắt đầu chuỗi sự kiện tại Quảng trường 7/5, phường Điện Biên Phủ, tỉnh Điện Biên.',
+    descriptionEn: 'Kicking off event series at May 7th Square, Dien Bien Phu Ward, Dien Bien Province.',
     icon: Flame,
   },
   {
+    titleKey: 'timeline.stage5',
     title: 'Liên hoan, Carnaval đường phố & Trình diễn Khinh khí cầu',
+    titleEn: 'Street Carnaval, Festival Fair & Hot Air Balloon Show',
     dateDisplay: '28/08/2026 - 02/09/2026',
     startDate: '2026-08-28',
     endDate: '2026-09-02',
     description: 'Hội chợ 300 gian hàng, biểu diễn đường phố, giao lưu văn hóa quốc tế (Lào, Thái Lan, Trung Quốc,...).',
+    descriptionEn: '300 trade booths, street performances, international cultural exchanges (Laos, Thailand, China,...).',
     icon: Calendar,
   },
   {
+    titleKey: 'timeline.stage6',
     title: 'Gala Tổng kết & Lễ Trao giải truyền hình trực tiếp trên VTV',
+    titleEn: 'Grand Awards Gala Live Broadcast on VTV',
     dateDisplay: '01/09/2026',
     startDate: '2026-09-01',
     endDate: '2026-09-01',
     description: 'Công bố kết quả, trao giải toàn đoàn & chuyên đề nhân dịp 81 năm Quốc khánh Nước CHXHCN Việt Nam.',
+    descriptionEn: 'Announcing results, awarding champions on the 81st National Day of Vietnam.',
     icon: CheckCircle,
   },
 ];
@@ -74,6 +96,7 @@ function getStageStatus(startDateStr: string, endDateStr: string, currentDate: D
 }
 
 export default function Timeline() {
+  const { language, t } = useLanguage();
   const [currentDate, setCurrentDate] = React.useState<Date | null>(null);
 
   React.useEffect(() => {
@@ -85,15 +108,12 @@ export default function Timeline() {
       <div className="text-center mb-16 space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 text-xs font-semibold uppercase tracking-wider border border-emerald-500/20">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          Cập Nhật Thời Gian Thực
+          {t('timeline.tag', 'Lịch Trình Festival')}
         </span>
         <h2 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900">
-          Lịch trình Sự kiện tương tác
+          {t('timeline.title', 'Hành Trình Sự Kiện 2026')}
         </h2>
         <div className="w-12 h-1 bg-secondary mx-auto mt-2 rounded-full" />
-        <p className="text-slate-600 text-sm mt-3">
-          Theo dõi các mốc thời gian quan trọng của Festival Dân ca Dân vũ 2026
-        </p>
       </div>
 
       <div className="relative border-l border-slate-200 ml-4 md:ml-36 space-y-10">
@@ -104,6 +124,9 @@ export default function Timeline() {
           const isCurrent = status === 'current';
           const isPast = status === 'past';
           const isFuture = status === 'future';
+
+          const stageTitle = language === 'en' ? stage.titleEn : stage.title;
+          const stageDesc = language === 'en' ? stage.descriptionEn : stage.description;
 
           return (
             <motion.div
@@ -162,31 +185,31 @@ export default function Timeline() {
                       isCurrent ? 'text-amber-950' : isPast ? 'text-slate-700' : 'text-slate-900'
                     }`}
                   >
-                    {stage.title}
+                    {stageTitle}
                   </h3>
 
                   {isCurrent && (
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-slate-950 bg-amber-400 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
-                      Đang Diễn Ra
+                      {language === 'en' ? 'Ongoing' : 'Đang Diễn Ra'}
                     </span>
                   )}
 
                   {isPast && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      ✓ Đã Kết Thúc
+                      ✓ {language === 'en' ? 'Completed' : 'Đã Kết Thúc'}
                     </span>
                   )}
 
                   {isFuture && (
                     <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      Sắp Diễn Ra
+                      {language === 'en' ? 'Upcoming' : 'Sắp Diễn Ra'}
                     </span>
                   )}
                 </div>
 
                 <p className={`mt-2 text-xs sm:text-sm leading-relaxed ${isPast ? 'text-slate-500' : 'text-slate-600'}`}>
-                  {stage.description}
+                  {stageDesc}
                 </p>
               </div>
             </motion.div>
@@ -196,3 +219,4 @@ export default function Timeline() {
     </div>
   );
 }
+

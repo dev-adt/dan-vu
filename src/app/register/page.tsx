@@ -6,6 +6,7 @@ import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Spark
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface FormData {
   teamName: string;
@@ -46,7 +47,9 @@ const initialFormData: FormData = {
 };
 
 export default function RegisterWizard() {
+  const { t, language } = useLanguage();
   const [step, setStep] = useState(1);
+
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -254,10 +257,10 @@ export default function RegisterWizard() {
   };
 
   const stepTitles = [
-    'Thông tin Đội thi',
-    'Tiết mục & Kỹ thuật',
-    'Tư liệu & Đính kèm',
-    'Xác nhận Hồ sơ',
+    t('reg.step1', '1. Thông tin Đội thi'),
+    t('reg.step2', '2. Tiết mục & Kỹ thuật'),
+    '3. ' + (language === 'en' ? 'Media & Upload' : 'Tư liệu & Đính kèm'),
+    t('reg.step3', '4. Xác nhận Hồ sơ'),
   ];
 
   return (
@@ -268,13 +271,13 @@ export default function RegisterWizard() {
         {/* Header Summary */}
         <div className="text-center mb-10">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            Đăng Ký Trực Tuyến
+            {t('nav.register', 'Đăng Ký Trực Tuyến')}
           </span>
           <h1 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900 mt-2">
-            Hồ Sơ Đăng Ký Dự Thi
+            {t('reg.wizard_title', 'Hồ Sơ Đăng Ký Dự Thi')}
           </h1>
           <p className="text-xs text-slate-500 mt-2">
-            Hoàn tất biểu mẫu trong vòng 5 phút. Bản nháp tự động lưu.
+            {language === 'en' ? 'Complete in 5 minutes. Drafts auto-saved.' : 'Hoàn tất biểu mẫu trong vòng 5 phút. Bản nháp tự động lưu.'}
           </p>
         </div>
 
@@ -293,7 +296,7 @@ export default function RegisterWizard() {
                 <span className={`text-[10px] text-center font-bold tracking-wider uppercase transition-colors hidden sm:block ${
                   isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-slate-400'
                 }`}>
-                  Bước {stepNum}
+                  {language === 'en' ? `Step ${stepNum}` : `Bước ${stepNum}`}
                 </span>
               </div>
             );

@@ -4,9 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Compass, Music, UserCheck, LayoutDashboard, Menu, X, Users, Video } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hasTeamSession, setHasTeamSession] = useState(false);
 
@@ -23,10 +26,10 @@ export default function Navbar() {
   }, [pathname]);
 
   const navItems = [
-    { name: 'Trang Chủ', href: '/', icon: Compass },
-    { name: 'Cổng Bình Chọn', href: '/vote', icon: Music },
-    { name: 'Đăng Ký Dự Thi', href: '/register', icon: Music },
-    { name: 'Cổng Đội Thi', href: hasTeamSession ? '/team/dashboard' : '/team/login', icon: Users },
+    { key: 'nav.home', href: '/', icon: Compass },
+    { key: 'nav.vote', href: '/vote', icon: Music },
+    { key: 'nav.register', href: '/register', icon: Music },
+    { key: 'nav.team_portal', href: hasTeamSession ? '/team/dashboard' : '/team/login', icon: Users },
   ];
 
   return (
@@ -43,39 +46,46 @@ export default function Navbar() {
               />
               <div className="flex flex-col">
                 <span className="font-heading font-bold text-lg leading-none tracking-wide text-dark-slate group-hover:text-primary transition-colors">
-                  NHỊP BƯỚC VIỆT NAM
+                  {t('brand.title', 'NHỊP BƯỚC VIỆT NAM')}
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.25em] text-accent font-sans leading-none mt-1">
-                  Festival 2026
+                  {t('brand.subtitle', 'Festival 2026')}
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    isActive
-                      ? 'bg-accent/10 text-accent border border-accent/20 shadow-sm'
-                      : 'text-dark-slate/75 hover:text-dark-slate hover:bg-slate-100 border border-transparent'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+          {/* Desktop Nav & Language Switcher */}
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                      isActive
+                        ? 'bg-accent/10 text-accent border border-accent/20 shadow-sm'
+                        : 'text-dark-slate/75 hover:text-dark-slate hover:bg-slate-100 border border-transparent'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{t(item.key)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="pl-2 border-l border-slate-200">
+              <LanguageSwitcher />
+            </div>
           </div>
 
-          {/* Mobile hamburger toggle */}
-          <div className="md:hidden">
+          {/* Mobile hamburger toggle & Language Switcher */}
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="text-dark-slate p-2 rounded-md hover:bg-slate-100 focus:outline-none"
@@ -105,7 +115,7 @@ export default function Navbar() {
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
+                <span>{t(item.key)}</span>
               </Link>
             );
           })}
@@ -114,3 +124,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

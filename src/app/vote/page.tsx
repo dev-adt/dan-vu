@@ -10,6 +10,8 @@ import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/s
 import { supabase } from '@/lib/supabase';
 import { getBrowserSiteUrl } from '@/lib/auth-redirect';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 interface Candidate {
   id: string;
   teamName: string;
@@ -23,7 +25,9 @@ interface Candidate {
 }
 
 export default function VoteDiscovery() {
+  const { t } = useLanguage();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'dan_ca' | 'dan_vu'>('all');
@@ -207,13 +211,13 @@ export default function VoteDiscovery() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 border-b border-slate-200/50 pb-6">
           <div className="text-center md:text-left">
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-              Khán Giả Bình Chọn
+              {t('vote.title', 'Khán Giả Bình Chọn')}
             </span>
             <h1 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
-              Đại Sứ Yêu Thích Nhất
+              {t('vote.subtitle', 'Đại Sứ Yêu Thích Nhất')}
             </h1>
             <p className="text-xs text-dark-slate/75 mt-2 max-w-xl">
-              Mỗi tài khoản Google được bình chọn tối đa 01 lần/ngày cho mỗi tiết mục. Hành vi gian lận (hack vote) sẽ bị hủy kết quả.
+              {t('vote.login_req_desc')}
             </p>
           </div>
 
@@ -230,7 +234,7 @@ export default function VoteDiscovery() {
                     )}
                   </div>
                   <div className="text-left">
-                    <span className="block text-xs font-semibold text-dark-obsidian">{user.user_metadata?.full_name || 'Khán Giả'}</span>
+                    <span className="block text-xs font-semibold text-dark-obsidian">{user.user_metadata?.full_name || 'Voter'}</span>
                     <span className="block text-[10px] text-dark-slate/60 font-mono">{user.email}</span>
                   </div>
                 </div>
@@ -238,17 +242,17 @@ export default function VoteDiscovery() {
                   onClick={handleLogout}
                   className="px-3.5 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <LogOut className="w-3.5 h-3.5" /> Đăng xuất
+                  <LogOut className="w-3.5 h-3.5" /> {t('vote.logout_btn', 'Đăng xuất')}
                 </button>
               </>
             ) : (
               <>
-                <p className="text-xs text-dark-slate/60">Đăng nhập tài khoản Google để thực hiện bình chọn:</p>
+                <p className="text-xs text-dark-slate/60">{t('vote.login_req_title', 'Đăng nhập để bình chọn')}:</p>
                 <button
                   onClick={handleGoogleLogin}
                   className="px-4 py-2 bg-accent text-white hover:bg-opacity-95 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                 >
-                  <LogIn className="w-3.5 h-3.5" /> Đăng nhập Google
+                  <LogIn className="w-3.5 h-3.5" /> {t('vote.login_google_btn', 'Đăng nhập Google')}
                 </button>
               </>
             )}
@@ -266,8 +270,7 @@ export default function VoteDiscovery() {
             >
               <CheckCircle2 className="w-5 h-5 text-accent animate-bounce" />
               <div className="text-xs text-left">
-                <p className="font-semibold text-accent">Ghi nhận bình chọn thành công!</p>
-                <p className="text-[10px] text-dark-slate/70">Cảm ơn bạn đã đóng góp tiếng nói tôn vinh di sản.</p>
+                <p className="font-semibold text-accent">{t('vote.btn_voted', 'Đã Bình Chọn!')}</p>
               </div>
             </motion.div>
           )}
@@ -280,7 +283,7 @@ export default function VoteDiscovery() {
             <Search className="w-4 h-4 text-dark-slate/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Nhập tên đội hoặc mã số..."
+              placeholder={t('vote.search_placeholder', 'Nhập tên đội hoặc mã số...')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -302,7 +305,7 @@ export default function VoteDiscovery() {
                   activeCategory === 'all' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
-                Tất cả
+                {t('vote.all_categories', 'Tất cả')}
               </button>
               <button
                 onClick={() => {
@@ -313,7 +316,7 @@ export default function VoteDiscovery() {
                   activeCategory === 'dan_ca' ? 'bg-accent text-white shadow-sm' : 'text-dark-slate/75 hover:text-dark-obsidian'
                 }`}
               >
-                Dân ca
+                {t('vote.cat_danca', 'Dân ca')}
               </button>
               <button
                 onClick={() => {

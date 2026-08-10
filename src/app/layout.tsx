@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -44,9 +45,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.png?v=3" />
       </head>
       <body className="min-h-full flex flex-col bg-gradient-to-b from-light-alabaster to-light-cream text-dark-obsidian selection:bg-accent selection:text-white">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
 }
+
 
