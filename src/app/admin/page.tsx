@@ -1338,10 +1338,10 @@ export default function AdminDashboard() {
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {!isAdminLoggedIn ? (
           /* Secure Admin Login Gate */
-          <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-8 shadow-md space-y-6 mt-10">
+          <div style={{ maxWidth: '440px', width: '100%', margin: '40px auto', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '24px', padding: '32px', boxSizing: 'border-box' }} className="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-8 shadow-md space-y-6 mt-10">
             <div className="text-center space-y-2">
               <span className="inline-block p-3.5 bg-primary/10 border border-primary/20 text-primary rounded-full mb-2">
-                <LayoutDashboard className="w-8 h-8" />
+                <LayoutDashboard className="w-8 h-8 text-primary" />
               </span>
               <h1 className="font-heading font-bold text-2xl text-slate-900">Bảng điều hành Quản trị viên</h1>
               <p className="text-xs text-slate-500">Cổng truy cập riêng tư dành cho Ban Tổ Chức Festival 2026.</p>
@@ -1362,6 +1362,7 @@ export default function AdminDashboard() {
                   placeholder="admin"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '13px', boxSizing: 'border-box' }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                 />
               </div>
@@ -1373,6 +1374,7 @@ export default function AdminDashboard() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '13px', boxSizing: 'border-box' }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                 />
               </div>
@@ -1380,6 +1382,7 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#C62828', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer' }}
                 className="w-full bg-primary text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-opacity-95 transition-all shadow-sm mt-6 glow-crimson-hover cursor-pointer"
               >
                 {isLoggingIn ? 'Đang xác thực...' : 'Đăng nhập Admin'}

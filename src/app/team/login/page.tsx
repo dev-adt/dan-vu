@@ -75,6 +75,7 @@ export default function TeamLoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          style={{ maxWidth: '440px', width: '100%', margin: '0 auto', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '24px', padding: '32px', boxSizing: 'border-box' }}
           className="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden backdrop-blur-md"
         >
           {/* Top Decorative Banner */}
@@ -106,6 +107,7 @@ export default function TeamLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t('team.email_placeholder')}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '13px', boxSizing: 'border-box' }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                 required
               />
@@ -129,6 +131,7 @@ export default function TeamLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('team.pass_placeholder')}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '13px', boxSizing: 'border-box' }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                   required
                 />
@@ -145,6 +148,7 @@ export default function TeamLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#00695C', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer' }}
               className="w-full py-3.5 rounded-xl bg-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 shadow-md shadow-accent/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
             >
               {isLoading ? (
