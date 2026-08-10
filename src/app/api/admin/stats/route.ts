@@ -1,0 +1,161 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase-client';
+
+// Initialize Supabase Admin client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+// Helper to authenticate admin
+function authenticateAdmin(req: NextRequest): boolean {
+  const authHeader = req.headers.get('Authorization');
+  if (authHeader) {
+    const [type, credentials] = authHeader.split(' ');
+    if (type.toLowerCase() === 'basic') {
+      const decoded = Buffer.from(credentials, 'base64').toString();
+      const [username, password] = decoded.split(':');
+      return (
+        username === (process.env.ADMIN_USERNAME || 'admin') &&
+        password === (process.env.ADMIN_PASSWORD || 'admin')
+      );
+    }
+  }
+  return false;
+}
+
+// GET: Fetch stats and ballot logs
+export async function GET(req: NextRequest) {
+  if (!authenticateAdmin(req)) {
+    return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
+  }
+
+  try {
+    // 1. Get teams count
+    const { count: teamsCount } = await supabaseAdmin
+      .from('teams')
+      .select('*', { count: 'exact', head: true });
+
+    // 2. Get votes count (valid ballots)
+    const { count: votesCount } = await supabaseAdmin
+      .from('ballots')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_valid', true);
+
+    // 3. Get fraud count (invalid OR low recaptcha score ballots < 0.80)
+    const { data: allBallotsForFraud } = await supabaseAdmin
+      .from('ballots')
+      .select('id, is_valid, recaptcha_score');
+
+    const fraudCount = (allBallotsForFraud || []).filter(
+      (b: any) => !b.is_valid || (b.recaptcha_score && b.recaptcha_score < 0.80)
+    ).length;
+
+    // 4. Get judges count
+    const { count: judgesCount } = await supabaseAdmin
+      .from('judges')
+      .select('*', { count: 'exact', head: true });
+
+    // 5. Get ballots audit log with team names
+    const { data: ballotsData, error: ballotsError } = await supabaseAdmin
+      .from('ballots')
+      .select('id, voted_at, voter_ip, voter_fingerprint, voter_email, recaptcha_score, is_valid, team_id, teams(team_name)')
+      .order('voted_at', { ascending: false })
+      .limit(50);
+
+    if (ballotsError) {
+      throw ballotsError;
+    }
+
+    // Format ballots to match UI layout:
+    // score < 0.30 or is_valid === false -> 'voided' (Đã hủy / Tự động loại)
+    // 0.30 <= score < 0.80 -> 'flagged' (Nghi vấn Fraud - Admin có thể Hủy Vote)
+    // score >= 0.80 -> 'valid' (Hợp lệ / An toàn)
+    const formattedLogs = (ballotsData || []).map((b: any) => {
+      const score = b.recaptcha_score !== undefined && b.recaptcha_score !== null ? Number(b.recaptcha_score) : 1.0;
+      let status: 'valid' | 'flagged' | 'voided' = 'valid';
+
+      if (!b.is_valid || score < 0.30) {
+        status = 'voided';
+      } else if (score < 0.80) {
+        status = 'flagged';
+      }
+
+      return {
+        id: b.id,
+        teamName: b.teams ? b.teams.team_name : 'N/A',
+        ip: b.voter_ip,
+        fingerprint: b.voter_fingerprint || 'canvas_hash_mock_fingerprint',
+        timestamp: new Date(b.voted_at).toLocaleString('vi-VN'),
+        score,
+        status,
+      };
+    });
+
+    return NextResponse.json({
+      stats: {
+        teamsCount: teamsCount || 0,
+        votesCount: votesCount || 0,
+        fraudCount: fraudCount || 0,
+        judgesCount: judgesCount || 0,
+      },
+      logs: formattedLogs
+    });
+  } catch (err: any) {
+    console.error('Error fetching admin stats:', err);
+    return NextResponse.json({ error: 'Lỗi nạp dữ liệu thống kê: ' + err.message }, { status: 500 });
+  }
+}
+
+// PATCH: Invalidate (Void) a ballot
+export async function PATCH(req: NextRequest) {
+  if (!authenticateAdmin(req)) {
+    return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
+  }
+
+  try {
+    const { id, is_valid } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Mã lượt vote (id) là bắt buộc.' }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('ballots')
+      .update({ is_valid: is_valid })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: 'Lỗi cập nhật phiếu bầu: ' + error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, ballot: data });
+  } catch (err: any) {
+    console.error('Error updating ballot:', err);
+    return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });
+  }
+}
+
+// DELETE: Clear all vote data for testing
+export async function DELETE(req: NextRequest) {
+  if (!authenticateAdmin(req)) {
+    return NextResponse.json({ error: 'Không có quyền truy cập.' }, { status: 401 });
+  }
+
+  try {
+    const { error } = await supabaseAdmin
+      .from('ballots')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (error) {
+      return NextResponse.json({ error: 'Lỗi xóa dữ liệu vote: ' + error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ dữ liệu bình chọn thử nghiệm.' });
+  } catch (err: any) {
+    console.error('Error clearing ballots:', err);
+    return NextResponse.json({ error: 'Lỗi máy chủ khi xóa dữ liệu.' }, { status: 500 });
+  }
+}

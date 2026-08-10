@@ -31,10 +31,16 @@ export default function Footer() {
               <Link href="/vote" className="hover:text-secondary transition-colors">Cổng bình chọn khán giả</Link>
             </li>
             <li>
-              <Link href="/judge" className="hover:text-secondary transition-colors">Cổng chấm điểm Giám khảo</Link>
+              <Link href="/guide" className="hover:text-secondary transition-colors font-semibold text-secondary">📖 Cẩm nang & Hướng dẫn sử dụng</Link>
             </li>
             <li>
-              <a href="#" className="hover:text-secondary transition-colors">Tải Thể Lệ Chi Tiết (PDF)</a>
+              <a
+                href="/files/the-le-chi-tiet.pdf"
+                download="The_le_chi_tiet_Nhip_buoc_Viet_Nam_2026.pdf"
+                className="hover:text-secondary transition-colors"
+              >
+                Tải Thể Lệ Chi Tiết (PDF)
+              </a>
             </li>
           </ul>
         </div>
@@ -46,13 +52,19 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2 text-sm text-light-alabaster/70">
             <li>
-              <span className="text-light-alabaster/40">Hotline:</span> +84 (0) 987 654 321 (Mr. Thanh)
+              <span className="text-light-alabaster/40">Truyền thông:</span> 0966 925 606 (Ms. Hương - Trưởng Ban kết nối truyền thông)
             </li>
             <li>
-              <span className="text-light-alabaster/40">Email:</span> btc@nhipbuocvietnam.gov.vn
+              <span className="text-light-alabaster/40">Du lịch:</span> 0375 860 238 (Ms Thúy - Phụ trách về tour: khách sạn, nhà hàng)
             </li>
             <li>
-              <span className="text-light-alabaster/40">Địa chỉ:</span> Nhà hát Lớn Hà Nội, Số 01 Tràng Tiền, Hoàn Kiếm, Hà Nội
+              <span className="text-light-alabaster/40">Liên hệ BTC:</span> <a href="mailto:festival2026@dancadanvu.com" className="hover:underline hover:text-secondary transition-colors">festival2026@dancadanvu.com</a>
+            </li>
+            <li>
+              <span className="text-light-alabaster/40">Văn phòng BTC tiếp nhận hồ sơ:</span> Số 53 Nguyễn Du, P. Hai Bà Trưng, TP. Hà Nội
+            </li>
+            <li>
+              <span className="text-light-alabaster/40">Địa điểm tổ chức:</span> Quảng trường 7/5, P. Điện Biên Phủ, Tỉnh Điện Biên
             </li>
           </ul>
         </div>

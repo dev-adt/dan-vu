@@ -1,19 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from './supabase-client';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    flowType: 'pkce',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+});
 
 export interface Team {
   id: string;
   created_at: string;
   team_name: string;
+  organization?: string;
+  member_count?: string;
   representative_name: string;
   phone: string;
   email: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
   performance_title: string;
+  duration?: string;
   description: string;
   technical_requirements: string;
   audio_url?: string;

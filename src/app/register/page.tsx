@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -13,6 +14,8 @@ interface FormData {
   representativeName: string;
   phone: string;
   email: string;
+  password?: string;
+  confirmPassword?: string;
   category: 'dan_ca' | 'dan_vu' | 'both';
   performanceTitle: string;
   duration: string;
@@ -20,6 +23,7 @@ interface FormData {
   technicalRequirements: string;
   audioLink: string;
   videoLink: string;
+  photoUrl: string;
 }
 
 const initialFormData: FormData = {
@@ -29,6 +33,8 @@ const initialFormData: FormData = {
   representativeName: '',
   phone: '',
   email: '',
+  password: '',
+  confirmPassword: '',
   category: 'dan_ca',
   performanceTitle: '',
   duration: '',
@@ -36,6 +42,7 @@ const initialFormData: FormData = {
   technicalRequirements: '',
   audioLink: '',
   videoLink: '',
+  photoUrl: '',
 };
 
 export default function RegisterWizard() {
@@ -44,13 +51,101 @@ export default function RegisterWizard() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [showRegPass, setShowRegPass] = useState(false);
+  const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+
+    // Check size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Dung lượng ảnh vượt quá giới hạn 5MB.');
+      return;
+    }
+
+    // Check type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn tệp hình ảnh (.jpg, .jpeg, .png).');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const mockUrl = `https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80`;
+        setFormData((prev) => ({ ...prev, photoUrl: mockUrl }));
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `team-photos/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      setFormData((prev) => ({ ...prev, photoUrl: publicUrl }));
+    } catch (err: any) {
+      console.error('Error uploading photo:', err);
+      alert('Không thể tải lên ảnh: ' + (err.message || 'Lỗi kết nối'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handlePhotoUpload(e.target.files[0]);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handlePhotoUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData((prev) => ({ ...prev, photoUrl: '' }));
+  };
 
   // Load draft from localStorage on mount
   useEffect(() => {
     const draft = localStorage.getItem('nhip_buoc_viet_nam_draft');
     if (draft) {
       try {
-        setFormData(JSON.parse(draft));
+        const parsed = JSON.parse(draft);
+        setFormData((prev) => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error('Failed to parse draft storage', e);
       }
@@ -80,22 +175,33 @@ export default function RegisterWizard() {
     const tempErrors: Partial<Record<keyof FormData, string>> = {};
 
     if (currentStep === 1) {
-      if (!formData.teamName.trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
-      if (!formData.memberCount.trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
-      if (!formData.representativeName.trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
-      if (!formData.phone.trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
-      if (!formData.email.trim()) {
+      if (!(formData.teamName || '').trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
+      if (!(formData.memberCount || '').trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
+      if (!(formData.representativeName || '').trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
+      if (!(formData.phone || '').trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
+      if (!(formData.email || '').trim()) {
         tempErrors.email = 'Email không được bỏ trống.';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         tempErrors.email = 'Địa chỉ email không hợp lệ.';
       }
+      if (!(formData.password || '').trim()) {
+        tempErrors.password = 'Mật khẩu quản lý tài khoản không được bỏ trống.';
+      } else if ((formData.password || '').length < 6) {
+        tempErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự.';
+      }
+      if (formData.confirmPassword !== formData.password) {
+        tempErrors.confirmPassword = 'Mật khẩu xác nhận không trùng khớp.';
+      }
     } else if (currentStep === 2) {
-      if (!formData.performanceTitle.trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
-      if (!formData.duration.trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
-      if (!formData.description.trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
+      if (!(formData.performanceTitle || '').trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
+      if (!(formData.duration || '').trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
+      if (!(formData.description || '').trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
     } else if (currentStep === 3) {
-      if (!formData.audioLink.trim() && !formData.videoLink.trim()) {
+      if (!(formData.audioLink || '').trim() && !(formData.videoLink || '').trim()) {
         tempErrors.audioLink = 'Bạn phải điền ít nhất link nhạc nền (Beat) hoặc link video chạy thử.';
+      }
+      if (!(formData.photoUrl || '').trim()) {
+        tempErrors.photoUrl = 'Vui lòng tải lên ảnh đại diện của đội thi.';
       }
     }
 
@@ -120,11 +226,31 @@ export default function RegisterWizard() {
     if (!validateStep(3)) return;
 
     setIsSaving(true);
-    // Simulate API registration delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSaving(false);
-    setIsSubmitted(true);
-    localStorage.removeItem('nhip_buoc_viet_nam_draft');
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || 'Đã có lỗi xảy ra khi nộp hồ sơ.');
+        setIsSaving(false);
+        return;
+      }
+
+      setSubmittedId(result.id);
+      setIsSaving(false);
+      setIsSubmitted(true);
+      localStorage.removeItem('nhip_buoc_viet_nam_draft');
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+      setIsSaving(false);
+    }
   };
 
   const stepTitles = [
@@ -189,7 +315,7 @@ export default function RegisterWizard() {
                 <div className="space-y-2">
                   <h2 className="font-heading font-bold text-2xl text-slate-900">Gửi Hồ Sơ Thành Công!</h2>
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    Mã số hồ sơ của bạn là <strong className="text-secondary">DC-{Math.floor(1000 + Math.random() * 9000)}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
+                    Mã số hồ sơ của bạn là <strong className="text-secondary">{submittedId}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
                   </p>
                 </div>
                 <div className="pt-4">
@@ -297,6 +423,50 @@ export default function RegisterWizard() {
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mật khẩu tài khoản Đội thi *</label>
+                        <div className="relative">
+                          <input
+                            type={showRegPass ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password || ''}
+                            onChange={handleChange}
+                            placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPass(!showRegPass)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                          >
+                            {showRegPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {errors.password && <p className="text-xs text-primary">{errors.password}</p>}
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Xác nhận mật khẩu *</label>
+                        <div className="relative">
+                          <input
+                            type={showRegConfirmPass ? 'text' : 'password'}
+                            name="confirmPassword"
+                            value={formData.confirmPassword || ''}
+                            onChange={handleChange}
+                            placeholder="Nhập lại mật khẩu để xác nhận"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegConfirmPass(!showRegConfirmPass)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                          >
+                            {showRegConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {errors.confirmPassword && <p className="text-xs text-primary">{errors.confirmPassword}</p>}
                       </div>
                     </div>
                   </motion.div>
@@ -427,10 +597,58 @@ export default function RegisterWizard() {
                         />
                       </div>
 
-                      <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center space-y-2 bg-slate-50/50">
-                        <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                        <p className="text-xs text-slate-600">Kéo thả ảnh đại diện của đội thi (định dạng JPG/PNG)</p>
-                        <p className="text-[10px] text-slate-400">Dung lượng tối đa: 5MB. Phục vụ truyền thông bình chọn.</p>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ảnh Đại Diện Đội Thi *</label>
+                        <div
+                          onDragEnter={handleDrag}
+                          onDragOver={handleDrag}
+                          onDragLeave={handleDrag}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                            isDragActive ? 'border-secondary bg-secondary/5' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/png, image/jpeg, image/jpg"
+                            className="hidden"
+                          />
+
+                          {isUploadingPhoto ? (
+                            <div className="space-y-2 py-4">
+                              <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
+                              <p className="text-xs text-slate-500">Đang tải ảnh lên máy chủ...</p>
+                            </div>
+                          ) : formData.photoUrl ? (
+                            <div className="relative group w-48 h-32 rounded-lg overflow-hidden border border-slate-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                              <img
+                                src={formData.photoUrl}
+                                alt="Xem trước ảnh đại diện"
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleRemovePhoto}
+                                className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-sm animate-fadeIn"
+                                title="Xóa ảnh"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                              <p className="text-xs font-medium text-slate-600">
+                                Kéo thả ảnh vào đây, hoặc <span className="text-secondary hover:underline">nhấp để chọn</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400">Định dạng JPG, PNG. Dung lượng tối đa: 5MB.</p>
+                            </>
+                          )}
+                        </div>
+                        {errors.photoUrl && <p className="text-xs text-primary mt-1">{errors.photoUrl}</p>}
                       </div>
                     </div>
                   </motion.div>
@@ -498,6 +716,14 @@ export default function RegisterWizard() {
                         {formData.audioLink && (
                           <div className="text-xs text-accent">
                             ✓ Nhạc nền đính kèm hợp lệ.
+                          </div>
+                        )}
+                        {formData.photoUrl && (
+                          <div className="flex items-center gap-3 pt-3 border-t border-slate-100/50 mt-2 animate-fadeIn">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Ảnh đại diện:</span>
+                            <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                              <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+                            </div>
                           </div>
                         )}
                       </div>
