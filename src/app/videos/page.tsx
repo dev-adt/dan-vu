@@ -8,10 +8,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VideoModal, { VideoItem } from '@/components/VideoModal';
 import { parseVideoUrl } from '@/lib/videoUtils';
+import { useLanguage } from '@/context/LanguageContext';
 
 const LIMIT = 9;
 
 export default function VideosPage() {
+  const { t, language } = useLanguage();
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -73,15 +75,15 @@ export default function VideosPage() {
         <section className="w-full bg-gradient-to-br from-primary/5 via-transparent to-accent/5 border-b border-slate-200/60 py-14 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center gap-2 text-[11px] text-dark-slate/50 font-medium mb-4">
-              <Link href="/" className="hover:text-primary transition-colors">Trang Chủ</Link>
+              <Link href="/" className="hover:text-primary transition-colors">{t('nav.home')}</Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-dark-slate/80">Thư Viện Video & Clips</span>
+              <span className="text-dark-slate/80">{t('videos.tag')}</span>
             </div>
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl text-dark-obsidian leading-tight">
-              Thư Viện Video & Clips
+              {t('videos.title')}
             </h1>
             <p className="text-sm text-dark-slate/60 mt-3 max-w-xl">
-              Tổng hợp những tiết mục xuất sắc, phỏng vấn và hình ảnh nổi bật tại Festival Dân Ca Dân Vũ Quốc Tế 2026.
+              {t('videos.subtitle')}
             </p>
           </div>
         </section>
@@ -97,7 +99,7 @@ export default function VideosPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Tìm kiếm video..."
+                  placeholder={t('videos.search_placeholder')}
                   className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                 />
                 {searchInput && (
@@ -110,7 +112,7 @@ export default function VideosPage() {
                 type="submit"
                 className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-opacity-90 transition-all"
               >
-                Tìm
+                {t('news.search_btn')}
               </button>
             </form>
 
@@ -124,7 +126,7 @@ export default function VideosPage() {
               }`}
             >
               <Star className="w-3.5 h-3.5" />
-              Nổi bật
+              {t('videos.filter_featured')}
             </button>
 
             {/* Result count */}

@@ -48,7 +48,7 @@ const bgImages = [
 ];
 
 export default function HomeClient() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [videos, setVideos] = React.useState<VideoItem[]>([]);
@@ -387,20 +387,20 @@ export default function HomeClient() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-amber-500/20 pb-6">
             <div>
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
-                <Star className="w-3.5 h-3.5 fill-amber-600" /> Cuộc Thi Thiết Kế Chính Thức
+                <Star className="w-3.5 h-3.5 fill-amber-600" /> {t('logo_contest.tag')}
               </span>
               <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900">
-                PHÁT ĐỘNG CUỘC THI THIẾT KẾ LOGO VÀ BỘ NHẬN DIỆN FESTIVAL
+                {t('logo_contest.title')}
               </h2>
               <p className="text-xs sm:text-sm text-slate-700 mt-2 max-w-3xl">
-                Tìm kiếm biểu trưng chính thức cho Festival Dân ca Dân vũ Quốc tế 2026. Dành cho các công dân Việt Nam và người nước ngoài có năng lực sáng tạo mỹ thuật & thiết kế.
+                {t('logo_contest.description')}
               </p>
             </div>
             <div className="bg-white/90 border border-amber-500/40 px-5 py-3.5 rounded-2xl text-center shadow-sm shrink-0">
-              <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Thời gian tiếp nhận</span>
-              <span className="font-bold text-sm text-slate-700">21/07/2026 – 30/07/2026</span>
+              <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{t('logo_contest.deadline_label')}</span>
+              <span className="font-bold text-sm text-slate-700">{t('logo_contest.deadline_dates')}</span>
               <span className="inline-block text-[10px] font-bold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full mt-1 uppercase">
-                ✓ Đã Kết Thúc Hồ Sơ
+                {t('logo_contest.status_closed')}
               </span>
             </div>
           </div>
@@ -409,20 +409,20 @@ export default function HomeClient() {
             {/* Contest Awards */}
             <div className="space-y-4 bg-white/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
               <h3 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-600" /> Cơ Cấu Giải Thưởng Cuộc Thi Logo
+                <Award className="w-5 h-5 text-amber-600" /> {t('logo_contest.awards_title')}
               </h3>
               <ul className="space-y-3 text-xs sm:text-sm text-slate-700">
                 <li className="flex items-start gap-3 bg-amber-50/80 p-3.5 rounded-xl border border-amber-200/60">
-                  <span className="font-bold text-amber-900 shrink-0">01 Giải Nhất:</span>
+                  <span className="font-bold text-amber-900 shrink-0">{t('logo_contest.first_prize_title')}</span>
                   <div>
-                    <strong className="text-amber-900 text-base">20.000.000 VNĐ</strong> + Chuyến du lịch nước ngoài.
-                    <p className="text-[11px] text-slate-600 mt-0.5">Tác phẩm đạt giải sẽ được lựa chọn làm Logo chính thức của Festival.</p>
+                    <strong className="text-amber-900 text-base">{t('logo_contest.first_prize_amount')}</strong> {t('logo_contest.first_prize_reward')}
+                    <p className="text-[11px] text-slate-600 mt-0.5">{t('logo_contest.first_prize_note')}</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                  <span className="font-bold text-slate-800 shrink-0">02 Giải Khuyến Khích:</span>
+                  <span className="font-bold text-slate-800 shrink-0">{t('logo_contest.consolation_title')}</span>
                   <div>
-                    <strong className="text-slate-900 text-base">5.000.000 VNĐ / giải</strong> + Chuyến du lịch Điện Biên.
+                    <strong className="text-slate-900 text-base">{t('logo_contest.consolation_amount')}</strong> {t('logo_contest.consolation_reward')}
                   </div>
                 </li>
               </ul>
@@ -432,15 +432,15 @@ export default function HomeClient() {
             <div className="space-y-4 bg-white/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
               <div>
                 <h3 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2 mb-3">
-                  <Heart className="w-5 h-5 text-accent" /> Hồ Sơ & Địa Chỉ Tiếp Nhận
+                  <Heart className="w-5 h-5 text-accent" /> {t('logo_contest.submission_title')}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                  Tác phẩm dự thi bảo đảm tính sáng tạo, tính biểu trưng, khả năng ứng dụng cao và chưa từng tham gia hoặc đạt giải tại các cuộc thi khác.
+                  {t('logo_contest.submission_req')}
                 </p>
                 <div className="mt-4 p-3.5 bg-slate-100/90 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 space-y-1.5">
-                  <p><strong>Hồ sơ gửi về:</strong> Văn phòng Ban Tổ chức, số 53 Nguyễn Du, phường Hai Bà Trưng, thành phố Hà Nội.</p>
-                  <p><strong>Trưởng Ban Truyền Thông:</strong> Mrs. Hương - 0966 925 606</p>
-                  <p><strong>Email chính thức:</strong> festival2026@dancadanvu.com</p>
+                  <p><strong>{t('logo_contest.submit_address_label')}</strong> {t('logo_contest.submit_address')}</p>
+                  <p><strong>{t('logo_contest.media_head_label')}</strong> {t('logo_contest.media_head_value')}</p>
+                  <p><strong>{t('logo_contest.official_email_label')}</strong> festival2026@dancadanvu.com</p>
                 </div>
               </div>
             </div>
@@ -457,10 +457,10 @@ export default function HomeClient() {
       <section className="py-24 px-4 max-w-7xl mx-auto space-y-16 relative z-10">
         <div className="text-center">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            Cơ Cấu Giải Thưởng Festival
+            {t('awards.tag')}
           </span>
           <h2 className="font-heading font-bold text-3xl sm:text-4xl text-dark-obsidian mt-2">
-            Giải Thưởng Toàn Đoàn & Chuyên Đề
+            {t('awards.title')}
           </h2>
           <div className="w-12 h-0.5 bg-secondary mx-auto mt-4" />
         </div>
@@ -472,26 +472,26 @@ export default function HomeClient() {
               <Award className="w-8 h-8" />
             </div>
             <div>
-              <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">02 Giải Nhì</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">100.000.000 VNĐ</h3>
-              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Mỗi giải / Cờ & Chứng nhận</p>
-              <p className="text-xs text-dark-slate/85 mt-2">Vinh danh các tập thể xuất sắc có kỹ thuật đồng đều và ý tưởng dàn dựng đột phá.</p>
+              <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">{t('awards.second_prize_badge')}</span>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">{t('awards.second_prize_amount')}</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">{t('awards.second_prize_reward')}</p>
+              <p className="text-xs text-dark-slate/85 mt-2">{t('awards.second_prize_desc')}</p>
             </div>
           </div>
 
           {/* First Prize (Highlighted) */}
           <div className="bg-gradient-to-b from-light-alabaster to-light-cream border-2 border-secondary p-10 rounded-2xl flex flex-col justify-between items-center text-center space-y-6 relative shadow-[0_10px_40px_rgba(244,180,0,0.08)] glow-gold-hover md:-translate-y-4">
             <span className="absolute -top-3.5 bg-secondary text-[#111827] font-bold text-[10px] uppercase tracking-widest px-4 py-1 rounded-full shadow-md">
-              Danh Giá Nhất
+              {t('awards.first_prize_badge')}
             </span>
             <div className="w-20 h-20 rounded-full bg-secondary/20 border border-secondary/30 flex items-center justify-center text-secondary">
               <Award className="w-10 h-10" />
             </div>
             <div>
-              <span className="text-xs text-secondary uppercase tracking-widest font-semibold">01 Giải Nhất Toàn Đoàn</span>
-              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">150.000.000 VNĐ</h3>
-              <p className="text-xs text-secondary font-bold uppercase tracking-wider mt-1">Cúp Vàng, Cờ & Chứng nhận</p>
-              <p className="text-xs text-dark-slate/95 mt-2">Trao cho đoàn nghệ thuật xuất sắc nhất kết hợp trọn vẹn bản sắc dân gian và tinh hoa vũ đạo.</p>
+              <span className="text-xs text-secondary uppercase tracking-widest font-semibold">{t('awards.first_prize_title')}</span>
+              <h3 className="font-heading font-bold text-3xl text-dark-obsidian mt-1">{t('awards.first_prize_amount')}</h3>
+              <p className="text-xs text-secondary font-bold uppercase tracking-wider mt-1">{t('awards.first_prize_reward')}</p>
+              <p className="text-xs text-dark-slate/95 mt-2">{t('awards.first_prize_desc')}</p>
             </div>
           </div>
 
@@ -501,10 +501,10 @@ export default function HomeClient() {
               <Award className="w-8 h-8" />
             </div>
             <div>
-              <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">03 Giải Ba</span>
-              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">80.000.000 VNĐ</h3>
-              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">Mỗi giải / Cờ & Chứng nhận</p>
-              <p className="text-xs text-dark-slate/85 mt-2">Trao cho các đoàn biểu diễn nhiệt huyết, giàu cảm xúc truyền tải di sản.</p>
+              <span className="text-xs text-dark-slate/60 uppercase tracking-widest font-semibold">{t('awards.third_prize_badge')}</span>
+              <h3 className="font-heading font-bold text-2xl text-dark-obsidian mt-1">{t('awards.third_prize_amount')}</h3>
+              <p className="text-xs text-accent font-bold uppercase tracking-wider mt-1">{t('awards.third_prize_reward')}</p>
+              <p className="text-xs text-dark-slate/85 mt-2">{t('awards.third_prize_desc')}</p>
             </div>
           </div>
         </div>
@@ -512,15 +512,15 @@ export default function HomeClient() {
         {/* Consolation & Special Category Prizes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="glass-panel border border-slate-300/40 rounded-2xl p-6 bg-light-alabaster shadow-sm">
-            <h4 className="font-bold text-sm text-primary uppercase tracking-wider mb-2">Các Giải Khuyến Khích</h4>
+            <h4 className="font-bold text-sm text-primary uppercase tracking-wider mb-2">{t('awards.consolation_section_title')}</h4>
             <p className="text-xs text-dark-slate/90 leading-relaxed">
-              Mỗi giải trị giá dự kiến <strong className="text-primary font-bold text-sm">50.000.000 VNĐ</strong>, kèm Cờ lưu niệm & Giấy chứng nhận của Ban Tổ chức.
+              {t('awards.consolation_section_desc')}
             </p>
           </div>
           <div className="glass-panel border border-amber-400/40 rounded-2xl p-6 bg-amber-50/50 shadow-sm">
-            <h4 className="font-bold text-sm text-amber-900 uppercase tracking-wider mb-2">Hệ Thống Giải Chuyên Đề</h4>
+            <h4 className="font-bold text-sm text-amber-900 uppercase tracking-wider mb-2">{t('awards.special_section_title')}</h4>
             <p className="text-xs text-dark-slate/90 leading-relaxed">
-              Các giải: <em className="font-semibold text-slate-800">Tiết mục xuất sắc, Biên đạo xuất sắc, Đội hình đẹp nhất, Trang phục đẹp nhất, Giải Sáng tạo, Giải được khán giả yêu thích, Giải Giao lưu quốc tế</em>. Mỗi giải trị giá <strong className="text-amber-900 font-bold text-sm">30.000.000 VNĐ</strong> kèm Cúp (Biểu trưng), Giấy chứng nhận & Kỷ niệm chương.
+              {t('awards.special_section_desc')}
             </p>
           </div>
         </div>
@@ -536,10 +536,10 @@ export default function HomeClient() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200/60 pb-6 gap-4">
             <div>
               <span className="text-xs uppercase tracking-[0.2em] font-semibold text-primary">
-                TIN TỨC & HOẠT ĐỘNG
+                {t('news.tag')}
               </span>
               <h2 className="font-heading font-extrabold text-3xl text-dark-obsidian mt-1.5">
-                Tin nổi bật
+                {t('news.featured_title')}
               </h2>
             </div>
           </div>
@@ -547,7 +547,7 @@ export default function HomeClient() {
           {/* Cards Grid — max 3 bài, ưu tiên nổi bật rồi mới nhất */}
           {isLoadingPosts ? (
             <div className="text-center py-16">
-              <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải tin tức mới nhất...</p>
+              <p className="text-xs text-dark-slate/60 animate-pulse">{t('news.loading')}</p>
             </div>
           ) : posts.length > 0 ? (
             <>
@@ -572,7 +572,7 @@ export default function HomeClient() {
                       )}
                       {post.is_featured && (
                         <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
-                          NỔI BẬT ★
+                          {t('news.featured_badge')}
                         </span>
                       )}
                     </Link>
@@ -589,19 +589,19 @@ export default function HomeClient() {
                           <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-[9px]">
                             {post.author ? post.author.substring(0, 2).toUpperCase() : 'BTC'}
                           </div>
-                          <span className="font-semibold">{post.author || 'Ban Tổ Chức'}</span>
+                          <span className="font-semibold">{post.author || t('news.author_default')}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                         <span className="text-[10px] text-dark-slate/50 font-medium">
-                          {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                          {new Date(post.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN')}
                         </span>
                         <Link
                           href={`/posts/${post.id}`}
                           className="px-4 py-2 bg-[#0074DA] text-white hover:bg-opacity-90 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm"
                         >
-                          Đọc bài
+                          {t('news.read_post')}
                         </Link>
                       </div>
                     </div>
@@ -615,14 +615,14 @@ export default function HomeClient() {
                   href="/posts"
                   className="inline-flex items-center gap-2 px-7 py-3 bg-dark-obsidian text-white font-bold text-sm rounded-2xl hover:bg-opacity-85 transition-all shadow-md group"
                 >
-                  Xem tất cả tin tức
+                  {t('news.view_all')}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </>
           ) : (
             <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-              <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có bài viết tin tức nào được xuất bản.</p>
+              <p className="text-xs text-dark-slate/50 italic">{t('news.no_posts')}</p>
             </div>
           )}
         </div>
@@ -635,10 +635,10 @@ export default function HomeClient() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200/60 pb-6 gap-4 text-left">
             <div>
               <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent block">
-                THƯ VIỆN VIDEO & CLIPS
+                {t('videos.tag')}
               </span>
               <h2 className="font-heading font-extrabold text-3xl text-dark-obsidian mt-1.5">
-                Video nổi bật
+                {t('videos.featured_title')}
               </h2>
             </div>
           </div>
@@ -646,7 +646,7 @@ export default function HomeClient() {
           {/* Video Cards Grid — max 3 videos */}
           {isLoadingVideos ? (
             <div className="text-center py-16">
-              <p className="text-xs text-dark-slate/60 animate-pulse">Đang tải video mới nhất...</p>
+              <p className="text-xs text-dark-slate/60 animate-pulse">{t('videos.loading')}</p>
             </div>
           ) : videos.length > 0 ? (
             <>
@@ -683,7 +683,7 @@ export default function HomeClient() {
 
                         {vid.is_featured && (
                           <span className="absolute top-3 right-3 bg-secondary text-[#111827] font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md z-10">
-                            NỔI BẬT ★
+                            {t('videos.featured_badge')}
                           </span>
                         )}
                       </div>
@@ -701,7 +701,7 @@ export default function HomeClient() {
 
                         <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                           <span className="text-[10px] text-dark-slate/50 font-medium">
-                            {new Date(vid.created_at).toLocaleDateString('vi-VN')}
+                            {new Date(vid.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN')}
                           </span>
                           <button
                             onClick={(e) => {
@@ -711,7 +711,7 @@ export default function HomeClient() {
                             className="flex items-center gap-1 px-4 py-2 bg-[#0074DA] text-white hover:bg-opacity-90 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm cursor-pointer"
                           >
                             <Play className="w-3 h-3 fill-current" />
-                            Xem Video
+                            {t('videos.watch_btn')}
                           </button>
                         </div>
                       </div>
@@ -726,14 +726,14 @@ export default function HomeClient() {
                   href="/videos"
                   className="inline-flex items-center gap-2 px-7 py-3 bg-dark-obsidian text-white font-bold text-sm rounded-2xl hover:bg-opacity-85 transition-all shadow-md group"
                 >
-                  Xem tất cả Video
+                  {t('videos.view_all')}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </>
           ) : (
             <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-              <p className="text-xs text-dark-slate/50 italic">Hiện tại chưa có video nào được xuất bản.</p>
+              <p className="text-xs text-dark-slate/50 italic">{t('videos.no_videos')}</p>
             </div>
           )}
         </div>

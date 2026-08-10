@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
@@ -257,10 +258,9 @@ export default function RegisterWizard() {
   };
 
   const stepTitles = [
-    t('reg.step1', '1. Thông tin Đội thi'),
-    t('reg.step2', '2. Tiết mục & Kỹ thuật'),
-    '3. ' + (language === 'en' ? 'Media & Upload' : 'Tư liệu & Đính kèm'),
-    t('reg.step3', '4. Xác nhận Hồ sơ'),
+    t('reg.step1'),
+    t('reg.step2'),
+    t('reg.step3'),
   ];
 
   return (
@@ -271,18 +271,18 @@ export default function RegisterWizard() {
         {/* Header Summary */}
         <div className="text-center mb-10">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            {t('nav.register', 'Đăng Ký Trực Tuyến')}
+            {t('nav.register')}
           </span>
           <h1 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900 mt-2">
-            {t('reg.wizard_title', 'Hồ Sơ Đăng Ký Dự Thi')}
+            {t('reg.wizard_title')}
           </h1>
           <p className="text-xs text-slate-500 mt-2">
-            {language === 'en' ? 'Complete in 5 minutes. Drafts auto-saved.' : 'Hoàn tất biểu mẫu trong vòng 5 phút. Bản nháp tự động lưu.'}
+            {t('reg.draft_saved')}
           </p>
         </div>
 
         {/* Dynamic Wizard Steps indicator */}
-        <div className="grid grid-cols-4 gap-2 mb-10 max-w-xl mx-auto">
+        <div className="grid grid-cols-3 gap-2 mb-10 max-w-xl mx-auto">
           {stepTitles.map((title, idx) => {
             const stepNum = idx + 1;
             const isCompleted = stepNum < step;
@@ -296,7 +296,7 @@ export default function RegisterWizard() {
                 <span className={`text-[10px] text-center font-bold tracking-wider uppercase transition-colors hidden sm:block ${
                   isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-slate-400'
                 }`}>
-                  {language === 'en' ? `Step ${stepNum}` : `Bước ${stepNum}`}
+                  {title}
                 </span>
               </div>
             );
@@ -316,22 +316,24 @@ export default function RegisterWizard() {
                   <CheckCircle className="w-10 h-10" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="font-heading font-bold text-2xl text-slate-900">Gửi Hồ Sơ Thành Công!</h2>
+                  <h2 className="font-heading font-bold text-2xl text-slate-900">{t('reg.success_title')}</h2>
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    Mã số hồ sơ của bạn là <strong className="text-secondary">{submittedId}</strong>. Ban tổ chức đã gửi một email xác nhận tự động. Vui lòng kiểm tra hộp thư (bao gồm cả spam) trong vòng 15 phút tới.
+                    {t('reg.success_desc')}
                   </p>
                 </div>
-                <div className="pt-4">
-                  <button
-                    onClick={() => {
-                      setIsSubmitted(false);
-                      setStep(1);
-                      setFormData(initialFormData);
-                    }}
+                <div className="pt-4 flex justify-center gap-3">
+                  <Link
+                    href="/team/login"
                     className="px-6 py-2.5 rounded-xl bg-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all"
                   >
-                    Đăng Ký Đội Mới
-                  </button>
+                    {t('reg.go_team_portal')}
+                  </Link>
+                  <Link
+                    href="/"
+                    className="px-6 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider hover:bg-slate-300 transition-all"
+                  >
+                    {t('reg.go_home')}
+                  </Link>
                 </div>
               </motion.div>
             ) : (
@@ -347,96 +349,96 @@ export default function RegisterWizard() {
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <User className="w-5 h-5" />
-                      <span>Bước 1: Thông tin liên hệ Trưởng đoàn</span>
+                      <span>{t('reg.step1')}</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tên Đội/Nhóm/CLB *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.team_name')}</label>
                         <input
                           type="text"
                           name="teamName"
                           value={formData.teamName}
                           onChange={handleChange}
-                          placeholder="Ví dụ: CLB Sen Vàng"
+                          placeholder={t('reg.team_name_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.teamName && <p className="text-xs text-primary">{errors.teamName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đơn vị đại diện (Trường học, Phường/Xã... nếu có)</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.organization')}</label>
                         <input
                           type="text"
                           name="organization"
                           value={formData.organization}
                           onChange={handleChange}
-                          placeholder="Ví dụ: Phường Tràng Tiền"
+                          placeholder={t('reg.organization_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Số lượng thành viên *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.member_count')}</label>
                         <input
                           type="text"
                           name="memberCount"
                           value={formData.memberCount}
                           onChange={handleChange}
-                          placeholder="Ví dụ: 15 người (Từ 5 - 30 người)"
+                          placeholder={t('reg.member_count_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.memberCount && <p className="text-xs text-primary">{errors.memberCount}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Trưởng đoàn / Người Đại diện *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.rep_name')}</label>
                         <input
                           type="text"
                           name="representativeName"
                           value={formData.representativeName}
                           onChange={handleChange}
-                          placeholder="Họ và tên"
+                          placeholder={t('reg.rep_name_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.representativeName && <p className="text-xs text-primary">{errors.representativeName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Số điện thoại liên hệ (Zalo) *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.phone')}</label>
                         <input
                           type="text"
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="Nhập số điện thoại"
+                          placeholder={t('reg.phone_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.phone && <p className="text-xs text-primary">{errors.phone}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Email liên hệ *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.email')}</label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder="example@gmail.com"
+                          placeholder={t('reg.email_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mật khẩu tài khoản Đội thi *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.pass')}</label>
                         <div className="relative">
                           <input
                             type={showRegPass ? 'text' : 'password'}
                             name="password"
                             value={formData.password || ''}
                             onChange={handleChange}
-                            placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                            placeholder={t('reg.pass_placeholder')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           <button
@@ -451,14 +453,14 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-1 sm:col-span-2">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Xác nhận mật khẩu *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.confirm_pass')}</label>
                         <div className="relative">
                           <input
                             type={showRegConfirmPass ? 'text' : 'password'}
                             name="confirmPassword"
                             value={formData.confirmPassword || ''}
                             onChange={handleChange}
-                            placeholder="Nhập lại mật khẩu để xác nhận"
+                            placeholder={t('reg.confirm_pass_placeholder')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           <button
@@ -486,46 +488,46 @@ export default function RegisterWizard() {
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Video className="w-5 h-5" />
-                      <span>Bước 2: Chi tiết tiết mục dự thi</span>
+                      <span>{t('reg.step2')}</span>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tên bài dự thi (Tiết mục) *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.performance_title')}</label>
                           <input
                             type="text"
                             name="performanceTitle"
                             value={formData.performanceTitle}
                             onChange={handleChange}
-                            placeholder="Ví dụ: Hào Khí Việt Nam"
+                            placeholder={t('reg.performance_title_placeholder')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           {errors.performanceTitle && <p className="text-xs text-primary">{errors.performanceTitle}</p>}
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Thể loại đăng ký *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.category')}</label>
                           <select
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           >
-                            <option value="dan_ca">Dân Ca</option>
-                            <option value="dan_vu">Dân Vũ</option>
-                            <option value="both">Cả hai (Dân Ca & Dân Vũ)</option>
+                            <option value="dan_ca">{t('reg.cat_dan_ca')}</option>
+                            <option value="dan_vu">{t('reg.cat_dan_vu')}</option>
+                            <option value="both">{t('reg.cat_both')}</option>
                           </select>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Thời lượng dự kiến *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.duration')}</label>
                           <input
                             type="text"
                             name="duration"
                             value={formData.duration}
                             onChange={handleChange}
-                            placeholder="Ví dụ: 5 phút 30 giây (Tối đa 7 phút)"
+                            placeholder={t('reg.duration_placeholder')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           {errors.duration && <p className="text-xs text-primary">{errors.duration}</p>}
@@ -533,26 +535,26 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ý tưởng & Nội dung (MC giới thiệu & BGK thẩm định) *</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.description')}</label>
                         <textarea
                           name="description"
                           value={formData.description}
                           onChange={handleChange}
                           rows={4}
-                          placeholder="Mô tả ngắn gọn về thông điệp, văn hóa vùng miền tôn vinh trong tiết mục..."
+                          placeholder={t('reg.description_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
                         />
                         {errors.description && <p className="text-xs text-primary">{errors.description}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Yêu cầu kỹ thuật sân khấu (Số lượng Micro, đạo cụ...)</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.tech_req')}</label>
                         <textarea
                           name="technicalRequirements"
                           value={formData.technicalRequirements}
                           onChange={handleChange}
                           rows={3}
-                          placeholder="Ví dụ: Cần 3 micro không dây cầm tay, 1 bục đứng trung tâm..."
+                          placeholder={t('reg.tech_req_placeholder')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
                         />
                       </div>
@@ -560,7 +562,7 @@ export default function RegisterWizard() {
                   </motion.div>
                 )}
 
-                {/* STEP 3: Attachments & Media Link */}
+                {/* STEP 3: Preview and Terms */}
                 {step === 3 && (
                   <motion.div
                     key="step-3"
@@ -570,133 +572,36 @@ export default function RegisterWizard() {
                     className="space-y-6"
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
-                      <Upload className="w-5 h-5" />
-                      <span>Bước 3: Tải lên tư liệu âm nhạc / video</span>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đường dẫn file Nhạc nền (Google Drive / Dropbox) *</label>
-                        <input
-                          type="url"
-                          name="audioLink"
-                          value={formData.audioLink}
-                          onChange={handleChange}
-                          placeholder="Dán link Drive đã mở quyền truy cập"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
-                        {errors.audioLink && <p className="text-xs text-primary">{errors.audioLink}</p>}
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Đường dẫn Video chạy thử / Tập luyện (YouTube / Google Drive)</label>
-                        <input
-                          type="url"
-                          name="videoLink"
-                          value={formData.videoLink}
-                          onChange={handleChange}
-                          placeholder="Dán link video tập luyện của đội"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ảnh Đại Diện Đội Thi *</label>
-                        <div
-                          onDragEnter={handleDrag}
-                          onDragOver={handleDrag}
-                          onDragLeave={handleDrag}
-                          onDrop={handleDrop}
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
-                            isDragActive ? 'border-secondary bg-secondary/5' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
-                          }`}
-                        >
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="image/png, image/jpeg, image/jpg"
-                            className="hidden"
-                          />
-
-                          {isUploadingPhoto ? (
-                            <div className="space-y-2 py-4">
-                              <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
-                              <p className="text-xs text-slate-500">Đang tải ảnh lên máy chủ...</p>
-                            </div>
-                          ) : formData.photoUrl ? (
-                            <div className="relative group w-48 h-32 rounded-lg overflow-hidden border border-slate-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
-                              <img
-                                src={formData.photoUrl}
-                                alt="Xem trước ảnh đại diện"
-                                className="w-full h-full object-cover"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleRemovePhoto}
-                                className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-sm animate-fadeIn"
-                                title="Xóa ảnh"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                              <p className="text-xs font-medium text-slate-600">
-                                Kéo thả ảnh vào đây, hoặc <span className="text-secondary hover:underline">nhấp để chọn</span>
-                              </p>
-                              <p className="text-[10px] text-slate-400">Định dạng JPG, PNG. Dung lượng tối đa: 5MB.</p>
-                            </>
-                          )}
-                        </div>
-                        {errors.photoUrl && <p className="text-xs text-primary mt-1">{errors.photoUrl}</p>}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* STEP 4: Preview and Terms */}
-                {step === 4 && (
-                  <motion.div
-                    key="step-4"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Sparkles className="w-5 h-5" />
-                      <span>Bước 4: Xác nhận hồ sơ đăng ký</span>
+                      <span>{t('reg.step3')}</span>
                     </div>
 
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 text-sm">
                       <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên Đội Thi:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.team_name')}</span>
                           <strong className="text-slate-800">{formData.teamName}</strong>
                         </div>
                         {formData.organization && (
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Đơn vị đại diện:</span>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.organization')}</span>
                             <strong className="text-slate-800">{formData.organization}</strong>
                           </div>
                         )}
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Số lượng thành viên:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.member_count')}</span>
                           <strong className="text-slate-800">{formData.memberCount}</strong>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Trưởng Đoàn:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.rep_name')}</span>
                           <strong className="text-slate-800">{formData.representativeName}</strong>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Số Điện Thoại:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.phone')}</span>
                           <span className="text-slate-800">{formData.phone}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Email liên hệ:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.email')}</span>
                           <span className="text-slate-800">{formData.email}</span>
                         </div>
                       </div>
@@ -704,38 +609,25 @@ export default function RegisterWizard() {
                       <div className="space-y-2">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên tiết mục:</span>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.performance_title')}</span>
                             <strong className="text-secondary">{formData.performanceTitle}</strong>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Thời lượng dự kiến:</span>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.duration')}</span>
                             <strong className="text-secondary">{formData.duration}</strong>
                           </div>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Ý tưởng tiết mục:</span>
+                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.description')}</span>
                           <p className="text-xs text-slate-600 italic">&ldquo;{formData.description}&rdquo;</p>
                         </div>
-                        {formData.audioLink && (
-                          <div className="text-xs text-accent">
-                            ✓ Nhạc nền đính kèm hợp lệ.
-                          </div>
-                        )}
-                        {formData.photoUrl && (
-                          <div className="flex items-center gap-3 pt-3 border-t border-slate-100/50 mt-2 animate-fadeIn">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Ảnh đại diện:</span>
-                            <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-                              <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 bg-primary/10 border border-primary/20 rounded-xl p-4">
                       <input type="checkbox" required id="agreement" className="mt-1 accent-primary" />
                       <label htmlFor="agreement" className="text-xs text-slate-600 leading-relaxed">
-                        Tôi cam kết tất cả thông tin khai báo trên là chính xác. Bản quyền âm nhạc của tiết mục hoàn toàn thuộc trách nhiệm tự thỏa thuận của đội thi. Ban tổ chức được toàn quyền sử dụng hình ảnh tiết mục để làm tư liệu truyền thông.
+                        {t('reg.step3_confirm_sub')}
                       </label>
                     </div>
                   </motion.div>
@@ -749,19 +641,19 @@ export default function RegisterWizard() {
                       onClick={handlePrev}
                       className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" /> Quay lại
+                      <ArrowLeft className="w-4 h-4" /> {t('reg.prev_btn')}
                     </button>
                   ) : (
                     <div />
                   )}
 
-                  {step < 4 ? (
+                  {step < 3 ? (
                     <button
                       type="button"
                       onClick={handleNext}
                       className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all glow-gold-hover"
                     >
-                      Tiếp tục <ArrowRight className="w-4 h-4" />
+                      {t('reg.next_btn')} <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
                     <button
@@ -771,10 +663,10 @@ export default function RegisterWizard() {
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" /> Đang gửi hồ sơ...
+                          <Loader2 className="w-4 h-4 animate-spin" /> {t('reg.submitting')}
                         </>
                       ) : (
-                        'Xác Nhận & Gửi Đăng Ký'
+                        t('reg.submit_btn')
                       )}
                     </button>
                   )}

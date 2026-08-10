@@ -10,17 +10,19 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ImageLightbox from '@/components/ImageLightbox';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PublicUserGuidePage() {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState<string>('sec-overview');
 
   const navSections = [
-    { id: 'sec-overview', label: '1. Tổng quan & Trang chủ', icon: Compass },
-    { id: 'sec-register', label: '2. Đăng ký Đội dự thi', icon: UserPlus },
-    { id: 'sec-team-portal', label: '3. Cổng Đội Thi & Dashboard', icon: LogIn },
-    { id: 'sec-vote', label: '4. Bình chọn Khán giả', icon: Heart },
-    { id: 'sec-update-info', label: '5. Đổi thông tin Hồ sơ', icon: Edit3 },
-    { id: 'sec-news-video', label: '6. Tin tức & Thư viện Video', icon: Newspaper },
+    { id: 'sec-overview', label: t('guide.sec1_nav'), icon: Compass },
+    { id: 'sec-register', label: t('guide.sec2_nav'), icon: UserPlus },
+    { id: 'sec-team-portal', label: t('guide.sec3_nav'), icon: LogIn },
+    { id: 'sec-vote', label: t('guide.sec4_nav'), icon: Heart },
+    { id: 'sec-update-info', label: t('guide.sec5_nav'), icon: Edit3 },
+    { id: 'sec-news-video', label: t('guide.sec6_nav'), icon: Newspaper },
   ];
 
   const scrollToSection = (id: string) => {
@@ -40,9 +42,9 @@ export default function PublicUserGuidePage() {
         <section className="w-full bg-gradient-to-br from-primary/10 via-white to-accent/5 border-b border-slate-200/60 py-12 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-2 text-xs text-dark-slate/50 font-medium mb-3">
-              <Link href="/" className="hover:text-primary transition-colors">Trang Chủ</Link>
+              <Link href="/" className="hover:text-primary transition-colors">{t('guide.breadcrumb_home')}</Link>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-dark-slate/80">Hướng Dẫn Sử Dụng</span>
+              <span className="text-dark-slate/80">{t('guide.breadcrumb_current')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-md">
@@ -50,10 +52,10 @@ export default function PublicUserGuidePage() {
               </div>
               <div>
                 <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-dark-obsidian">
-                  Cẩm Nang & Hướng Dẫn Sử Dụng
+                  {t('guide.title')}
                 </h1>
                 <p className="text-xs sm:text-sm text-dark-slate/60 mt-1">
-                  Tài liệu chi tiết hướng dẫn dành cho Đội thi, Khán giả bình chọn và Người dùng Festival Dân Ca Dân Vũ Quốc Tế 2026.
+                  {t('guide.subtitle')}
                 </p>
               </div>
             </div>
@@ -68,7 +70,7 @@ export default function PublicUserGuidePage() {
               <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
                 <h3 className="font-heading font-bold text-xs uppercase tracking-wider text-slate-400 px-2 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  Danh mục Hướng dẫn
+                  {t('guide.menu_title')}
                 </h3>
                 <nav className="space-y-1">
                   {navSections.map((sec) => {
@@ -96,13 +98,13 @@ export default function PublicUserGuidePage() {
               <div className="bg-gradient-to-br from-primary/5 to-secondary/10 border border-primary/20 rounded-3xl p-5 space-y-2">
                 <h4 className="font-heading font-bold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
-                  Hỗ trợ trực tiếp 24/7
+                  {t('guide.support_title')}
                 </h4>
                 <p className="text-[11px] text-dark-slate/70 leading-relaxed">
-                  Nếu bạn cần hỗ trợ kỹ thuật hoặc có thắc mắc trong quá trình đăng ký, vui lòng liên hệ Ban Tổ Chức:
+                  {t('guide.support_desc')}
                 </p>
                 <div className="text-xs font-bold text-dark-obsidian pt-1">
-                  📞 Hotline: <span className="text-primary">0966 925 606</span> (Mrs. Hương)
+                  {t('guide.hotline_label')} <span className="text-primary">0966 925 606</span> (Mrs. Hương)
                 </div>
               </div>
             </aside>
@@ -117,27 +119,25 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Tổng Quan Trang Chủ & Giao Diện Chính
+                      {t('guide.sec1_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Khám phá các tính năng chính trên website Festival 2026</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec1_subtitle')}</p>
                   </div>
                 </div>
 
                 <div className="text-xs sm:text-sm text-dark-slate/80 leading-relaxed space-y-3">
-                  <p>
-                    Website <strong>Festival Dân Ca Dân Vũ Quốc Tế – Nhịp Bước Việt Nam 2026</strong> là cổng thông tin chính thức kết nối Ban Tổ Chức, các Đoàn nghệ thuật / Đội thi dự thi và Khán giả trên toàn quốc.
-                  </p>
+                  <p>{t('guide.sec1_desc1')}</p>
                   <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
-                    <li><strong>Thanh điều hướng chính (Navbar):</strong> Truy cập nhanh Trang chủ, Cổng bình chọn, Đăng ký dự thi, Cổng Đội Thi.</li>
-                    <li><strong>Bảng tin tức & Video:</strong> Cập nhật liên tục tin tức báo chí, video thông điệp và hình ảnh festival.</li>
-                    <li><strong>Cổng bình chọn khán giả:</strong> Theo dõi bảng điểm và bình chọn trực tiếp cho đội yêu thích.</li>
+                    <li>{t('guide.sec1_item1')}</li>
+                    <li>{t('guide.sec1_item2')}</li>
+                    <li>{t('guide.sec1_item3')}</li>
                   </ul>
                 </div>
 
                 <ImageLightbox
                   src="/guide/Trang chủ.png"
                   alt="Giao diện Trang chủ Festival Dân Ca Dân Vũ Quốc Tế"
-                  caption="Hình 1.1: Giao diện Trang chủ chính thức với các phân vùng chức năng"
+                  caption={t('guide.sec1_img_caption')}
                 />
               </section>
 
@@ -149,39 +149,39 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Hướng Dẫn Đăng Ký Đội Dự Thi
+                      {t('guide.sec2_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Quy trình nộp hồ sơ tham gia Festival dành cho các Đội nhóm / Câu lạc bộ</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec2_subtitle')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-3 text-xs sm:text-sm text-dark-slate/80">
                     <div className="flex items-start gap-2">
-                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Bước 1</span>
-                      <p>Trên thanh Menu chính, chọn <strong>"Đăng Ký Dự Thi"</strong> hoặc truy cập đường dẫn <code className="bg-slate-200 px-1 py-0.5 rounded text-xs text-primary font-mono">/register</code>.</p>
+                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Step 1</span>
+                      <p>{t('guide.sec2_step1')}</p>
                     </div>
                     <div className="flex items-start gap-2">
-                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Bước 2</span>
-                      <p>Điền đầy đủ thông tin vào Form đăng ký:</p>
+                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Step 2</span>
+                      <p>{t('guide.sec2_step2')}</p>
                     </div>
                     <ul className="list-disc pl-10 space-y-1 text-xs text-slate-700">
-                      <li><strong>Tên Đoàn / CLB / Đội thi:</strong> Nhập chính xác tên đơn vị biểu diễn.</li>
-                      <li><strong>Thể loại dự thi:</strong> Chọn <em>Dân Ca</em>, <em>Dân Vũ</em> hoặc <em>Cả hai thể loại</em>.</li>
-                      <li><strong>Thông tin đại diện:</strong> Họ tên người đại diện, Số điện thoại và Email chính xác (Email sẽ dùng để đăng nhập Cổng Đội Thi).</li>
-                      <li><strong>Thông tin tiết mục:</strong> Tên tiết mục, thời lượng dự kiến, mô tả ý tưởng và yêu cầu kỹ thuật (micro, khói lạnh, bục bệ...).</li>
-                      <li><strong>Mật khẩu quản trị đội thi:</strong> Tạo mật khẩu bảo mật (tối thiểu 6 ký tự).</li>
+                      <li>{t('guide.sec2_item1')}</li>
+                      <li>{t('guide.sec2_item2')}</li>
+                      <li>{t('guide.sec2_item3')}</li>
+                      <li>{t('guide.sec2_item4')}</li>
+                      <li>{t('guide.sec2_item5')}</li>
                     </ul>
                     <div className="flex items-start gap-2">
-                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Bước 3</span>
-                      <p>Kiểm tra kỹ thông tin và nhấn nút <strong>"Gửi Hồ Sơ Đăng Ký"</strong>. Hệ thống sẽ tạo hồ sơ ở trạng thái <em>Chờ phê duyệt</em>.</p>
+                      <span className="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">Step 3</span>
+                      <p>{t('guide.sec2_step3')}</p>
                     </div>
                   </div>
 
                   <ImageLightbox
                     src="/guide/Trang đăng ký.png"
                     alt="Mẫu Form đăng ký đội dự thi"
-                    caption="Hình 2.1: Giao diện Form nộp hồ sơ đăng ký tham gia Festival 2026"
+                    caption={t('guide.sec2_img_caption')}
                   />
                 </div>
               </section>
@@ -194,32 +194,30 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Cổng Đội Thi & Dashboard Quản Lý Hồ Sơ
+                      {t('guide.sec3_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Đăng nhập tài khoản đội thi, theo dõi trạng thái duyệt & nộp file nhạc/ảnh</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec3_subtitle')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4 text-xs sm:text-sm text-dark-slate/80 leading-relaxed">
-                  <p>
-                    Sau khi đăng ký thành công, mỗi Đội thi có một <strong>Dashboard riêng</strong> để quản lý toàn bộ hồ sơ dự thi.
-                  </p>
+                  <p>{t('guide.sec3_desc1')}</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-2">
                       <h4 className="font-bold text-xs text-primary flex items-center gap-1.5">
-                        <LogIn className="w-4 h-4" /> Đăng nhập Cổng Đội Thi
+                        <LogIn className="w-4 h-4" /> {t('guide.sec3_login_title')}
                       </h4>
                       <p className="text-xs text-slate-600">
-                        Chọn menu <strong>"Cổng Đội Thi"</strong> hoặc truy cập <code className="bg-slate-200 px-1 py-0.5 rounded text-primary">/team/login</code>. Đăng nhập bằng Email & Mật khẩu đã tạo.
+                        {t('guide.sec3_login_desc')}
                       </p>
                     </div>
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-2">
                       <h4 className="font-bold text-xs text-primary flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Trạng thái Phê duyệt
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {t('guide.sec3_status_title')}
                       </h4>
                       <p className="text-xs text-slate-600">
-                        Hồ sơ sẽ hiển thị nhãn trạng thái: <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">Chờ duyệt</span>, <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Đã duyệt</span> hoặc <span className="bg-rose-100 text-rose-800 font-bold px-1.5 py-0.5 rounded">Từ chối</span>.
+                        {t('guide.sec3_status_desc')}
                       </p>
                     </div>
                   </div>
@@ -228,12 +226,12 @@ export default function PublicUserGuidePage() {
                     <ImageLightbox
                       src="/guide/Trang đăng nhập.png"
                       alt="Trang đăng nhập Cổng Đội Thi"
-                      caption="Hình 3.1: Giao diện đăng nhập tài khoản Đội thi"
+                      caption={t('guide.sec3_img1_caption')}
                     />
                     <ImageLightbox
                       src="/guide/Trang dashboard đội thi.png"
                       alt="Dashboard Quản lý Hồ sơ Đội thi"
-                      caption="Hình 3.2: Giao diện Dashboard Quản lý Hồ sơ Đội thi"
+                      caption={t('guide.sec3_img2_caption')}
                     />
                   </div>
                 </div>
@@ -247,9 +245,9 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Hướng Dẫn Khán Giả Đăng Nhập & Bình Chọn
+                      {t('guide.sec4_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Bình chọn ủng hộ các tiết mục yêu thích tại Festival 2026</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec4_subtitle')}</p>
                   </div>
                 </div>
 
@@ -257,22 +255,22 @@ export default function PublicUserGuidePage() {
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-3">
                     <div className="flex items-start gap-2">
                       <span className="bg-accent text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">1</span>
-                      <p>Truy cập menu <strong>"Cổng Bình Chọn"</strong> trên thanh điều hướng hoặc xem danh sách các Đội thi ở Trang chủ.</p>
+                      <p>{t('guide.sec4_step1')}</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="bg-accent text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">2</span>
-                      <p>Tìm kiếm tên Đội thi hoặc Tiết mục cần bình chọn, nhấn nút <strong>"Bình Chọn Ngay"</strong>.</p>
+                      <p>{t('guide.sec4_step2')}</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="bg-accent text-white font-bold px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">3</span>
-                      <p>Xác thực lượt bình chọn hợp lệ. Mỗi lượt vote đều được kiểm soát bởi hệ thống bảo mật để đảm bảo tính công bằng chuyên nghiệp.</p>
+                      <p>{t('guide.sec4_step3')}</p>
                     </div>
                   </div>
 
                   <ImageLightbox
                     src="/guide/Trang bình chọn.png"
                     alt="Giao diện Cổng Bình Chọn khán giả"
-                    caption="Hình 4.1: Cổng Bình Chọn trực tuyến với bảng xếp hạng lượt vote thời gian thực"
+                    caption={t('guide.sec4_img_caption')}
                   />
                 </div>
               </section>
@@ -285,22 +283,14 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Hướng Dẫn Gửi Yêu Cầu Chỉnh Sửa Thông Tin
+                      {t('guide.sec5_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Quy trình cập nhật tên tiết mục, SĐT, danh sách thành viên hoặc kỹ thuật sân khấu</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec5_subtitle')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4 text-xs sm:text-sm text-dark-slate/80 leading-relaxed">
-                  <p>
-                    Khi Đội thi cần cập nhật lại thông tin tiết mục hoặc người đại diện sau khi đã được phê duyệt, đội thi thực hiện các bước:
-                  </p>
-                  <ol className="list-decimal pl-5 space-y-2 text-xs text-slate-700">
-                    <li>Đăng nhập vào <strong>Dashboard Cổng Đội Thi</strong>.</li>
-                    <li>Bấm nút <strong>"Gửi Yêu Cầu Chỉnh Sửa"</strong> bên cạnh thông tin cần thay đổi.</li>
-                    <li>Nhập thông tin mới và lý do thay đổi, sau đó bấm <strong>"Xác nhận gửi yêu cầu"</strong>.</li>
-                    <li>Yêu cầu sẽ được chuyển tới Ban Quản Trị (Admin). Sau khi Admin kiểm tra và bấm <em>Chấp nhận</em>, thông tin mới sẽ tự động cập nhật trên hệ thống.</li>
-                  </ol>
+                  <p>{t('guide.sec5_desc1')}</p>
                 </div>
               </section>
 
@@ -312,9 +302,9 @@ export default function PublicUserGuidePage() {
                   </div>
                   <div>
                     <h2 className="font-heading font-extrabold text-xl text-dark-obsidian">
-                      Khám Phá Tin Tức & Thư Viện Video Clips
+                      {t('guide.sec6_title')}
                     </h2>
-                    <p className="text-xs text-dark-slate/60">Theo dõi thông tin báo chí, thông điệp truyền thông và xem video biểu diễn</p>
+                    <p className="text-xs text-dark-slate/60">{t('guide.sec6_subtitle')}</p>
                   </div>
                 </div>
 
@@ -323,12 +313,12 @@ export default function PublicUserGuidePage() {
                     <ImageLightbox
                       src="/guide/Trang tin tức.png"
                       alt="Trang Tin tức & Bài viết"
-                      caption="Hình 6.1: Trang danh sách Tin tức & Bài viết truyền thông"
+                      caption="Figure 6.1"
                     />
                     <ImageLightbox
                       src="/guide/Trang video.png"
                       alt="Trang Thư viện Video & Clips"
-                      caption="Hình 6.2: Thư viện Video Clips phát trực tiếp trên Modal"
+                      caption="Figure 6.2"
                     />
                   </div>
                 </div>
@@ -341,7 +331,7 @@ export default function PublicUserGuidePage() {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-dark-obsidian text-white font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-opacity-85 transition-all shadow-md"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Quay về Trang Chủ
+                  {t('common.back')}
                 </Link>
               </div>
             </div>

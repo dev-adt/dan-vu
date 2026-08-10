@@ -339,6 +339,7 @@ const TOUR_DATA: TourPackage[] = [
 ];
 
 export default function TourSlider() {
+  const { t, language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -373,13 +374,13 @@ export default function TourSlider() {
         <div>
           <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
             <Compass className="w-3.5 h-3.5 text-emerald-700 animate-spin" style={{ animationDuration: '10s' }} />
-            Du Lịch & Khám Phá Điện Biên
+            {t('tour.tag')}
           </span>
           <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-dark-obsidian tracking-wide">
-            CÁC GÓI TOUR ĐIỆN BIÊN NỔI BẬT
+            {t('tour.title')}
           </h2>
           <p className="text-xs sm:text-sm text-dark-slate/80 mt-1 max-w-2xl">
-            Khám phá các di tích lịch sử Hào hùng, hòa mình vào lễ hội Festival Dân Vũ 2026 và trải nghiệm thiên nhiên Tây Bắc hùng vĩ cùng Vietravel / Ban Tổ Chức.
+            {t('tour.subtitle')}
           </p>
         </div>
 
@@ -393,21 +394,21 @@ export default function TourSlider() {
                 className={`h-2.5 rounded-full transition-all duration-300 ${
                   currentIndex === idx ? 'w-8 bg-primary' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
                 }`}
-                title={`Chuyển tới tour ${idx + 1}`}
+                title={`Tour ${idx + 1}`}
               />
             ))}
           </div>
           <button
             onClick={handlePrev}
             className="w-10 h-10 rounded-full bg-white border border-slate-300 hover:border-primary hover:bg-primary hover:text-white text-slate-700 flex items-center justify-center shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
-            title="Tour trước"
+            title={t('tour.prev_btn')}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={handleNext}
             className="w-10 h-10 rounded-full bg-white border border-slate-300 hover:border-primary hover:bg-primary hover:text-white text-slate-700 flex items-center justify-center shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
-            title="Tour tiếp theo"
+            title={t('tour.next_btn')}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -469,7 +470,7 @@ export default function TourSlider() {
                 {/* Title & Subtitle */}
                 <div>
                   <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                    <Star className="w-4 h-4 fill-primary" /> Điểm Nhấn Lịch Trình
+                    <Star className="w-4 h-4 fill-primary" /> {t('tour.highlights_label')}
                   </div>
                   <h3 className="font-heading font-bold text-xl sm:text-2xl text-slate-900 leading-snug">
                     {currentTour.title}
@@ -498,7 +499,7 @@ export default function TourSlider() {
                 <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 space-y-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
                     <Utensils className="w-3.5 h-3.5 text-amber-600" />
-                    Ẩm Thực Tây Bắc Đặc Sắc Bao Gồm:
+                    {t('tour.cuisine_label')}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {currentTour.menuHighlights.map((menu, mIdx) => (
@@ -520,7 +521,7 @@ export default function TourSlider() {
                   className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-[0_4px_15px_rgba(198,40,40,0.25)] transition-all cursor-pointer glow-crimson-hover"
                 >
                   <Calendar className="w-4 h-4" />
-                  Xem Lịch Trình Chi Tiết
+                  {t('tour.view_itinerary_btn')}
                 </button>
 
                 <a
@@ -528,7 +529,7 @@ export default function TourSlider() {
                   className="inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-[0_4px_15px_rgba(0,105,92,0.25)] transition-all"
                 >
                   <PhoneCall className="w-4 h-4" />
-                  Hotline Đặt Tour: 0966 925 606
+                  {t('tour.hotline_btn')}
                 </a>
               </div>
             </div>
@@ -563,7 +564,7 @@ export default function TourSlider() {
                 <button
                   onClick={() => setSelectedTour(null)}
                   className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                  title="Đóng cửa sổ"
+                  title={t('common.close')}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -576,22 +577,22 @@ export default function TourSlider() {
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
                     <Clock className="w-8 h-8 text-primary shrink-0" />
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Thời gian</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">{t('tour.modal_time_label')}</span>
                       <strong className="text-xs font-bold text-slate-900">{selectedTour.duration}</strong>
                     </div>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
                     <Compass className="w-8 h-8 text-accent shrink-0" />
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Phương tiện</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">{t('tour.modal_transport_label')}</span>
                       <strong className="text-xs font-bold text-slate-900">{selectedTour.transport}</strong>
                     </div>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
                     <Award className="w-8 h-8 text-amber-600 shrink-0" />
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Khách sạn</span>
-                      <strong className="text-xs font-bold text-slate-900">Tiêu chuẩn 3 Sao Trung Tâm</strong>
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">{t('tour.modal_hotel_label')}</span>
+                      <strong className="text-xs font-bold text-slate-900">{t('tour.modal_hotel_value')}</strong>
                     </div>
                   </div>
                 </div>
@@ -599,7 +600,7 @@ export default function TourSlider() {
                 {/* Day-by-day Itinerary */}
                 <div className="space-y-4">
                   <h4 className="font-heading font-bold text-lg text-slate-900 flex items-center gap-2 border-b border-slate-200 pb-2">
-                    <Calendar className="w-5 h-5 text-primary" /> LỊCH TRÌNH CHI TIẾT
+                    <Calendar className="w-5 h-5 text-primary" /> {t('tour.modal_title')}
                   </h4>
 
                   <div className="space-y-6 relative before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
@@ -632,7 +633,7 @@ export default function TourSlider() {
                   {/* BAO GỒM */}
                   <div className="bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200 space-y-3">
                     <h5 className="font-heading font-bold text-sm text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" /> DỊCH VỤ BAO GỒM
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" /> {t('tour.modal_inclusions_label')}
                     </h5>
                     <ul className="space-y-2 text-xs text-slate-800">
                       {selectedTour.inclusions.map((inc, i) => (
@@ -647,7 +648,7 @@ export default function TourSlider() {
                   {/* KHÔNG BAO GỒM */}
                   <div className="bg-rose-50/70 p-5 rounded-2xl border border-rose-200 space-y-3">
                     <h5 className="font-heading font-bold text-sm text-rose-950 uppercase tracking-wider flex items-center gap-2">
-                      <X className="w-4 h-4 text-rose-600" /> KHÔNG BAO GỒM
+                      <X className="w-4 h-4 text-rose-600" /> {t('tour.modal_exclusions_label')}
                     </h5>
                     <ul className="space-y-2 text-xs text-slate-800">
                       {selectedTour.exclusions.map((exc, eIdx) => (
@@ -663,8 +664,8 @@ export default function TourSlider() {
                 {/* Contact & Booking Banner */}
                 <div className="bg-gradient-to-r from-primary to-accent text-white p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
                   <div>
-                    <h5 className="font-heading font-bold text-base">TƯ VẤN & ĐẶT TOUR DU LỊCH ĐIỆN BIÊN</h5>
-                    <p className="text-xs text-white/90 mt-0.5">Liên hệ Ban Tổ Chức Festival / Vietravel để được hỗ trợ xếp đoàn & nhận ưu đãi đặc biệt.</p>
+                    <h5 className="font-heading font-bold text-base">{t('tour.modal_banner_title')}</h5>
+                    <p className="text-xs text-white/90 mt-0.5">{t('tour.modal_banner_desc')}</p>
                   </div>
                   <a
                     href="tel:0966925606"
