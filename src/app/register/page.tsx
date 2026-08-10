@@ -304,7 +304,7 @@ export default function RegisterWizard() {
         </div>
 
         {/* Wizard Panel */}
-        <div className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden shadow-sm">
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '16px', padding: '32px', boxSizing: 'border-box' }} className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden shadow-sm">
           <AnimatePresence mode="wait">
             {isSubmitted ? (
               <motion.div
