@@ -55,6 +55,7 @@ export async function PATCH(req: NextRequest) {
       audio_url,
       video_url,
       photo_url,
+      performances,
       password,
     } = body;
 
@@ -91,6 +92,18 @@ export async function PATCH(req: NextRequest) {
     if (audio_url !== undefined) updatedFields.audio_url = audio_url;
     if (video_url !== undefined) updatedFields.video_url = video_url;
     if (photo_url !== undefined) updatedFields.photo_url = photo_url;
+    if (performances !== undefined) {
+      updatedFields.performances = performances;
+      if (Array.isArray(performances) && performances.length > 0) {
+        if (!updatedFields.performance_title) updatedFields.performance_title = performances[0].title;
+        if (!updatedFields.category) updatedFields.category = performances[0].category;
+        if (!updatedFields.duration) updatedFields.duration = performances[0].duration;
+        if (!updatedFields.description) updatedFields.description = performances[0].description;
+        if (!updatedFields.technical_requirements) updatedFields.technical_requirements = performances[0].technicalRequirements;
+        if (!updatedFields.audio_url) updatedFields.audio_url = performances[0].audioUrl;
+        if (!updatedFields.video_url) updatedFields.video_url = performances[0].videoUrl;
+      }
+    }
 
     // Check if team is already approved
     if (currentTeam.status === 'approved') {

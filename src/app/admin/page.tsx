@@ -7,12 +7,17 @@ import {
   LayoutDashboard, Users, Heart, AlertOctagon, UserCheck,
   ShieldAlert, Ban, Download, CheckCircle, Trash2, Edit3, X, Save, UserPlus, PlusCircle, AlertTriangle,
   BookOpen, FileEdit, Newspaper, Bold, Italic, Underline, Link as LinkIcon, List, Eye, EyeOff, Key, Image as ImageIcon, Upload,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify, Video, Play, Film
+  AlignLeft, AlignCenter, AlignRight, AlignJustify, Video, Play, Film, Layers, Music
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
 import VideoModal, { VideoItem } from '@/components/VideoModal';
 import { parseVideoUrl } from '@/lib/videoUtils';
+
+function getVideoEmbedUrl(url: string): string {
+  if (!url) return '';
+  return parseVideoUrl(url).embedUrl;
+}
 
 
 interface Post {
@@ -59,6 +64,7 @@ interface Team {
   audio_url?: string;
   video_url?: string;
   photo_url?: string;
+  performances?: any[];
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
   has_pending_update?: boolean;
   pending_changes?: any;
@@ -82,7 +88,6 @@ export default function AdminDashboard() {
   // Active Tab
   const [activeTab, setActiveTab] = useState<'monitoring' | 'teams' | 'pending_updates' | 'judges' | 'rankings' | 'posts' | 'videos'>('monitoring');
 
-
   // Dashboard state loaded from backend APIs
   const [stats, setStats] = useState({
     teamsCount: 0,
@@ -95,6 +100,10 @@ export default function AdminDashboard() {
   const [judges, setJudges] = useState<Judge[]>([]);
   const [rankings, setRankings] = useState<any[]>([]);
   const [isLoadingRankings, setIsLoadingRankings] = useState(false);
+
+  // Detail Modal state for Team
+  const [viewingTeamDetails, setViewingTeamDetails] = useState<Team | null>(null);
+  const [activeDetailPerfTab, setActiveDetailPerfTab] = useState(0);
 
   // Editing state for Team
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -1822,6 +1831,16 @@ export default function AdminDashboard() {
                                   )}
                                 </td>
                                 <td className="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+                                  <button
+                                    onClick={() => {
+                                      setViewingTeamDetails(team);
+                                      setActiveDetailPerfTab(0);
+                                    }}
+                                    className="p-1.5 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer inline-block"
+                                    title="Xem chi tiết 3 tiết mục & video"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
                                   {!isApproved && (
                                     <button
                                       onClick={() => handleUpdateTeamStatus(team.id, 'approved')}
@@ -3706,6 +3725,245 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Team Details Modal */}
+      {viewingTeamDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-4 shrink-0">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                    viewingTeamDetails.status === 'approved' ? 'bg-green-100 text-green-800' :
+                    viewingTeamDetails.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {viewingTeamDetails.status === 'approved' ? 'Đã Duyệt' : viewingTeamDetails.status === 'rejected' ? 'Từ Chối' : 'Chờ Duyệt'}
+                  </span>
+                  <span className="text-xs font-mono text-slate-400">
+                    Mã: {viewingTeamDetails.id.substring(0, 8).toUpperCase()}
+                  </span>
+                </div>
+                <h3 className="font-heading font-extrabold text-2xl text-slate-900 mt-1">
+                  {viewingTeamDetails.team_name}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {viewingTeamDetails.status !== 'approved' && (
+                  <button
+                    onClick={() => {
+                      handleUpdateTeamStatus(viewingTeamDetails.id, 'approved');
+                      setViewingTeamDetails({ ...viewingTeamDetails, status: 'approved' });
+                    }}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold uppercase transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Duyệt Hồ Sơ
+                  </button>
+                )}
+                {viewingTeamDetails.status !== 'rejected' && (
+                  <button
+                    onClick={() => {
+                      handleUpdateTeamStatus(viewingTeamDetails.id, 'rejected');
+                      setViewingTeamDetails({ ...viewingTeamDetails, status: 'rejected' });
+                    }}
+                    className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold uppercase transition-all cursor-pointer"
+                  >
+                    Từ Chối
+                  </button>
+                )}
+                <button
+                  onClick={() => setViewingTeamDetails(null)}
+                  className="p-2 text-slate-400 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="overflow-y-auto space-y-6 flex-grow pr-1">
+              {/* Section 1: Team Info */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                {viewingTeamDetails.photo_url && (
+                  <div className="md:col-span-4 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ảnh Đại Diện Đội Thi</span>
+                    <div className="w-full h-40 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-200">
+                      <img
+                        src={viewingTeamDetails.photo_url}
+                        alt="Ảnh đội thi"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className={`${viewingTeamDetails.photo_url ? 'md:col-span-8' : 'md:col-span-12'} grid grid-cols-2 gap-4 text-xs`}>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Đơn vị đại diện</span>
+                    <strong className="text-slate-800 text-sm">{viewingTeamDetails.organization || '(Tự do)'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Số lượng thành viên</span>
+                    <strong className="text-slate-800 text-sm">{viewingTeamDetails.member_count || 'N/A'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Trưởng đoàn</span>
+                    <strong className="text-slate-800 text-sm">{viewingTeamDetails.representative_name}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Số điện thoại</span>
+                    <a href={`tel:${viewingTeamDetails.phone}`} className="text-secondary font-bold text-sm hover:underline">{viewingTeamDetails.phone}</a>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email liên hệ</span>
+                    <a href={`mailto:${viewingTeamDetails.email}`} className="text-secondary font-bold hover:underline">{viewingTeamDetails.email}</a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: 3 Performances */}
+              {(() => {
+                const perfs = Array.isArray(viewingTeamDetails.performances) && viewingTeamDetails.performances.length > 0
+                  ? viewingTeamDetails.performances
+                  : [
+                      {
+                        title: viewingTeamDetails.performance_title,
+                        category: viewingTeamDetails.category,
+                        duration: viewingTeamDetails.duration,
+                        description: viewingTeamDetails.description,
+                        technicalRequirements: viewingTeamDetails.technical_requirements,
+                        audioUrl: viewingTeamDetails.audio_url,
+                        videoUrl: viewingTeamDetails.video_url,
+                      }
+                    ];
+
+                const currentPerf = perfs[activeDetailPerfTab] || perfs[0];
+
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                      <h4 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-secondary" />
+                        <span>Danh Sách 3 Tiết Mục Dự Thi ({perfs.length} bài)</span>
+                      </h4>
+
+                      <div className="flex items-center gap-1.5">
+                        {perfs.map((_, pIdx) => (
+                          <button
+                            key={pIdx}
+                            onClick={() => setActiveDetailPerfTab(pIdx)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                              activeDetailPerfTab === pIdx
+                                ? 'bg-secondary text-slate-900 shadow-sm'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            Tiết mục {pIdx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-primary tracking-wider">
+                            Tiết mục số {activeDetailPerfTab + 1} / {perfs.length}
+                          </span>
+                          <h4 className="font-heading font-bold text-xl text-slate-900 mt-0.5">
+                            {currentPerf.title || currentPerf.performanceTitle || `Tiết mục ${activeDetailPerfTab + 1}`}
+                          </h4>
+                        </div>
+                        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-secondary/15 text-secondary self-start">
+                          {currentPerf.category === 'dan_ca' ? 'Dân Ca' : currentPerf.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ'} ({currentPerf.duration || 'N/A'})
+                        </span>
+                      </div>
+
+                      {/* Video Player in Admin Modal */}
+                      {(currentPerf.videoUrl || currentPerf.videoLink) && (String(currentPerf.videoUrl || currentPerf.videoLink).startsWith('http://') || String(currentPerf.videoUrl || currentPerf.videoLink).startsWith('https://')) ? (
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Video Dự Thi Tiết Mục {activeDetailPerfTab + 1}
+                          </span>
+                          <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-sm">
+                            <iframe
+                              className="w-full h-full border-0 absolute inset-0"
+                              src={getVideoEmbedUrl(currentPerf.videoUrl || currentPerf.videoLink)}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                          <a
+                            href={currentPerf.videoUrl || currentPerf.videoLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-secondary hover:underline inline-flex items-center gap-1 font-semibold"
+                          >
+                            <Video className="w-3.5 h-3.5" /> Mở link video gốc: {currentPerf.videoUrl || currentPerf.videoLink}
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="bg-slate-100 rounded-xl p-6 text-center text-xs text-slate-500 font-medium">
+                          Chưa có link video dự thi cho tiết mục này
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 gap-4 text-xs">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                            Ý tưởng & Nội dung nghệ thuật
+                          </span>
+                          <p className="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 italic leading-relaxed">
+                            {currentPerf.description || 'Chưa có mô tả ý tưởng.'}
+                          </p>
+                        </div>
+
+                        {(currentPerf.technicalRequirements || currentPerf.technical_requirements) && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                              Yêu cầu sân khấu & kỹ thuật
+                            </span>
+                            <p className="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                              {currentPerf.technicalRequirements || currentPerf.technical_requirements}
+                            </p>
+                          </div>
+                        )}
+
+                        {(currentPerf.audioUrl || currentPerf.audioLink) && (
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Nhạc nền (Beat / Audio)
+                            </span>
+                            <a
+                              href={currentPerf.audioUrl || currentPerf.audioLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                            >
+                              <Music className="w-3.5 h-3.5" /> Mở file nhạc Beat
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-100 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewingTeamDetails(null)}
+                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

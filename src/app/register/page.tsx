@@ -3,13 +3,23 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { User, Video, Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2, Sparkles, X, Image as ImageIcon, Eye, EyeOff, Music, Layers } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 
-interface FormData {
+export interface PerformanceItemData {
+  title: string;
+  category: 'dan_ca' | 'dan_vu' | 'both';
+  duration: string;
+  description: string;
+  technicalRequirements: string;
+  audioLink: string;
+  videoLink: string;
+}
+
+export interface RegistrationFormData {
   teamName: string;
   organization: string;
   memberCount: string;
@@ -18,17 +28,21 @@ interface FormData {
   email: string;
   password?: string;
   confirmPassword?: string;
-  category: 'dan_ca' | 'dan_vu' | 'both';
-  performanceTitle: string;
-  duration: string;
-  description: string;
-  technicalRequirements: string;
-  audioLink: string;
-  videoLink: string;
+  performances: [PerformanceItemData, PerformanceItemData, PerformanceItemData];
   photoUrl: string;
 }
 
-const initialFormData: FormData = {
+const initialPerformance: PerformanceItemData = {
+  title: '',
+  category: 'dan_ca',
+  duration: '',
+  description: '',
+  technicalRequirements: '',
+  audioLink: '',
+  videoLink: '',
+};
+
+const initialFormData: RegistrationFormData = {
   teamName: '',
   organization: '',
   memberCount: '',
@@ -37,22 +51,21 @@ const initialFormData: FormData = {
   email: '',
   password: '',
   confirmPassword: '',
-  category: 'dan_ca',
-  performanceTitle: '',
-  duration: '',
-  description: '',
-  technicalRequirements: '',
-  audioLink: '',
-  videoLink: '',
+  performances: [
+    { ...initialPerformance, category: 'dan_ca' },
+    { ...initialPerformance, category: 'dan_vu' },
+    { ...initialPerformance, category: 'both' },
+  ],
   photoUrl: '',
 };
 
 export default function RegisterWizard() {
   const { t, language } = useLanguage();
   const [step, setStep] = useState(1);
+  const [activePerfTab, setActivePerfTab] = useState(0); // 0: Tiết mục 1, 1: Tiết mục 2, 2: Tiết mục 3
 
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [formData, setFormData] = useState<RegistrationFormData>(initialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
@@ -65,13 +78,11 @@ export default function RegisterWizard() {
   const handlePhotoUpload = async (file: File) => {
     if (!file) return;
 
-    // Check size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('Dung lượng ảnh vượt quá giới hạn 5MB.');
       return;
     }
 
-    // Check type
     if (!file.type.startsWith('image/')) {
       alert('Vui lòng chọn tệp hình ảnh (.jpg, .jpeg, .png).');
       return;
@@ -90,16 +101,14 @@ export default function RegisterWizard() {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `team-photos/${fileName}`;
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('photos')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
         });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
         .from('photos')
@@ -145,38 +154,70 @@ export default function RegisterWizard() {
 
   // Load draft from localStorage on mount
   useEffect(() => {
-    const draft = localStorage.getItem('nhip_buoc_viet_nam_draft');
+    const draft = localStorage.getItem('nhip_buoc_viet_nam_draft_v2');
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
-        setFormData((prev) => ({ ...prev, ...parsed }));
+        if (parsed.performances && Array.isArray(parsed.performances) && parsed.performances.length === 3) {
+          setFormData(parsed);
+        }
       } catch (e) {
-        console.error('Failed to parse draft storage', e);
+        console.error('Error loading draft:', e);
       }
     }
   }, []);
 
-  // Save draft to localStorage on change
+  // Auto-save draft on form change
   useEffect(() => {
-    if (formData !== initialFormData) {
-      const timer = setTimeout(() => {
-        localStorage.setItem('nhip_buoc_viet_nam_draft', JSON.stringify(formData));
-      }, 300);
-      return () => clearTimeout(timer);
+    if (!isSubmitted && formData.teamName) {
+      localStorage.setItem('nhip_buoc_viet_nam_draft_v2', JSON.stringify(formData));
     }
-  }, [formData]);
+  }, [formData, isSubmitted]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear validation error on change
-    if (errors[name as keyof FormData]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handlePerformanceChange = (
+    index: number,
+    field: keyof PerformanceItemData,
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const newPerfs = [...prev.performances] as [PerformanceItemData, PerformanceItemData, PerformanceItemData];
+      newPerfs[index] = {
+        ...newPerfs[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        performances: newPerfs,
+      };
+    });
+
+    const errorKey = `perf_${index}_${field}`;
+    if (errors[errorKey]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[errorKey];
+        return newErrors;
+      });
     }
   };
 
   const validateStep = (currentStep: number): boolean => {
-    const tempErrors: Partial<Record<keyof FormData, string>> = {};
+    const tempErrors: Record<string, string> = {};
 
     if (currentStep === 1) {
       if (!(formData.teamName || '').trim()) tempErrors.teamName = 'Tên đội/nhóm không được bỏ trống.';
@@ -197,13 +238,23 @@ export default function RegisterWizard() {
         tempErrors.confirmPassword = 'Mật khẩu xác nhận không trùng khớp.';
       }
     } else if (currentStep === 2) {
-      if (!(formData.performanceTitle || '').trim()) tempErrors.performanceTitle = 'Tên tiết mục không được bỏ trống.';
-      if (!(formData.duration || '').trim()) tempErrors.duration = 'Thời lượng dự kiến không được bỏ trống.';
-      if (!(formData.description || '').trim()) tempErrors.description = 'Tóm tắt ý tưởng không được bỏ trống.';
+      // Validate all 3 performances
+      formData.performances.forEach((p, idx) => {
+        const pNum = idx + 1;
+        if (!p.title.trim()) {
+          tempErrors[`perf_${idx}_title`] = `Tiết mục ${pNum}: Vui lòng nhập tên tiết mục.`;
+        }
+        if (!p.duration.trim()) {
+          tempErrors[`perf_${idx}_duration`] = `Tiết mục ${pNum}: Vui lòng nhập thời lượng.`;
+        }
+        if (!p.description.trim()) {
+          tempErrors[`perf_${idx}_description`] = `Tiết mục ${pNum}: Vui lòng nhập tóm tắt ý tưởng.`;
+        }
+        if (!p.audioLink.trim() && !p.videoLink.trim()) {
+          tempErrors[`perf_${idx}_audioLink`] = `Tiết mục ${pNum}: Vui lòng dán link nhạc beat hoặc link video dự thi.`;
+        }
+      });
     } else if (currentStep === 3) {
-      if (!(formData.audioLink || '').trim() && !(formData.videoLink || '').trim()) {
-        tempErrors.audioLink = 'Bạn phải điền ít nhất link nhạc nền (Beat) hoặc link video chạy thử.';
-      }
       if (!(formData.photoUrl || '').trim()) {
         tempErrors.photoUrl = 'Vui lòng tải lên ảnh đại diện của đội thi.';
       }
@@ -217,6 +268,21 @@ export default function RegisterWizard() {
     if (validateStep(step)) {
       setStep((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // If error in step 2, automatically jump to the first tab that has an error
+      if (step === 2) {
+        for (let i = 0; i < 3; i++) {
+          if (
+            errors[`perf_${i}_title`] ||
+            errors[`perf_${i}_duration`] ||
+            errors[`perf_${i}_description`] ||
+            errors[`perf_${i}_audioLink`]
+          ) {
+            setActivePerfTab(i);
+            break;
+          }
+        }
+      }
     }
   };
 
@@ -239,7 +305,17 @@ export default function RegisterWizard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          teamName: formData.teamName,
+          organization: formData.organization,
+          memberCount: formData.memberCount,
+          representativeName: formData.representativeName,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          photoUrl: formData.photoUrl,
+          performances: formData.performances,
+        }),
       });
 
       const result = await response.json();
@@ -252,7 +328,7 @@ export default function RegisterWizard() {
       setSubmittedId(result.id);
       setIsSaving(false);
       setIsSubmitted(true);
-      localStorage.removeItem('nhip_buoc_viet_nam_draft');
+      localStorage.removeItem('nhip_buoc_viet_nam_draft_v2');
     } catch (err) {
       console.error(err);
       alert('Không thể kết nối đến máy chủ.');
@@ -261,10 +337,10 @@ export default function RegisterWizard() {
   };
 
   const stepTitles = [
-    t('reg.step1'),
-    t('reg.step2'),
-    t('reg.step3'),
-    t('reg.step4'),
+    t('reg.step1', '1. Thông Tin Đội Thi'),
+    language === 'en' ? '2. 3 Performances Info' : '2. 3 Tiết Mục Dự Thi',
+    language === 'en' ? '3. Team Photo' : '3. Ảnh Đại Diện Đội Thi',
+    t('reg.step4', '4. Xác Nhận & Gửi'),
   ];
 
   return (
@@ -275,13 +351,15 @@ export default function RegisterWizard() {
         {/* Header Summary */}
         <div className="text-center mb-10">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-secondary">
-            {t('nav.register')}
+            {t('nav.register', 'ĐĂNG KÝ TRỰC TUYẾN')}
           </span>
           <h1 className="font-heading font-bold text-3xl sm:text-4xl text-slate-900 mt-2">
-            {t('reg.wizard_title')}
+            {t('reg.wizard_title', 'Hồ Sơ Đăng Ký Dự Thi')}
           </h1>
           <p className="text-xs text-slate-500 mt-2">
-            {t('reg.draft_saved')}
+            {language === 'en'
+              ? 'Each team prepares 3 official performances. Drafts are auto-saved.'
+              : 'Mỗi đội thi đăng ký 3 tiết mục chính thức. Bản nháp tự động lưu.'}
           </p>
         </div>
 
@@ -294,12 +372,16 @@ export default function RegisterWizard() {
 
             return (
               <div key={title} className="flex flex-col items-center space-y-2">
-                <div className={`h-1.5 w-full rounded-full transition-all duration-500 ${
-                  isCompleted ? 'bg-accent' : isActive ? 'bg-secondary' : 'bg-slate-200'
-                }`} />
-                <span className={`text-[10px] text-center font-bold tracking-wider uppercase transition-colors hidden sm:block ${
-                  isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-slate-400'
-                }`}>
+                <div
+                  className={`h-1.5 w-full rounded-full transition-all duration-500 ${
+                    isCompleted ? 'bg-accent' : isActive ? 'bg-secondary' : 'bg-slate-200'
+                  }`}
+                />
+                <span
+                  className={`text-[10px] text-center font-bold tracking-wider uppercase transition-colors hidden sm:block ${
+                    isActive ? 'text-secondary' : isCompleted ? 'text-accent' : 'text-slate-400'
+                  }`}
+                >
                   {title}
                 </span>
               </div>
@@ -308,7 +390,10 @@ export default function RegisterWizard() {
         </div>
 
         {/* Wizard Panel */}
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '16px', padding: '32px', boxSizing: 'border-box' }} className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden shadow-sm">
+        <div
+          style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '16px', padding: '32px', boxSizing: 'border-box' }}
+          className="glass-panel rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden shadow-sm"
+        >
           <AnimatePresence mode="wait">
             {isSubmitted ? (
               <motion.div
@@ -320,9 +405,12 @@ export default function RegisterWizard() {
                   <CheckCircle className="w-10 h-10" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="font-heading font-bold text-2xl text-slate-900">{t('reg.success_title')}</h2>
+                  <h2 className="font-heading font-bold text-2xl text-slate-900">
+                    {t('reg.success_title', 'Gửi Hồ Sơ Đăng Ký Thành Công!')}
+                  </h2>
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    {t('reg.success_desc')}
+                    {t('reg.success_desc', 'Hồ sơ 3 tiết mục dự thi của bạn đã được tiếp nhận. Mã hồ sơ của bạn là:')}{' '}
+                    <strong className="text-primary font-mono text-base">{submittedId}</strong>
                   </p>
                 </div>
                 <div className="pt-4 flex justify-center gap-3">
@@ -330,13 +418,13 @@ export default function RegisterWizard() {
                     href="/team/login"
                     className="px-6 py-2.5 rounded-xl bg-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all"
                   >
-                    {t('reg.go_team_portal')}
+                    {t('reg.go_team_portal', 'Vào Cổng Đội Thi Ngay')}
                   </Link>
                   <Link
                     href="/"
                     className="px-6 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider hover:bg-slate-300 transition-all"
                   >
-                    {t('reg.go_home')}
+                    {t('reg.go_home', 'Về Trang Chủ')}
                   </Link>
                 </div>
               </motion.div>
@@ -353,96 +441,110 @@ export default function RegisterWizard() {
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <User className="w-5 h-5" />
-                      <span>{t('reg.step1')}</span>
+                      <span>{t('reg.step1', '1. Thông Tin Đội Thi')}</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.team_name')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.team_name', 'Tên Đội Thi / Câu Lạc Bộ *')}
+                        </label>
                         <input
                           type="text"
                           name="teamName"
                           value={formData.teamName}
                           onChange={handleChange}
-                          placeholder={t('reg.team_name_placeholder')}
+                          placeholder={t('reg.team_name_placeholder', 'Nhập tên đội thi hoặc câu lạc bộ...')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.teamName && <p className="text-xs text-primary">{errors.teamName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.organization')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.organization', 'Đơn Vị Trực Thuộc / Tỉnh Thành *')}
+                        </label>
                         <input
                           type="text"
                           name="organization"
                           value={formData.organization}
                           onChange={handleChange}
-                          placeholder={t('reg.organization_placeholder')}
+                          placeholder={t('reg.organization_placeholder', 'VD: Trung tâm Văn hóa Tỉnh Điện Biên')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.member_count')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.member_count', 'Số Lượng Thành Viên *')}
+                        </label>
                         <input
                           type="text"
                           name="memberCount"
                           value={formData.memberCount}
                           onChange={handleChange}
-                          placeholder={t('reg.member_count_placeholder')}
+                          placeholder={t('reg.member_count_placeholder', 'VD: 25')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.memberCount && <p className="text-xs text-primary">{errors.memberCount}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.rep_name')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.rep_name', 'Họ và Tên Trưởng Đoàn *')}
+                        </label>
                         <input
                           type="text"
                           name="representativeName"
                           value={formData.representativeName}
                           onChange={handleChange}
-                          placeholder={t('reg.rep_name_placeholder')}
+                          placeholder={t('reg.rep_name_placeholder', 'Nhập họ tên trưởng đoàn...')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.representativeName && <p className="text-xs text-primary">{errors.representativeName}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.phone')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.phone', 'Số Điện Thoại Liên Hệ *')}
+                        </label>
                         <input
                           type="text"
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder={t('reg.phone_placeholder')}
+                          placeholder={t('reg.phone_placeholder', '0988xxxxxx')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.phone && <p className="text-xs text-primary">{errors.phone}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.email')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.email', 'Email Liên Hệ *')}
+                        </label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder={t('reg.email_placeholder')}
+                          placeholder={t('reg.email_placeholder', 'truongdoan@gmail.com')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.pass')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.pass', 'Mật Khẩu Đăng Nhập Cổng Đội Thi *')}
+                        </label>
                         <div className="relative">
                           <input
                             type={showRegPass ? 'text' : 'password'}
                             name="password"
                             value={formData.password || ''}
                             onChange={handleChange}
-                            placeholder={t('reg.pass_placeholder')}
+                            placeholder={t('reg.pass_placeholder', 'Tối thiểu 6 ký tự')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           <button
@@ -457,14 +559,16 @@ export default function RegisterWizard() {
                       </div>
 
                       <div className="space-y-1 sm:col-span-2">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.confirm_pass')}</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('reg.confirm_pass', 'Xác Nhận Mật Khẩu *')}
+                        </label>
                         <div className="relative">
                           <input
                             type={showRegConfirmPass ? 'text' : 'password'}
                             name="confirmPassword"
                             value={formData.confirmPassword || ''}
                             onChange={handleChange}
-                            placeholder={t('reg.confirm_pass_placeholder')}
+                            placeholder={t('reg.confirm_pass_placeholder', 'Nhập lại mật khẩu...')}
                             className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                           />
                           <button
@@ -481,7 +585,7 @@ export default function RegisterWizard() {
                   </motion.div>
                 )}
 
-                {/* STEP 2: Performance Concept */}
+                {/* STEP 2: 3 Performances Details */}
                 {step === 2 && (
                   <motion.div
                     key="step-2"
@@ -490,83 +594,209 @@ export default function RegisterWizard() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
-                      <Video className="w-5 h-5" />
-                      <span>{t('reg.step2')}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg">
+                        <Layers className="w-5 h-5" />
+                        <span>{language === 'en' ? 'Step 2: 3 Official Performances' : 'Bước 2: 3 Tiết Mục Dự Thi'}</span>
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">
+                        {language === 'en' ? 'Rule: 3 performances per team' : 'Quy định: Mỗi đội thi gửi 3 tiết mục'}
+                      </span>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.performance_title')}</label>
-                          <input
-                            type="text"
-                            name="performanceTitle"
-                            value={formData.performanceTitle}
-                            onChange={handleChange}
-                            placeholder={t('reg.performance_title_placeholder')}
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                          />
-                          {errors.performanceTitle && <p className="text-xs text-primary">{errors.performanceTitle}</p>}
-                        </div>
+                    {/* Performance Sub-tabs */}
+                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                      {[0, 1, 2].map((idx) => {
+                        const pNum = idx + 1;
+                        const hasErr =
+                          errors[`perf_${idx}_title`] ||
+                          errors[`perf_${idx}_duration`] ||
+                          errors[`perf_${idx}_description`] ||
+                          errors[`perf_${idx}_audioLink`];
+                        const isDone =
+                          formData.performances[idx].title &&
+                          formData.performances[idx].duration &&
+                          formData.performances[idx].description;
 
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.category')}</label>
-                          <select
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setActivePerfTab(idx)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                              activePerfTab === idx
+                                ? 'bg-secondary text-white shadow-md'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            } ${hasErr ? 'border border-red-400' : ''}`}
                           >
-                            <option value="dan_ca">{t('reg.cat_dan_ca')}</option>
-                            <option value="dan_vu">{t('reg.cat_dan_vu')}</option>
-                            <option value="both">{t('reg.cat_both')}</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.duration')}</label>
-                          <input
-                            type="text"
-                            name="duration"
-                            value={formData.duration}
-                            onChange={handleChange}
-                            placeholder={t('reg.duration_placeholder')}
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                          />
-                          {errors.duration && <p className="text-xs text-primary">{errors.duration}</p>}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.description')}</label>
-                        <textarea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          rows={4}
-                          placeholder={t('reg.description_placeholder')}
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
-                        />
-                        {errors.description && <p className="text-xs text-primary">{errors.description}</p>}
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('reg.tech_req')}</label>
-                        <textarea
-                          name="technicalRequirements"
-                          value={formData.technicalRequirements}
-                          onChange={handleChange}
-                          rows={3}
-                          placeholder={t('reg.tech_req_placeholder')}
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
-                        />
-                      </div>
+                            <span>Tiết mục {pNum}</span>
+                            {isDone ? (
+                              <span className="w-2 h-2 rounded-full bg-green-400" />
+                            ) : hasErr ? (
+                              <span className="w-2 h-2 rounded-full bg-red-500" />
+                            ) : null}
+                          </button>
+                        );
+                      })}
                     </div>
+
+                    {/* Active Performance Form */}
+                    {(() => {
+                      const idx = activePerfTab;
+                      const perf = formData.performances[idx];
+                      const pNum = idx + 1;
+
+                      return (
+                        <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 space-y-6">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-secondary uppercase tracking-wider">
+                              Thông tin chi tiết: Tiết mục số {pNum}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              (Phần thi {pNum} / 3)
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="space-y-1 sm:col-span-2">
+                              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Tên Tiết Mục Số {pNum} *
+                              </label>
+                              <input
+                                type="text"
+                                value={perf.title}
+                                onChange={(e) => handlePerformanceChange(idx, 'title', e.target.value)}
+                                placeholder={`VD: ${idx === 0 ? 'Múa Xòe Hoa Tây Bắc' : idx === 1 ? 'Hát Xoan Đất Tổ' : 'Vũ điệu Khèn Mông'}`}
+                                className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                              />
+                              {errors[`perf_${idx}_title`] && (
+                                <p className="text-xs text-primary">{errors[`perf_${idx}_title`]}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                {t('reg.category', 'Thể Loại Dự Thi *')}
+                              </label>
+                              <select
+                                value={perf.category}
+                                onChange={(e) => handlePerformanceChange(idx, 'category', e.target.value as any)}
+                                className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                              >
+                                <option value="dan_ca">{t('reg.cat_dan_ca', 'Dân Ca')}</option>
+                                <option value="dan_vu">{t('reg.cat_dan_vu', 'Dân Vũ')}</option>
+                                <option value="both">{t('reg.cat_both', 'Cả Dân Ca & Dân Vũ')}</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Thời Lượng (phút) *
+                              </label>
+                              <input
+                                type="text"
+                                value={perf.duration}
+                                onChange={(e) => handlePerformanceChange(idx, 'duration', e.target.value)}
+                                placeholder="VD: 5-7 phút"
+                                className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                              />
+                              {errors[`perf_${idx}_duration`] && (
+                                <p className="text-xs text-primary">{errors[`perf_${idx}_duration`]}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-1 sm:col-span-2">
+                              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Đường Dẫn Nhạc Nền (Beat / Audio) *
+                              </label>
+                              <input
+                                type="url"
+                                value={perf.audioLink}
+                                onChange={(e) => handlePerformanceChange(idx, 'audioLink', e.target.value)}
+                                placeholder="https://drive.google.com/... hoặc link MP3 / Youtube"
+                                className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                              />
+                              {errors[`perf_${idx}_audioLink`] && (
+                                <p className="text-xs text-primary">{errors[`perf_${idx}_audioLink`]}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Video Dự Thi Tiết Mục Số {pNum} (Youtube / Google Drive) *
+                            </label>
+                            <input
+                              type="url"
+                              value={perf.videoLink}
+                              onChange={(e) => handlePerformanceChange(idx, 'videoLink', e.target.value)}
+                              placeholder="https://youtube.com/watch?v=... hoặc Google Drive link"
+                              className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                            />
+                            <p className="text-[10px] text-slate-400">
+                              Dán đường dẫn video trình diễn tiết mục số {pNum} để khán giả bình chọn và giám khảo chấm điểm.
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Mô Tả Tiết Mục / Ý Tưởng Nghệ Thuật *
+                            </label>
+                            <textarea
+                              value={perf.description}
+                              onChange={(e) => handlePerformanceChange(idx, 'description', e.target.value)}
+                              rows={3}
+                              placeholder="Tóm tắt ý tưởng, nội dung bài thi và trang phục trình diễn..."
+                              className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
+                            />
+                            {errors[`perf_${idx}_description`] && (
+                              <p className="text-xs text-primary">{errors[`perf_${idx}_description`]}</p>
+                            )}
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Yêu Cầu Sân Khấu & Kỹ Thuật (Đạo cụ, ánh sáng...)
+                            </label>
+                            <textarea
+                              value={perf.technicalRequirements}
+                              onChange={(e) => handlePerformanceChange(idx, 'technicalRequirements', e.target.value)}
+                              rows={2}
+                              placeholder="VD: Cần 2 micro cầm tay, khói lạnh, đạo cụ quạt lụa..."
+                              className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors resize-none"
+                            />
+                          </div>
+
+                          {/* Navigation between performance tabs */}
+                          <div className="flex justify-between items-center pt-2 border-t border-slate-200/50">
+                            {idx > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => setActivePerfTab(idx - 1)}
+                                className="text-xs text-secondary hover:underline font-semibold"
+                              >
+                                ← Sang Tiết mục {idx}
+                              </button>
+                            ) : <div />}
+                            {idx < 2 ? (
+                              <button
+                                type="button"
+                                onClick={() => setActivePerfTab(idx + 1)}
+                                className="text-xs text-secondary hover:underline font-semibold"
+                              >
+                                Điền tiếp Tiết mục {idx + 2} →
+                              </button>
+                            ) : <div />}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 )}
 
-                {/* STEP 3: Media Uploads */}
+                {/* STEP 3: Media Uploads (Team Photo) */}
                 {step === 3 && (
                   <motion.div
                     key="step-3"
@@ -577,44 +807,13 @@ export default function RegisterWizard() {
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Upload className="w-5 h-5" />
-                      <span>{t('reg.step3')}</span>
+                      <span>{language === 'en' ? 'Step 3: Team Representative Photo' : 'Bước 3: Tải Ảnh Đại Diện Đội Thi'}</span>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                          Đường Dẫn Nhạc Nền (Beat / Audio) *
-                        </label>
-                        <input
-                          type="url"
-                          name="audioLink"
-                          value={formData.audioLink}
-                          onChange={handleChange}
-                          placeholder="https://drive.google.com/... hoặc link MP3 / Youtube"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
-                        <p className="text-[10px] text-slate-400">Dán đường link Google Drive, Youtube hoặc Soundcloud chứa bản thu âm / beat tiết mục.</p>
-                        {errors.audioLink && <p className="text-xs text-primary">{errors.audioLink}</p>}
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                          Đường Dẫn Video Demo Chạy Thử (Tùy chọn)
-                        </label>
-                        <input
-                          type="url"
-                          name="videoLink"
-                          value={formData.videoLink}
-                          onChange={handleChange}
-                          placeholder="https://youtube.com/watch?v=... hoặc Google Drive"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
-                        />
-                        <p className="text-[10px] text-slate-400">Clip tập luyện hoặc demo biểu diễn trước đó của đội (nếu có).</p>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                          Ảnh Đại Diện Đội Thi (Banner / Poster) *
+                          Ảnh Đại Diện Đội Thi (Banner / Poster / Ảnh tập thể) *
                         </label>
 
                         {/* Hidden file input */}
@@ -633,7 +832,7 @@ export default function RegisterWizard() {
                           onDragOver={handleDrag}
                           onDrop={handleDrop}
                           onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                             isDragActive
                               ? 'border-secondary bg-secondary/10'
                               : formData.photoUrl
@@ -648,7 +847,7 @@ export default function RegisterWizard() {
                             </div>
                           ) : formData.photoUrl ? (
                             <div className="relative group w-full flex flex-col items-center">
-                              <div className="relative w-48 h-32 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                              <div className="relative w-64 h-40 rounded-xl overflow-hidden border border-slate-200 shadow-md">
                                 <img
                                   src={formData.photoUrl}
                                   alt="Ảnh đội thi"
@@ -660,23 +859,27 @@ export default function RegisterWizard() {
                                     e.stopPropagation();
                                     handleRemovePhoto();
                                   }}
-                                  className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-90 hover:opacity-100 shadow-md transition-opacity"
+                                  className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-90 hover:opacity-100 shadow-md transition-opacity"
                                   title="Xóa ảnh"
                                 >
-                                  <X className="w-3.5 h-3.5" />
+                                  <X className="w-4 h-4" />
                                 </button>
                               </div>
-                              <span className="text-[11px] text-accent font-semibold mt-2">✓ Đã tải lên ảnh đại diện. Nhấp để chọn ảnh khác.</span>
+                              <span className="text-xs text-accent font-semibold mt-3">
+                                ✓ Đã tải lên ảnh đại diện thành công. Nhấp để chọn ảnh khác.
+                              </span>
                             </div>
                           ) : (
                             <>
-                              <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                                <ImageIcon className="w-5 h-5" />
+                              <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mb-1">
+                                <ImageIcon className="w-6 h-6" />
                               </div>
-                              <p className="text-xs font-medium text-slate-600">
-                                Kéo thả ảnh vào đây, hoặc <span className="text-secondary hover:underline">nhấp để chọn</span>
+                              <p className="text-xs font-semibold text-slate-700">
+                                Kéo thả ảnh đội thi vào đây, hoặc <span className="text-secondary underline">nhấp để chọn tệp</span>
                               </p>
-                              <p className="text-[10px] text-slate-400">Định dạng JPG, PNG. Dung lượng tối đa: 5MB.</p>
+                              <p className="text-[11px] text-slate-400">
+                                Định dạng hỗ trợ: JPG, PNG, WEBP. Dung lượng tối đa: 5MB.
+                              </p>
                             </>
                           )}
                         </div>
@@ -697,79 +900,106 @@ export default function RegisterWizard() {
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
                       <Sparkles className="w-5 h-5" />
-                      <span>{t('reg.step4')}</span>
+                      <span>{t('reg.step4', '4. Xác Nhận & Gửi')}</span>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 text-sm">
-                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.team_name')}</span>
-                          <strong className="text-slate-800">{formData.teamName}</strong>
-                        </div>
-                        {formData.organization && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-6 text-sm">
+                      {/* Team Info Summary */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                          1. Thông tin Đội thi
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-b border-slate-200 pb-4">
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.organization')}</span>
-                            <strong className="text-slate-800">{formData.organization}</strong>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.team_name', 'Tên Đội Thi:')}</span>
+                            <strong className="text-slate-800">{formData.teamName}</strong>
                           </div>
-                        )}
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.member_count')}</span>
-                          <strong className="text-slate-800">{formData.memberCount}</strong>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.rep_name')}</span>
-                          <strong className="text-slate-800">{formData.representativeName}</strong>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.phone')}</span>
-                          <span className="text-slate-800">{formData.phone}</span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.email')}</span>
-                          <span className="text-slate-800">{formData.email}</span>
+                          {formData.organization && (
+                            <div>
+                              <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.organization', 'Đơn vị đại diện:')}</span>
+                              <strong className="text-slate-800">{formData.organization}</strong>
+                            </div>
+                          )}
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.member_count', 'Số lượng thành viên:')}</span>
+                            <strong className="text-slate-800">{formData.memberCount}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.rep_name', 'Trưởng Đoàn:')}</span>
+                            <strong className="text-slate-800">{formData.representativeName}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.phone', 'Số Điện Thoại:')}</span>
+                            <span className="text-slate-800">{formData.phone}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.email', 'Email:')}</span>
+                            <span className="text-slate-800">{formData.email}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.performance_title')}</span>
-                            <strong className="text-secondary">{formData.performanceTitle}</strong>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.duration')}</span>
-                            <strong className="text-secondary">{formData.duration}</strong>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.description')}</span>
-                          <p className="text-xs text-slate-600 italic">&ldquo;{formData.description}&rdquo;</p>
-                        </div>
-                        {formData.audioLink && (
-                          <div className="text-xs text-accent">
-                            ✓ Nhạc nền đính kèm hợp lệ: <a href={formData.audioLink} target="_blank" rel="noreferrer" className="underline">{formData.audioLink}</a>
-                          </div>
-                        )}
-                        {formData.videoLink && (
-                          <div className="text-xs text-accent">
-                            ✓ Link video demo: <a href={formData.videoLink} target="_blank" rel="noreferrer" className="underline">{formData.videoLink}</a>
-                          </div>
-                        )}
-                        {formData.photoUrl && (
-                          <div className="flex items-center gap-3 pt-3 border-t border-slate-100/50 mt-2 animate-fadeIn">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Ảnh đại diện:</span>
-                            <div className="w-16 h-12 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-                              <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+                      {/* 3 Performances Summary */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                          2. Danh sách 3 Tiết mục đăng ký
+                        </h4>
+                        <div className="grid grid-cols-1 gap-4">
+                          {formData.performances.map((perf, pIdx) => (
+                            <div
+                              key={pIdx}
+                              className="bg-white border border-slate-200 rounded-xl p-4 space-y-2 shadow-xs"
+                            >
+                              <div className="flex items-center justify-between">
+                                <strong className="text-secondary font-heading text-sm">
+                                  Tiết mục {pIdx + 1}: {perf.title || '(Chưa đặt tên)'}
+                                </strong>
+                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold">
+                                  {perf.category === 'dan_ca' ? 'Dân Ca' : perf.category === 'dan_vu' ? 'Dân Vũ' : 'Dân Ca & Dân Vũ'} ({perf.duration})
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 italic">
+                                &ldquo;{perf.description}&rdquo;
+                              </p>
+                              <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-4 text-xs text-slate-500">
+                                {perf.audioLink && (
+                                  <div className="flex items-center gap-1 text-accent">
+                                    <Music className="w-3.5 h-3.5" />
+                                    <span>Beat: <a href={perf.audioLink} target="_blank" rel="noreferrer" className="underline">{perf.audioLink}</a></span>
+                                  </div>
+                                )}
+                                {perf.videoLink && (
+                                  <div className="flex items-center gap-1 text-secondary">
+                                    <Video className="w-3.5 h-3.5" />
+                                    <span>Video: <a href={perf.videoLink} target="_blank" rel="noreferrer" className="underline">{perf.videoLink}</a></span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </div>
+
+                      {/* Photo Preview */}
+                      {formData.photoUrl && (
+                        <div className="pt-2 border-t border-slate-200">
+                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            3. Ảnh Đại Diện
+                          </h4>
+                          <div className="w-24 h-16 rounded-lg border border-slate-200 overflow-hidden shadow-xs">
+                            <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-start gap-3 bg-primary/10 border border-primary/20 rounded-xl p-4">
                       <input type="checkbox" required id="agreement" className="mt-1 accent-primary cursor-pointer" />
                       <label htmlFor="agreement" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
-                        {t('reg.step3_confirm_sub')}
+                        {t(
+                          'reg.step3_confirm_sub',
+                          'Tôi cam kết tất cả thông tin khai báo trên là chính xác. Bản quyền âm nhạc của cả 3 tiết mục hoàn toàn thuộc trách nhiệm tự thỏa thuận của đội thi. Ban tổ chức được toàn quyền sử dụng hình ảnh tiết mục để làm tư liệu truyền thông.'
+                        )}
                       </label>
                     </div>
                   </motion.div>
@@ -783,7 +1013,7 @@ export default function RegisterWizard() {
                       onClick={handlePrev}
                       className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft className="w-4 h-4" /> {t('reg.prev_btn')}
+                      <ArrowLeft className="w-4 h-4" /> {t('reg.prev_btn', 'Quay lại')}
                     </button>
                   ) : (
                     <div />
@@ -795,7 +1025,7 @@ export default function RegisterWizard() {
                       onClick={handleNext}
                       className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all glow-gold-hover cursor-pointer"
                     >
-                      {t('reg.next_btn')} <ArrowRight className="w-4 h-4" />
+                      {t('reg.next_btn', 'Tiếp tục')} <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
                     <button
@@ -805,10 +1035,10 @@ export default function RegisterWizard() {
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" /> {t('reg.submitting')}
+                          <Loader2 className="w-4 h-4 animate-spin" /> {t('reg.submitting', 'Đang gửi hồ sơ...')}
                         </>
                       ) : (
-                        t('reg.submit_btn')
+                        t('reg.submit_btn', 'Xác Nhận & Gửi Đăng Ký 3 Tiết Mục')
                       )}
                     </button>
                   )}

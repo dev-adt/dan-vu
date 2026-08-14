@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     // 1. Fetch team info
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
-      .select('id, team_name, representative_name, phone, email, category, performance_title, duration, description, technical_requirements, photo_url, audio_url, video_url, organization')
+      .select('id, team_name, representative_name, phone, email, category, performance_title, duration, description, technical_requirements, photo_url, audio_url, video_url, organization, performances')
       .eq('id', id)
       .eq('status', 'approved')
       .maybeSingle();
@@ -65,6 +65,34 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Format performances
+    let parsedPerformances: any[] = [];
+    if (Array.isArray(team.performances) && team.performances.length > 0) {
+      parsedPerformances = team.performances.map((p: any, idx: number) => ({
+        id: p.id || `p${idx + 1}`,
+        title: p.title || p.performanceTitle || `Tiết mục ${idx + 1}`,
+        category: p.category || team.category || 'dan_ca',
+        duration: p.duration || team.duration || '',
+        description: p.description || '',
+        technicalRequirements: p.technicalRequirements || p.technical_requirements || '',
+        audioUrl: p.audioUrl || p.audioLink || p.audio_url || '',
+        videoUrl: p.videoUrl || p.videoLink || p.video_url || '',
+      }));
+    } else {
+      parsedPerformances = [
+        {
+          id: 'p1',
+          title: team.performance_title || 'Tiết mục 1',
+          category: team.category || 'dan_ca',
+          duration: team.duration || '',
+          description: team.description || '',
+          technicalRequirements: team.technical_requirements || '',
+          audioUrl: team.audio_url || '',
+          videoUrl: team.video_url || '',
+        }
+      ];
+    }
+
     return NextResponse.json({
       team: {
         id: team.id,
@@ -81,6 +109,7 @@ export async function GET(req: NextRequest) {
         photoUrl: team.photo_url || '/images/hero-bg-1.png',
         audioUrl: team.audio_url || '',
         videoUrl: team.video_url || '',
+        performances: parsedPerformances,
         votesCount: votesCount || 0,
       },
       hasVotedToday

@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     // 1. Fetch team details
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
-      .select('id, team_name, performance_title, video_url, category')
+      .select('id, team_name, performance_title, video_url, category, performances')
       .eq('id', teamId)
       .eq('status', 'approved')
       .maybeSingle();
@@ -69,10 +69,38 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Không tìm thấy đội thi hoặc đội thi chưa được phê duyệt.' }, { status: 404 });
     }
 
+    // Format performances
+    let parsedPerformances: any[] = [];
+    if (Array.isArray(team.performances) && team.performances.length > 0) {
+      parsedPerformances = team.performances.map((p: any, idx: number) => ({
+        id: p.id || `p${idx + 1}`,
+        title: p.title || p.performanceTitle || `Tiết mục ${idx + 1}`,
+        category: p.category || team.category || 'dan_ca',
+        duration: p.duration || '',
+        description: p.description || '',
+        technicalRequirements: p.technicalRequirements || '',
+        audioUrl: p.audioUrl || p.audioLink || '',
+        videoUrl: p.videoUrl || p.videoLink || '',
+      }));
+    } else {
+      parsedPerformances = [
+        {
+          id: 'p1',
+          title: team.performance_title || 'Tiết mục 1',
+          category: team.category || 'dan_ca',
+          duration: '',
+          description: '',
+          technicalRequirements: '',
+          audioUrl: '',
+          videoUrl: team.video_url || '',
+        }
+      ];
+    }
+
     // 2. Fetch scorecard if it exists for this judge and team
     const { data: scorecard, error: scorecardError } = await supabaseAdmin
       .from('scorecards')
-      .select('score_concept, score_technique, score_costume, score_stage, feedback, is_locked')
+      .select('score_concept, score_technique, score_costume, score_stage, feedback, is_locked, scores, total_score')
       .eq('judge_id', judge.id)
       .eq('team_id', teamId)
       .maybeSingle();
@@ -88,6 +116,7 @@ export async function GET(req: NextRequest) {
         performanceTitle: team.performance_title,
         videoUrl: team.video_url || '',
         category: team.category,
+        performances: parsedPerformances,
       },
       scorecard: scorecard || null
     });

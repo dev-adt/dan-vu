@@ -105,10 +105,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { teamId, scoreConcept, scoreTechnique, scoreCostume, scoreStage, feedback, isLocked } = await req.json();
+    const body = await req.json();
+    const {
+      teamId,
+      performanceScores,
+      scoreConcept,
+      scoreTechnique,
+      scoreCostume,
+      scoreStage,
+      feedback,
+      isLocked,
+    } = body;
 
-    if (!teamId || scoreConcept === undefined || scoreTechnique === undefined || scoreCostume === undefined || scoreStage === undefined) {
-      return NextResponse.json({ error: 'Thiếu thông tin chấm điểm bắt buộc.' }, { status: 400 });
+    if (!teamId) {
+      return NextResponse.json({ error: 'Thiếu mã đội thi (teamId).' }, { status: 400 });
     }
 
     // Check if scorecard already exists and is locked
@@ -127,16 +137,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phiếu chấm điểm này đã được gửi chính thức và khóa lại, không thể sửa đổi.' }, { status: 400 });
     }
 
+    let finalConcept = scoreConcept || 0;
+    let finalTechnique = scoreTechnique || 0;
+    let finalCostume = scoreCostume || 0;
+    let finalStage = scoreStage || 0;
+    let finalTotal = finalConcept + finalTechnique + finalCostume + finalStage;
+
+    if (performanceScores && typeof performanceScores === 'object') {
+      const pKeys = Object.keys(performanceScores);
+      if (pKeys.length > 0) {
+        let sumConcept = 0;
+        let sumTechnique = 0;
+        let sumCostume = 0;
+        let sumStage = 0;
+        let sumTotal = 0;
+
+        pKeys.forEach((key) => {
+          const item = performanceScores[key];
+          const c = Number(item.concept || 0);
+          const t = Number(item.technique || 0);
+          const co = Number(item.costume || 0);
+          const s = Number(item.stage || 0);
+          sumConcept += c;
+          sumTechnique += t;
+          sumCostume += co;
+          sumStage += s;
+          sumTotal += (c + t + co + s);
+        });
+
+        const count = pKeys.length;
+        finalConcept = Number((sumConcept / count).toFixed(1));
+        finalTechnique = Number((sumTechnique / count).toFixed(1));
+        finalCostume = Number((sumCostume / count).toFixed(1));
+        finalStage = Number((sumStage / count).toFixed(1));
+        finalTotal = Number((sumTotal / count).toFixed(1));
+      }
+    }
+
     // Upsert the scorecard
     const { error: upsertError } = await supabaseAdmin
       .from('scorecards')
       .upsert({
         team_id: teamId,
         judge_id: judge.id,
-        score_concept: scoreConcept,
-        score_technique: scoreTechnique,
-        score_costume: scoreCostume,
-        score_stage: scoreStage,
+        score_concept: finalConcept,
+        score_technique: finalTechnique,
+        score_costume: finalCostume,
+        score_stage: finalStage,
+        total_score: finalTotal,
+        scores: performanceScores || null,
         feedback: feedback || null,
         is_locked: !!isLocked,
       }, { onConflict: 'judge_id,team_id' });
@@ -146,7 +195,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Lỗi lưu phiếu chấm điểm: ' + upsertError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, totalScore: finalTotal });
   } catch (err: any) {
     console.error('Scorecard submission internal error:', err);
     return NextResponse.json({ error: 'Lỗi máy chủ nội bộ.' }, { status: 500 });

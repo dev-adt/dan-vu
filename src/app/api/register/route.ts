@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
       phone,
       email,
       password,
+      performances,
+      // legacy single performance fields fallback
       category,
       performanceTitle,
       duration,
@@ -28,9 +30,22 @@ export async function POST(req: NextRequest) {
       photoUrl,
     } = body;
 
+    const p1 = Array.isArray(performances) && performances[0] ? performances[0] : null;
+    const finalTitle = p1 ? p1.title : performanceTitle;
+    const finalCategory = p1 ? p1.category : (category || 'dan_ca');
+    const finalDuration = p1 ? p1.duration : duration;
+    const finalDesc = p1 ? p1.description : description;
+    const finalTech = p1 ? p1.technicalRequirements : technicalRequirements;
+    const finalAudio = p1 ? (p1.audioLink || p1.audioUrl) : audioLink;
+    const finalVideo = p1 ? (p1.videoLink || p1.videoUrl) : videoLink;
+
     // Validate fields
-    if (!teamName || !memberCount || !representativeName || !phone || !email || !performanceTitle || !duration) {
-      return NextResponse.json({ error: 'Các trường bắt buộc không được để trống.' }, { status: 400 });
+    if (!teamName || !memberCount || !representativeName || !phone || !email) {
+      return NextResponse.json({ error: 'Các trường thông tin đội thi bắt buộc không được để trống.' }, { status: 400 });
+    }
+
+    if (!finalTitle || !finalDuration) {
+      return NextResponse.json({ error: 'Vui lòng điền đầy đủ thông tin cho các tiết mục dự thi.' }, { status: 400 });
     }
 
     // Insert into Supabase table public.teams with fallback if new columns do not exist yet
@@ -44,14 +59,26 @@ export async function POST(req: NextRequest) {
       representative_name: representativeName,
       phone,
       email,
-      category,
-      performance_title: performanceTitle,
-      duration,
-      description: description || null,
-      technical_requirements: technicalRequirements || null,
-      audio_url: audioLink || null,
-      video_url: videoLink || null,
+      category: finalCategory,
+      performance_title: finalTitle,
+      duration: finalDuration,
+      description: finalDesc || null,
+      technical_requirements: finalTech || null,
+      audio_url: finalAudio || null,
+      video_url: finalVideo || null,
       photo_url: photoUrl || null,
+      performances: Array.isArray(performances) && performances.length > 0 ? performances : [
+        {
+          id: 'p1',
+          title: finalTitle,
+          category: finalCategory,
+          duration: finalDuration,
+          description: finalDesc || '',
+          technicalRequirements: finalTech || '',
+          audioUrl: finalAudio || '',
+          videoUrl: finalVideo || '',
+        }
+      ],
       status: 'submitted',
     };
 

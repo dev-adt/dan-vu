@@ -21,8 +21,41 @@ export function getGlobalDb() {
       duration: '6:15',
       description: 'Tiết mục dân ca ba miền đặc sắc.',
       technical_requirements: '2 micro không dây',
-      photo_url: '',
+      photo_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80',
       video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      audio_url: 'https://soundcloud.com/example/beat-hoasen-1',
+      performances: [
+        {
+          id: 'p1',
+          title: 'Liên khúc Dân ca Ba miền',
+          category: 'dan_ca',
+          duration: '6:15',
+          description: 'Hòa quyện điệu hò Nam Bộ, ca Huế ngọt ngào và quan họ Bắc Ninh thanh lịch.',
+          technicalRequirements: '2 micro không dây, khói lạnh',
+          audioUrl: 'https://soundcloud.com/example/beat-hoasen-1',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p2',
+          title: 'Trẩy hội đền Hùng',
+          category: 'dan_ca',
+          duration: '5:45',
+          description: 'Hát xoan Phú Thọ ngợi ca cội nguồn dân tộc, trang phục truyền thống vùng đất Tổ.',
+          technicalRequirements: 'Trống hội sân khấu, 4 micro cố định',
+          audioUrl: 'https://soundcloud.com/example/beat-hoasen-2',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p3',
+          title: 'Đi cấy đêm trăng',
+          category: 'dan_ca',
+          duration: '5:00',
+          description: 'Tái hiện sinh hoạt đồng quê Bắc Bộ rộn ràng tiếng cười dưới ánh trăng rằm.',
+          technicalRequirements: 'Đèn vàng ấm, nón quai thao',
+          audioUrl: 'https://soundcloud.com/example/beat-hoasen-3',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        }
+      ],
       password: '12345678',
       pending_changes: null,
       has_pending_update: false
@@ -40,8 +73,41 @@ export function getGlobalDb() {
       duration: '5:30',
       description: 'Mô tả điệu múa gặt lúa ngày mùa.',
       technical_requirements: 'Bục bệ sân khấu',
-      photo_url: '',
+      photo_url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80',
       video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      audio_url: 'https://soundcloud.com/example/beat-taybac-1',
+      performances: [
+        {
+          id: 'p1',
+          title: 'Vũ điệu Gặt Lúa Tây Bắc',
+          category: 'dan_vu',
+          duration: '5:30',
+          description: 'Mô tả điệu múa gặt lúa ngày mùa trên những thửa ruộng bậc thang kỳ vĩ.',
+          technicalRequirements: 'Bục bệ sân khấu, đạo cụ gùi lúa',
+          audioUrl: 'https://soundcloud.com/example/beat-taybac-1',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p2',
+          title: 'Múa Xòe Hoa Tây Bắc',
+          category: 'dan_vu',
+          duration: '4:50',
+          description: 'Điệu Xòe Thái duyên dáng kết nối tình đoàn kết giữa các dân tộc anh em.',
+          technicalRequirements: 'Khăn piêu, đèn chiếu đổi màu',
+          audioUrl: 'https://soundcloud.com/example/beat-taybac-2',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p3',
+          title: 'Tiếng Khèn Gọi Bạn',
+          category: 'dan_vu',
+          duration: '6:10',
+          description: 'Vũ điệu khèn Mông sôi động nơi đỉnh đèo mây phủ trong phiên chợ tình vùng cao.',
+          technicalRequirements: 'Đạo cụ khèn Mông thật, hiệu ứng sương mù',
+          audioUrl: 'https://soundcloud.com/example/beat-taybac-3',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        }
+      ],
       password: '12345678',
       pending_changes: null,
       has_pending_update: false
@@ -59,8 +125,41 @@ export function getGlobalDb() {
       duration: '6:45',
       description: 'Làn điệu dân ca ngọt ngào xứ Quảng.',
       technical_requirements: '3 micro, nhạc nền cổng AUX',
-      photo_url: '',
+      photo_url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80',
       video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      audio_url: 'https://soundcloud.com/example/beat-mientrung-1',
+      performances: [
+        {
+          id: 'p1',
+          title: 'Điệu Lý Giao Duyên Xứ Quảng',
+          category: 'dan_ca',
+          duration: '6:45',
+          description: 'Làn điệu dân ca đối đáp đối duyên dí dỏm, chân chất của con người xứ Quảng.',
+          technicalRequirements: '3 micro, nhạc nền cổng AUX',
+          audioUrl: 'https://soundcloud.com/example/beat-mientrung-1',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p2',
+          title: 'Hò Khoan Lệ Thủy',
+          category: 'dan_ca',
+          duration: '5:20',
+          description: 'Điệu hò sông nước Quảng Bình mộc mạc mang âm vang hào sảng của cha ông.',
+          technicalRequirements: '2 micro thu âm nhạc cụ dân tộc',
+          audioUrl: 'https://soundcloud.com/example/beat-mientrung-2',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p3',
+          title: 'Ca Huế Trên Sông Hương',
+          category: 'dan_ca',
+          duration: '6:00',
+          description: 'Di sản nhã nhạc và ca Huế trầm lắng bên dòng sông Hương thơ mộng.',
+          technicalRequirements: 'Trang phục áo dài ngũ thân cổ truyền',
+          audioUrl: 'https://soundcloud.com/example/beat-mientrung-3',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        }
+      ],
       password: '12345678',
       pending_changes: null,
       has_pending_update: false
@@ -78,8 +177,41 @@ export function getGlobalDb() {
       duration: '7:00',
       description: 'Điệu múa huyền bí bên tháp cổ.',
       technical_requirements: 'Hiệu ứng khói lạnh',
-      photo_url: '',
+      photo_url: 'https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=600&auto=format&fit=crop&q=80',
       video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      audio_url: 'https://soundcloud.com/example/beat-cham-1',
+      performances: [
+        {
+          id: 'p1',
+          title: 'Vũ điệu Tháp Cổ Chămpa',
+          category: 'dan_vu',
+          duration: '7:00',
+          description: 'Điệu múa Apsara huyền bí và uyển chuyển dưới chân tháp Chăm cổ kính.',
+          technicalRequirements: 'Hiệu ứng khói lạnh, đèn đỏ cam',
+          audioUrl: 'https://soundcloud.com/example/beat-cham-1',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p2',
+          title: 'Tiếng Trống Paranưng Ngày Hội Katê',
+          category: 'dan_vu',
+          duration: '5:15',
+          description: 'Rộn rã thanh âm ngày Tết Katê thiêng liêng và tươi vui của đồng bào Chăm.',
+          technicalRequirements: 'Đạo cụ trống Paranưng, kèn Saranai',
+          audioUrl: 'https://soundcloud.com/example/beat-cham-2',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          id: 'p3',
+          title: 'Vũ Khúc Khát Vọng Biển Đông',
+          category: 'dan_vu',
+          duration: '5:45',
+          description: 'Vũ điệu vượt sóng vươn khơi bám biển của các ngư dân miền duyên hải.',
+          technicalRequirements: 'Đạo cụ dải lụa xanh tượng trưng sóng biển',
+          audioUrl: 'https://soundcloud.com/example/beat-cham-3',
+          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        }
+      ],
       password: '12345678',
       pending_changes: null,
       has_pending_update: false
@@ -546,20 +678,32 @@ class MockSupabaseAuth {
 
   async signInWithPassword({ email, password }: any) {
     const db = getGlobalDb();
-    const judge = db.judges.find((j: any) => j.email === email);
+    let judge = db.judges.find((j: any) => j.email?.toLowerCase() === email?.toLowerCase());
+    
+    if (!judge) {
+      judge = {
+        id: `mock-judge-${Math.random().toString(36).substring(2, 9)}`,
+        email: email,
+        full_name: email.split('@')[0] || 'Giám Khảo',
+        created_at: new Date().toISOString(),
+      };
+      db.judges.push(judge);
+      saveGlobalDb(db);
+    }
     
     const session = {
       access_token: 'mock-access-token',
       user: {
-        id: judge ? judge.id : 'mock-judge-id',
-        email: email,
+        id: judge.id,
+        email: judge.email,
         user_metadata: {
-          full_name: judge ? judge.full_name : 'Giám Khảo Thử Nghiệm'
+          role: 'judge',
+          full_name: judge.full_name || 'Ban Giám Khảo'
         }
       }
     };
     this.saveSessionToStorage(session);
-    return { data: { user: session.user }, error: null };
+    return { data: { session, user: session.user }, error: null };
   }
 
   async signInWithOAuth({ provider, options }: any) {
@@ -591,16 +735,19 @@ class MockSupabaseAuth {
   }
 
   async getUser(token: string) {
-    const session = this.getSessionFromStorage() || {
-      user: {
-        id: 'mock-voter-id',
-        email: 'voter@example.com',
-        user_metadata: {
-          full_name: 'Khán Giả Thử Nghiệm'
-        }
+    const session = this.getSessionFromStorage();
+    if (session?.user) {
+      return { data: { user: session.user }, error: null };
+    }
+    const defaultJudge = {
+      id: 'mock-judge-id',
+      email: 'giamkhao@nhipbuocvietnam.gov.vn',
+      user_metadata: {
+        role: 'judge',
+        full_name: 'Lê Khánh Giám Khảo'
       }
     };
-    return { data: { user: session.user }, error: null };
+    return { data: { user: defaultJudge }, error: null };
   }
 
   get admin() {
