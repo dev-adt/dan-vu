@@ -12,13 +12,16 @@ interface Post {
   id: string;
   created_at: string;
   title: string;
+  title_en?: string;
   content: string;
+  content_en?: string;
   photo_url?: string;
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
   format?: string;
   summary?: string;
+  summary_en?: string;
   source?: string;
 }
 
@@ -234,30 +237,32 @@ export default function PostsPage() {
                       <div className="space-y-2">
                         <Link href={`/posts/${post.id}`}>
                           <h2 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 hover:text-primary transition-colors">
-                            {post.title}
+                            {language === 'en' && post.title_en ? post.title_en : post.title}
                           </h2>
                         </Link>
-                        {post.summary && (
-                          <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">{post.summary}</p>
+                        {(language === 'en' ? (post.summary_en || post.summary) : post.summary) && (
+                          <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">
+                            {language === 'en' && post.summary_en ? post.summary_en : post.summary}
+                          </p>
                         )}
                         <div className="flex items-center gap-2 text-[10px] text-dark-slate/60">
                           <div className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-[8px]">
                             {post.author ? post.author.substring(0, 2).toUpperCase() : 'BT'}
                           </div>
-                          <span className="font-semibold">{post.author || 'Ban Tổ Chức'}</span>
+                          <span className="font-semibold">{post.author || t('news.author_default')}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                         <span className="flex items-center gap-1 text-[10px] text-dark-slate/50">
                           <Calendar className="w-3 h-3" />
-                          {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                          {new Date(post.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN')}
                         </span>
                         <Link
                           href={`/posts/${post.id}`}
                           className="px-4 py-1.5 bg-[#0074DA] text-white hover:bg-opacity-90 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all shadow-sm"
                         >
-                          Đọc bài
+                          {t('news.read_post')}
                         </Link>
                       </div>
                     </div>

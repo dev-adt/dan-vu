@@ -630,12 +630,16 @@ export const translations: TranslationDictionary = {
     en: '1. Team Information',
   },
   'reg.step2': {
-    vi: '2. Thông Tin Tiết Mục',
+    vi: '2. Tiết Mục & Kỹ Thuật',
     en: '2. Performance Details',
   },
   'reg.step3': {
-    vi: '3. Xác Nhận & Gửi',
-    en: '3. Confirm & Submit',
+    vi: '3. Tư Liệu & Đính Kèm',
+    en: '3. Media & Uploads',
+  },
+  'reg.step4': {
+    vi: '4. Xác Nhận & Gửi',
+    en: '4. Confirm & Submit',
   },
   'reg.draft_saved': {
     vi: 'Hệ thống tự động lưu bản nháp hồ sơ',

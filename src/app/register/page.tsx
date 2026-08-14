@@ -227,7 +227,10 @@ export default function RegisterWizard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(3)) return;
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+      alert('Vui lòng kiểm tra lại đầy đủ thông tin ở các bước trước.');
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -261,6 +264,7 @@ export default function RegisterWizard() {
     t('reg.step1'),
     t('reg.step2'),
     t('reg.step3'),
+    t('reg.step4'),
   ];
 
   return (
@@ -282,7 +286,7 @@ export default function RegisterWizard() {
         </div>
 
         {/* Dynamic Wizard Steps indicator */}
-        <div className="grid grid-cols-3 gap-2 mb-10 max-w-xl mx-auto">
+        <div className="grid grid-cols-4 gap-2 mb-10 max-w-2xl mx-auto">
           {stepTitles.map((title, idx) => {
             const stepNum = idx + 1;
             const isCompleted = stepNum < step;
@@ -562,7 +566,7 @@ export default function RegisterWizard() {
                   </motion.div>
                 )}
 
-                {/* STEP 3: Preview and Terms */}
+                {/* STEP 3: Media Uploads */}
                 {step === 3 && (
                   <motion.div
                     key="step-3"
@@ -572,8 +576,128 @@ export default function RegisterWizard() {
                     className="space-y-6"
                   >
                     <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
-                      <Sparkles className="w-5 h-5" />
+                      <Upload className="w-5 h-5" />
                       <span>{t('reg.step3')}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          Đường Dẫn Nhạc Nền (Beat / Audio) *
+                        </label>
+                        <input
+                          type="url"
+                          name="audioLink"
+                          value={formData.audioLink}
+                          onChange={handleChange}
+                          placeholder="https://drive.google.com/... hoặc link MP3 / Youtube"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                        <p className="text-[10px] text-slate-400">Dán đường link Google Drive, Youtube hoặc Soundcloud chứa bản thu âm / beat tiết mục.</p>
+                        {errors.audioLink && <p className="text-xs text-primary">{errors.audioLink}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          Đường Dẫn Video Demo Chạy Thử (Tùy chọn)
+                        </label>
+                        <input
+                          type="url"
+                          name="videoLink"
+                          value={formData.videoLink}
+                          onChange={handleChange}
+                          placeholder="https://youtube.com/watch?v=... hoặc Google Drive"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
+                        />
+                        <p className="text-[10px] text-slate-400">Clip tập luyện hoặc demo biểu diễn trước đó của đội (nếu có).</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          Ảnh Đại Diện Đội Thi (Banner / Poster) *
+                        </label>
+
+                        {/* Hidden file input */}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          accept="image/*"
+                          className="hidden"
+                        />
+
+                        {/* Upload box */}
+                        <div
+                          onDragEnter={handleDrag}
+                          onDragLeave={handleDrag}
+                          onDragOver={handleDrag}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                            isDragActive
+                              ? 'border-secondary bg-secondary/10'
+                              : formData.photoUrl
+                              ? 'border-accent bg-accent/5'
+                              : 'border-slate-300 hover:border-secondary bg-slate-50'
+                          }`}
+                        >
+                          {isUploadingPhoto ? (
+                            <div className="flex flex-col items-center gap-2 py-4">
+                              <Loader2 className="w-8 h-8 text-secondary animate-spin" />
+                              <span className="text-xs text-slate-500 font-medium">Đang tải ảnh lên...</span>
+                            </div>
+                          ) : formData.photoUrl ? (
+                            <div className="relative group w-full flex flex-col items-center">
+                              <div className="relative w-48 h-32 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                                <img
+                                  src={formData.photoUrl}
+                                  alt="Ảnh đội thi"
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemovePhoto();
+                                  }}
+                                  className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-90 hover:opacity-100 shadow-md transition-opacity"
+                                  title="Xóa ảnh"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <span className="text-[11px] text-accent font-semibold mt-2">✓ Đã tải lên ảnh đại diện. Nhấp để chọn ảnh khác.</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                                <ImageIcon className="w-5 h-5" />
+                              </div>
+                              <p className="text-xs font-medium text-slate-600">
+                                Kéo thả ảnh vào đây, hoặc <span className="text-secondary hover:underline">nhấp để chọn</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400">Định dạng JPG, PNG. Dung lượng tối đa: 5MB.</p>
+                            </>
+                          )}
+                        </div>
+                        {errors.photoUrl && <p className="text-xs text-primary mt-1">{errors.photoUrl}</p>}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STEP 4: Preview and Terms */}
+                {step === 4 && (
+                  <motion.div
+                    key="step-4"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-2 text-secondary font-heading font-bold text-lg border-b border-slate-100 pb-3">
+                      <Sparkles className="w-5 h-5" />
+                      <span>{t('reg.step4')}</span>
                     </div>
 
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 text-sm">
@@ -621,12 +745,30 @@ export default function RegisterWizard() {
                           <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.description')}</span>
                           <p className="text-xs text-slate-600 italic">&ldquo;{formData.description}&rdquo;</p>
                         </div>
+                        {formData.audioLink && (
+                          <div className="text-xs text-accent">
+                            ✓ Nhạc nền đính kèm hợp lệ: <a href={formData.audioLink} target="_blank" rel="noreferrer" className="underline">{formData.audioLink}</a>
+                          </div>
+                        )}
+                        {formData.videoLink && (
+                          <div className="text-xs text-accent">
+                            ✓ Link video demo: <a href={formData.videoLink} target="_blank" rel="noreferrer" className="underline">{formData.videoLink}</a>
+                          </div>
+                        )}
+                        {formData.photoUrl && (
+                          <div className="flex items-center gap-3 pt-3 border-t border-slate-100/50 mt-2 animate-fadeIn">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Ảnh đại diện:</span>
+                            <div className="w-16 h-12 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                              <img src={formData.photoUrl} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 bg-primary/10 border border-primary/20 rounded-xl p-4">
-                      <input type="checkbox" required id="agreement" className="mt-1 accent-primary" />
-                      <label htmlFor="agreement" className="text-xs text-slate-600 leading-relaxed">
+                      <input type="checkbox" required id="agreement" className="mt-1 accent-primary cursor-pointer" />
+                      <label htmlFor="agreement" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
                         {t('reg.step3_confirm_sub')}
                       </label>
                     </div>
@@ -639,7 +781,7 @@ export default function RegisterWizard() {
                     <button
                       type="button"
                       onClick={handlePrev}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                     >
                       <ArrowLeft className="w-4 h-4" /> {t('reg.prev_btn')}
                     </button>
@@ -647,11 +789,11 @@ export default function RegisterWizard() {
                     <div />
                   )}
 
-                  {step < 3 ? (
+                  {step < 4 ? (
                     <button
                       type="button"
                       onClick={handleNext}
-                      className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all glow-gold-hover"
+                      className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs uppercase tracking-wider hover:bg-opacity-90 transition-all glow-gold-hover cursor-pointer"
                     >
                       {t('reg.next_btn')} <ArrowRight className="w-4 h-4" />
                     </button>
@@ -659,7 +801,7 @@ export default function RegisterWizard() {
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all glow-crimson-hover disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all glow-crimson-hover disabled:opacity-50 cursor-pointer"
                     >
                       {isSaving ? (
                         <>

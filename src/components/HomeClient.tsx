@@ -18,13 +18,16 @@ interface Post {
   id: string;
   created_at: string;
   title: string;
+  title_en?: string;
   content: string;
+  content_en?: string;
   photo_url?: string;
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
   format?: 'html' | 'text' | 'markdown';
   summary?: string;
+  summary_en?: string;
   source?: string;
 }
 
@@ -582,9 +585,14 @@ export default function HomeClient() {
                       <div className="space-y-2">
                         <Link href={`/posts/${post.id}`}>
                           <h3 className="font-heading font-extrabold text-sm text-dark-obsidian leading-snug line-clamp-2 min-h-[40px] hover:text-primary transition-colors cursor-pointer">
-                            {post.title}
+                            {language === 'en' && post.title_en ? post.title_en : post.title}
                           </h3>
                         </Link>
+                        {(language === 'en' ? (post.summary_en || post.summary) : post.summary) && (
+                          <p className="text-[11px] text-dark-slate/60 line-clamp-2 italic">
+                            {language === 'en' && post.summary_en ? post.summary_en : post.summary}
+                          </p>
+                        )}
                         <div className="flex items-center gap-2 text-[10px] text-dark-slate/70">
                           <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-[9px]">
                             {post.author ? post.author.substring(0, 2).toUpperCase() : 'BTC'}

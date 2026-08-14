@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, content, photo_url, status, is_featured, author, format, summary, source } = body;
+    const { title, title_en, content, content_en, photo_url, status, is_featured, author, format, summary, summary_en, source } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Tiêu đề và nội dung bài viết không được để trống.' }, { status: 400 });
@@ -83,13 +83,16 @@ export async function POST(req: NextRequest) {
       .from('posts')
       .insert({
         title,
+        title_en: title_en || null,
         content,
+        content_en: content_en || null,
         photo_url,
         status: status || 'draft',
         is_featured: !!is_featured,
         author: author || 'Ban Tổ Chức',
         format: format || 'html',
         summary: summary || null,
+        summary_en: summary_en || null,
         source: source || null
       })
       .select()
@@ -115,7 +118,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, title, content, photo_url, status, is_featured, author, format, summary, source } = body;
+    const { id, title, title_en, content, content_en, photo_url, status, is_featured, author, format, summary, summary_en, source } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Mã bài viết (id) là bắt buộc.' }, { status: 400 });
@@ -142,13 +145,16 @@ export async function PATCH(req: NextRequest) {
       .from('posts')
       .update({
         title,
+        title_en: title_en || null,
         content,
+        content_en: content_en || null,
         photo_url,
         status,
         is_featured: !!is_featured,
         author,
         format,
         summary: summary || null,
+        summary_en: summary_en || null,
         source: source || null
       })
       .eq('id', id)

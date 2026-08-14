@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     // Search filter
     if (search) {
-      query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%,author.ilike.%${search}%`);
+      query = query.or(`title.ilike.%${search}%,title_en.ilike.%${search}%,content.ilike.%${search}%,author.ilike.%${search}%`);
     }
 
     // Featured only filter

@@ -8,23 +8,28 @@ import { ArrowLeft, Calendar, User, Newspaper, ChevronRight } from 'lucide-react
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { parseMarkdownToHtml } from '@/lib/parseMarkdown';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Post {
   id: string;
   created_at: string;
   title: string;
+  title_en?: string;
   content: string;
+  content_en?: string;
   photo_url?: string;
   status: 'draft' | 'published';
   is_featured: boolean;
   author: string;
   format?: 'html' | 'text' | 'markdown';
   summary?: string;
+  summary_en?: string;
   source?: string;
 }
 
 
 export default function PostDetailPage() {
+  const { t, language } = useLanguage();
   const params = useParams();
   const id = params?.id as string;
 
@@ -106,44 +111,51 @@ export default function PostDetailPage() {
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8">
               {/* Breadcrumb */}
               <nav className="flex items-center gap-1.5 text-[11px] text-dark-slate/50 font-medium flex-wrap">
-                <Link href="/" className="hover:text-primary transition-colors">Trang Chủ</Link>
+                <Link href="/" className="hover:text-primary transition-colors">{t('nav.home')}</Link>
                 <ChevronRight className="w-3 h-3" />
-                <Link href="/posts" className="hover:text-primary transition-colors">Tin Tức</Link>
+                <Link href="/posts" className="hover:text-primary transition-colors">{t('news.tag')}</Link>
                 <ChevronRight className="w-3 h-3" />
-                <span className="text-dark-slate/80 line-clamp-1">{post.title}</span>
+                <span className="text-dark-slate/80 line-clamp-1">{language === 'en' && post.title_en ? post.title_en : post.title}</span>
               </nav>
 
               {/* Title + Meta */}
               <div className="space-y-4">
                 <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-dark-obsidian leading-tight">
-                  {post.title}
+                  {language === 'en' && post.title_en ? post.title_en : post.title}
                 </h1>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-dark-slate/60 border-y border-slate-200 py-3">
                   <span className="flex items-center gap-1.5 bg-primary/10 text-primary font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                     <User className="w-3 h-3" />
-                    {post.author || 'Ban Tổ Chức'}
+                    {post.author || t('news.author_default')}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    {new Date(post.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    {new Date(post.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                   </span>
                 </div>
               </div>
 
               {/* Summary */}
-              {post.summary && (
+              {(language === 'en' ? (post.summary_en || post.summary) : post.summary) && (
                 <div className="border-l-4 border-primary/40 pl-5 py-2 bg-primary/5 rounded-r-xl">
-                  <p className="text-sm text-dark-slate/80 italic leading-relaxed">{post.summary}</p>
+                  <p className="text-sm text-dark-slate/80 italic leading-relaxed">
+                    {language === 'en' && post.summary_en ? post.summary_en : post.summary}
+                  </p>
                 </div>
               )}
 
               {/* Content */}
-              <div
-                className="leading-loose text-dark-slate/90 space-y-3 text-base prose prose-slate max-w-none"
-                dangerouslySetInnerHTML={{
-                  __html: post.format === 'html' ? post.content : parseMarkdownToHtml(post.content, { size: 'md' }),
-                }}
-              />
+              {(() => {
+                const displayContent = language === 'en' && post.content_en ? post.content_en : post.content;
+                return (
+                  <div
+                    className="leading-loose text-dark-slate/90 space-y-3 text-base prose prose-slate max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: post.format === 'html' ? displayContent : parseMarkdownToHtml(displayContent, { size: 'md' }),
+                    }}
+                  />
+                );
+              })()}
 
               {/* Source */}
               {post.source && (
