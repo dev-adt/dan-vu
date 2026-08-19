@@ -26,6 +26,7 @@ export interface RegistrationFormData {
   representativeName: string;
   phone: string;
   email: string;
+  loginPreference?: 'email' | 'phone';
   password?: string;
   confirmPassword?: string;
   performances: [PerformanceItemData, PerformanceItemData, PerformanceItemData];
@@ -49,6 +50,7 @@ const initialFormData: RegistrationFormData = {
   representativeName: '',
   phone: '',
   email: '',
+  loginPreference: 'email',
   password: '',
   confirmPassword: '',
   performances: [
@@ -224,9 +226,7 @@ export default function RegisterWizard() {
       if (!(formData.memberCount || '').trim()) tempErrors.memberCount = 'Số lượng thành viên không được bỏ trống.';
       if (!(formData.representativeName || '').trim()) tempErrors.representativeName = 'Họ và tên trưởng đoàn không được bỏ trống.';
       if (!(formData.phone || '').trim()) tempErrors.phone = 'Số điện thoại không được bỏ trống.';
-      if (!(formData.email || '').trim()) {
-        tempErrors.email = 'Email không được bỏ trống.';
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      if ((formData.email || '').trim() && !/\S+@\S+\.\S+/.test(formData.email.trim())) {
         tempErrors.email = 'Địa chỉ email không hợp lệ.';
       }
       if (!(formData.password || '').trim()) {
@@ -517,22 +517,64 @@ export default function RegisterWizard() {
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.phone && <p className="text-xs text-primary">{errors.phone}</p>}
+                        {!formData.email.trim() && formData.phone.trim() && (
+                          <p className="text-[11px] text-secondary font-medium">
+                            * Số điện thoại này sẽ được dùng làm Tên đăng nhập vào Cổng Đội Thi.
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                          {t('reg.email', 'Email Liên Hệ *')}
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center justify-between">
+                          <span>{t('reg.email', 'Email Liên Hệ')}</span>
+                          <span className="text-[10px] text-slate-400 font-normal normal-case">(Tùy chọn)</span>
                         </label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder={t('reg.email_placeholder', 'truongdoan@gmail.com')}
+                          placeholder={t('reg.email_placeholder', 'truongdoan@gmail.com (không bắt buộc)')}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-xs focus:border-secondary focus:outline-none transition-colors"
                         />
                         {errors.email && <p className="text-xs text-primary">{errors.email}</p>}
                       </div>
+
+                      {/* Login Identifier Preference if both are entered */}
+                      {formData.phone.trim() && formData.email.trim() && (
+                        <div className="sm:col-span-2 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                            Tài khoản đăng nhập ưu tiên vào Cổng Đội Thi:
+                          </label>
+                          <div className="flex flex-wrap gap-4 text-xs">
+                            <label className="inline-flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-secondary transition-colors">
+                              <input
+                                type="radio"
+                                name="loginPreference"
+                                value="email"
+                                checked={formData.loginPreference !== 'phone'}
+                                onChange={() => setFormData((prev) => ({ ...prev, loginPreference: 'email' }))}
+                                className="text-secondary focus:ring-secondary cursor-pointer"
+                              />
+                              Sử dụng Email (<span className="text-secondary">{formData.email}</span>)
+                            </label>
+                            <label className="inline-flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-secondary transition-colors">
+                              <input
+                                type="radio"
+                                name="loginPreference"
+                                value="phone"
+                                checked={formData.loginPreference === 'phone'}
+                                onChange={() => setFormData((prev) => ({ ...prev, loginPreference: 'phone' }))}
+                                className="text-secondary focus:ring-secondary cursor-pointer"
+                              />
+                              Sử dụng Số điện thoại (<span className="text-secondary">{formData.phone}</span>)
+                            </label>
+                          </div>
+                          <p className="text-[11px] text-slate-500 italic">
+                            * Gợi ý: Bạn vẫn có thể dùng cả Email hoặc Số điện thoại cùng Mật khẩu để đăng nhập bất cứ lúc nào.
+                          </p>
+                        </div>
+                      )}
 
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
@@ -929,12 +971,22 @@ export default function RegisterWizard() {
                             <strong className="text-slate-800">{formData.representativeName}</strong>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.phone', 'Số Điện Thoại:')}</span>
-                            <span className="text-slate-800">{formData.phone}</span>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.phone', 'Số Điện Thoại Liên Hệ:')}</span>
+                            <strong className="text-slate-800">{formData.phone}</strong>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.email', 'Email:')}</span>
-                            <span className="text-slate-800">{formData.email}</span>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">{t('reg.email', 'Email Liên Hệ:')}</span>
+                            <span className="text-slate-800">{formData.email || '(Không cung cấp)'}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase tracking-wider">Tên Đăng Nhập Cổng Đội Thi:</span>
+                            <span className="text-secondary font-bold font-mono">
+                              {formData.email
+                                ? formData.loginPreference === 'phone'
+                                  ? formData.phone
+                                  : formData.email
+                                : formData.phone}
+                            </span>
                           </div>
                         </div>
                       </div>

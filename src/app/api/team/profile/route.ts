@@ -82,8 +82,8 @@ export async function PATCH(req: NextRequest) {
     if (organization !== undefined) updatedFields.organization = organization;
     if (member_count !== undefined) updatedFields.member_count = member_count;
     if (representative_name !== undefined) updatedFields.representative_name = representative_name;
-    if (phone !== undefined) updatedFields.phone = phone;
-    if (email !== undefined) updatedFields.email = email;
+    if (phone !== undefined) updatedFields.phone = phone && typeof phone === 'string' ? phone.trim() : '';
+    if (email !== undefined) updatedFields.email = email && typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
     if (category !== undefined) updatedFields.category = category;
     if (performance_title !== undefined) updatedFields.performance_title = performance_title;
     if (duration !== undefined) updatedFields.duration = duration;

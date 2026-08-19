@@ -382,12 +382,49 @@ export function getGlobalDb() {
     }
   ];
 
+  const initialVideos = [
+    {
+      id: 'vid-1',
+      created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+      title: 'Khoảnh khắc thăng hoa đêm hội Dân ca & Dân vũ 2026',
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=60',
+      summary: 'Những màn trình diễn đặc sắc mang đậm dấu ấn văn hóa ba miền.',
+      source: 'Ban Tổ Chức',
+      status: 'published',
+      is_featured: true
+    },
+    {
+      id: 'vid-2',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      title: 'Hậu trường tập luyện các đoàn nghệ thuật',
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail_url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=60',
+      summary: 'Khám phá sự chuẩn bị công phu của các nghệ nhân và diễn viên trẻ.',
+      source: 'Ban Truyền Thông',
+      status: 'published',
+      is_featured: true
+    },
+    {
+      id: 'vid-3',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      title: 'Vũ khúc Chăm Pa - Nét đẹp huyền bí di sản miền Trung',
+      video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail_url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=60',
+      summary: 'Trình diễn điệu múa thiêng của các cô gái Chăm bên tháp cổ.',
+      source: 'Ban Tổ Chức',
+      status: 'published',
+      is_featured: false
+    }
+  ];
+
   globalDb = {
     teams: initialTeams,
     judges: initialJudges,
     scorecards: initialScorecards,
     ballots: initialBallots,
-    posts: initialPosts
+    posts: initialPosts,
+    videos: initialVideos
   };
 
   return globalDb;
@@ -399,16 +436,19 @@ export function saveGlobalDb(db: any) {
 
 interface Filter {
   column: string;
-  op: 'eq' | 'gte' | 'lte';
+  op: 'eq' | 'neq' | 'gte' | 'lte' | 'ilike' | 'in';
   value: any;
 }
 
 class MockQueryBuilder {
   private table: string;
   private filters: Filter[] = [];
+  private orFilter: string | null = null;
   private orderCol: string | null = null;
   private orderAsc = true;
   private limitCount: number | null = null;
+  private rangeFrom: number | null = null;
+  private rangeTo: number | null = null;
   private updateData: any = null;
   private deleteFlag = false;
   private insertData: any = null;
@@ -434,6 +474,11 @@ class MockQueryBuilder {
     return this;
   }
 
+  neq(column: string, value: any) {
+    this.filters.push({ column, op: 'neq', value });
+    return this;
+  }
+
   gte(column: string, value: any) {
     this.filters.push({ column, op: 'gte', value });
     return this;
@@ -441,6 +486,27 @@ class MockQueryBuilder {
 
   lte(column: string, value: any) {
     this.filters.push({ column, op: 'lte', value });
+    return this;
+  }
+
+  ilike(column: string, pattern: string) {
+    this.filters.push({ column, op: 'ilike', value: pattern });
+    return this;
+  }
+
+  in(column: string, values: any[]) {
+    this.filters.push({ column, op: 'in', value: values });
+    return this;
+  }
+
+  or(filterStr: string) {
+    this.orFilter = filterStr;
+    return this;
+  }
+
+  range(from: number, to: number) {
+    this.rangeFrom = from;
+    this.rangeTo = to;
     return this;
   }
 
@@ -560,10 +626,38 @@ class MockQueryBuilder {
     let filtered = [...dataList];
     for (const f of this.filters) {
       filtered = filtered.filter(item => {
-        if (f.op === 'eq') return item[f.column] === f.value;
+        if (f.op === 'eq') {
+          if (typeof f.value === 'string' && typeof item[f.column] === 'string') {
+            return item[f.column].toLowerCase() === f.value.toLowerCase();
+          }
+          return item[f.column] === f.value;
+        }
+        if (f.op === 'neq') return item[f.column] !== f.value;
         if (f.op === 'gte') return item[f.column] >= f.value;
         if (f.op === 'lte') return item[f.column] <= f.value;
+        if (f.op === 'in') return Array.isArray(f.value) && f.value.includes(item[f.column]);
+        if (f.op === 'ilike') {
+          const val = String(item[f.column] || '').toLowerCase();
+          const cleanPattern = String(f.value || '').replace(/%/g, '').toLowerCase();
+          return val.includes(cleanPattern);
+        }
         return true;
+      });
+    }
+
+    // Handle OR filters if present (e.g. title.ilike.%search%,summary.ilike.%search%)
+    if (this.orFilter) {
+      const parts = this.orFilter.split(',');
+      filtered = filtered.filter(item => {
+        return parts.some(part => {
+          const [col, op, pattern] = part.split('.');
+          if (col && op === 'ilike' && pattern) {
+            const cleanPattern = pattern.replace(/%/g, '').toLowerCase();
+            const val = String(item[col] || '').toLowerCase();
+            return val.includes(cleanPattern);
+          }
+          return false;
+        });
       });
     }
 
@@ -595,12 +689,7 @@ class MockQueryBuilder {
       });
     }
 
-    // 7. Handle limit
-    if (this.limitCount !== null) {
-      filtered = filtered.slice(0, this.limitCount);
-    }
-
-    // 8. Handle joins (ballots -> teams)
+    // 7. Handle joins (ballots -> teams)
     if (this.table === 'ballots') {
       filtered = filtered.map(b => {
         const team = db.teams.find((t: any) => t.id === b.team_id);
@@ -611,21 +700,37 @@ class MockQueryBuilder {
       });
     }
 
+    const totalCount = filtered.length;
+
+    // 8. Handle pagination range / limit
+    if (this.rangeFrom !== null && this.rangeTo !== null) {
+      filtered = filtered.slice(this.rangeFrom, this.rangeTo + 1);
+    } else if (this.limitCount !== null) {
+      filtered = filtered.slice(0, this.limitCount);
+    }
+
     // 9. Exact counts matching metrics instructions
-    let count = this.isCountExact ? filtered.length : undefined;
+    let count = this.isCountExact ? totalCount : undefined;
     if (this.table === 'ballots' && this.isCountExact) {
       const isValidFilter = this.filters.find(f => f.column === 'is_valid');
       if (isValidFilter && isValidFilter.value === true) {
-        count = 12060 + filtered.length;
+        count = 12060 + totalCount;
       } else if (isValidFilter && isValidFilter.value === false) {
-        count = filtered.length;
+        count = totalCount;
       } else {
-        count = 12060 + filtered.length;
+        count = 12060 + totalCount;
       }
     }
 
+    if (this.isSingle) {
+      return { data: filtered[0] || null, error: filtered[0] ? null : { message: 'Row not found' }, count };
+    }
+    if (this.isMaybeSingle) {
+      return { data: filtered[0] || null, error: null, count };
+    }
+
     return {
-      data: (this.isSingle || this.isMaybeSingle) ? (filtered[0] || null) : filtered,
+      data: filtered,
       error: null,
       count
     };

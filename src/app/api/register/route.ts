@@ -39,14 +39,17 @@ export async function POST(req: NextRequest) {
     const finalAudio = p1 ? (p1.audioLink || p1.audioUrl) : audioLink;
     const finalVideo = p1 ? (p1.videoLink || p1.videoUrl) : videoLink;
 
-    // Validate fields
-    if (!teamName || !memberCount || !representativeName || !phone || !email) {
+    // Validate fields - phone is mandatory, email is optional
+    if (!teamName || !memberCount || !representativeName || !phone) {
       return NextResponse.json({ error: 'Các trường thông tin đội thi bắt buộc không được để trống.' }, { status: 400 });
     }
 
     if (!finalTitle || !finalDuration) {
       return NextResponse.json({ error: 'Vui lòng điền đầy đủ thông tin cho các tiết mục dự thi.' }, { status: 400 });
     }
+
+    const cleanEmail = email && typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
+    const cleanPhone = phone ? String(phone).trim() : '';
 
     // Insert into Supabase table public.teams with fallback if new columns do not exist yet
     let teamData: any = null;
@@ -57,8 +60,8 @@ export async function POST(req: NextRequest) {
       organization: organization || null,
       member_count: memberCount,
       representative_name: representativeName,
-      phone,
-      email,
+      phone: cleanPhone,
+      email: cleanEmail,
       category: finalCategory,
       performance_title: finalTitle,
       duration: finalDuration,
@@ -117,27 +120,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Lỗi lưu dữ liệu đăng ký vào hệ thống: ' + (dbError?.message || 'Lỗi cơ sở dữ liệu') }, { status: 500 });
     }
 
-    // Send confirmation email via SMTP
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_PORT === '465',
-        auth: {
-          user: process.env.SMTP_USER || '',
-          pass: process.env.SMTP_PASS || '',
-        },
-      });
+    // Send confirmation email via SMTP only if cleanEmail is provided
+    if (cleanEmail) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_PORT === '465',
+          auth: {
+            user: process.env.SMTP_USER || '',
+            pass: process.env.SMTP_PASS || '',
+          },
+        });
 
-      const mailOptions: any = {
-        from: process.env.SMTP_FROM || `"Festival Dân Ca Dân Vũ 2026" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: `[Festival 2026] Xác nhận đăng ký hồ sơ dự thi & Tài khoản Cổng Đội Thi - ${teamName}`,
-        bcc: process.env.SMTP_BCC || undefined,
-        html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
-            <div style="text-align: center; margin-bottom: 25px;">
-              <h2 style="color: #c62828; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">NHỊP BƯỚC VIỆT NAM</h2>
+        const mailOptions: any = {
+          from: process.env.SMTP_FROM || `"Festival Dân Ca Dân Vũ 2026" <${process.env.SMTP_USER}>`,
+          to: cleanEmail,
+          subject: `[Festival 2026] Xác nhận đăng ký hồ sơ dự thi & Tài khoản Cổng Đội Thi - ${teamName}`,
+          bcc: process.env.SMTP_BCC || undefined,
+          html: `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+              <div style="text-align: center; margin-bottom: 25px;">
+                <h2 style="color: #c62828; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">NHỊP BƯỚC VIỆT NAM</h2>
               <span style="color: #00695c; text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: 3px;">Festival Dân Ca Dân Vũ Quốc Tế 2026</span>
             </div>
             
@@ -215,6 +219,7 @@ export async function POST(req: NextRequest) {
         warning: 'Lưu hồ sơ thành công nhưng gặp sự cố gửi email xác nhận. BTC sẽ liên hệ trực tiếp qua số điện thoại.'
       });
     }
+  }
 
     return NextResponse.json({ success: true, id: teamData.id.substring(0, 8).toUpperCase() });
   } catch (err: any) {

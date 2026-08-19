@@ -8,7 +8,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function ForgotPasswordPage() {
+  const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,28 +21,45 @@ export default function ForgotPasswordPage() {
     setError('');
     setSuccessMsg('');
 
-    if (!email) {
+    if (method === 'email' && !email.trim()) {
       setError('Vui lòng nhập Email liên hệ khi đăng ký.');
       return;
     }
 
+    if (method === 'phone') {
+      if (!phone.trim()) {
+        setError('Vui lòng nhập Số điện thoại liên hệ đã đăng ký.');
+        return;
+      }
+      if (!newEmail.trim()) {
+        setError('Vui lòng nhập Email để nhận mật khẩu mới.');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
+      const payload = method === 'email'
+        ? { email: email.trim() }
+        : { phone: phone.trim(), newEmail: newEmail.trim() };
+
       const res = await fetch('/api/team/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.error || 'Không thể cấp lại mật khẩu. Vui lòng kiểm tra lại email.');
+        setError(data.error || 'Không thể cấp lại mật khẩu. Vui lòng kiểm tra lại thông tin.');
         return;
       }
 
       setSuccessMsg(data.message || 'Mật khẩu ngẫu nhiên mới đã được gửi tới email của bạn.');
       setEmail('');
+      setPhone('');
+      setNewEmail('');
     } catch (err: any) {
       setError('Lỗi kết nối khi gửi yêu cầu cấp lại mật khẩu.');
     } finally {
@@ -56,6 +76,7 @@ export default function ForgotPasswordPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          style={{ maxWidth: '460px', width: '100%', margin: '0 auto', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '24px', padding: '32px', boxSizing: 'border-box' }}
           className="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden backdrop-blur-md"
         >
           <div className="text-center space-y-2">
@@ -66,8 +87,40 @@ export default function ForgotPasswordPage() {
               QUÊN MẬT KHẨU CỔNG ĐỘI THI
             </h1>
             <p className="text-xs text-slate-500">
-              Nhập email đã đăng ký của bạn. Hệ thống sẽ tạo một mật khẩu ngẫu nhiên mới và gửi trực tiếp tới hòm thư của bạn.
+              Hệ thống sẽ tạo một mật khẩu ngẫu nhiên mới và gửi trực tiếp tới hòm thư email của bạn.
             </p>
+          </div>
+
+          {/* Method Selection Tabs */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setMethod('email');
+                setError('');
+              }}
+              className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                method === 'email'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Qua Email Đã Đăng Ký
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMethod('phone');
+                setError('');
+              }}
+              className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                method === 'phone'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Qua Số Điện Thoại
+            </button>
           </div>
 
           {error && (
@@ -88,23 +141,59 @@ export default function ForgotPasswordPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-primary" /> Email Liên Hệ Đã Đăng Ký *
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Nhập địa chỉ email của đội thi"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none transition-colors"
-                required
-              />
-            </div>
+            {method === 'email' ? (
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-primary" /> Email Liên Hệ Đã Đăng Ký *
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Nhập địa chỉ email của đội thi..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none transition-colors"
+                  required
+                />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-primary font-mono text-sm">📞</span> Số Điện Thoại Liên Hệ Đã Đăng Ký *
+                  </label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="VD: 0988xxxxxx"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none transition-colors"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-primary" /> Email Để Nhận Mật Khẩu Mới *
+                  </label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="Nhập email bạn muốn nhận mật khẩu..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-primary focus:outline-none transition-colors"
+                    required
+                  />
+                  <p className="text-[11px] text-slate-400">
+                    * Hệ thống sẽ tự động ghép Email này vào tài khoản của bạn để gửi mật khẩu.
+                  </p>
+                </div>
+              </>
+            )}
 
             <button
               type="submit"
               disabled={isLoading}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#c62828', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer' }}
               className="w-full py-3.5 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
             >
               {isLoading ? (

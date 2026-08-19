@@ -7,30 +7,48 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const identifier = (body.identifier || body.email || body.phone || body.username || '').trim();
+    const password = body.password;
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Vui lòng nhập đầy đủ Email và Mật khẩu.' }, { status: 400 });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'Vui lòng nhập đầy đủ Email hoặc Số điện thoại và Mật khẩu.' }, { status: 400 });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    // Query team by email OR phone
+    let team: any = null;
 
-    // Query team by email
-    const { data: team, error } = await supabaseAdmin
+    // 1. Try matching by email (case-insensitive)
+    const emailRes = await supabaseAdmin
       .from('teams')
       .select('*')
-      .eq('email', trimmedEmail)
+      .eq('email', identifier.toLowerCase())
       .maybeSingle();
 
-    if (error || !team) {
-      return NextResponse.json({ error: 'Tên đăng nhập (Email) hoặc Mật khẩu không chính xác.' }, { status: 401 });
+    if (emailRes.data) {
+      team = emailRes.data;
+    } else {
+      // 2. Try matching by phone number
+      const phoneRes = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('phone', identifier)
+        .maybeSingle();
+
+      if (phoneRes.data) {
+        team = phoneRes.data;
+      }
+    }
+
+    if (!team) {
+      return NextResponse.json({ error: 'Tên đăng nhập (Email/SĐT) hoặc Mật khẩu không chính xác.' }, { status: 401 });
     }
 
     // Verify password
     // Support default legacy password '12345678' if password is empty in DB
     const storedPassword = team.password || '12345678';
     if (password !== storedPassword) {
-      return NextResponse.json({ error: 'Tên đăng nhập (Email) hoặc Mật khẩu không chính xác.' }, { status: 401 });
+      return NextResponse.json({ error: 'Tên đăng nhập (Email/SĐT) hoặc Mật khẩu không chính xác.' }, { status: 401 });
     }
 
     // Omit sensitive password field

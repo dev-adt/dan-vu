@@ -12,7 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function TeamLoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -36,8 +36,8 @@ export default function TeamLoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
-      setError('Vui lòng điền đầy đủ Email và Mật khẩu.');
+    if (!identifier || !password) {
+      setError('Vui lòng điền đầy đủ Email hoặc Số điện thoại và Mật khẩu.');
       return;
     }
 
@@ -46,7 +46,7 @@ export default function TeamLoginPage() {
       const res = await fetch('/api/team/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await res.json();
@@ -81,13 +81,13 @@ export default function TeamLoginPage() {
           {/* Top Decorative Banner */}
           <div className="text-center space-y-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-wider">
-              <UserCheck className="w-3.5 h-3.5" /> {t('team.login_tag')}
+              <UserCheck className="w-3.5 h-3.5" /> {t('team.login_tag', 'Cổng Đội Thi')}
             </span>
             <h1 className="font-heading font-extrabold text-2xl text-dark-obsidian">
-              {t('team.login_title')}
+              {t('team.login_title', 'ĐĂNG NHẬP ĐỘI THI')}
             </h1>
             <p className="text-xs text-slate-500">
-              {t('team.login_desc')}
+              {t('team.login_desc', 'Sử dụng Email hoặc Số điện thoại cùng Mật khẩu để quản lý thông tin 3 tiết mục dự thi.')}
             </p>
           </div>
 
@@ -100,13 +100,13 @@ export default function TeamLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-accent" /> {t('team.email_label')}
+                <UserCheck className="w-3.5 h-3.5 text-accent" /> {t('team.identifier_label', 'Email hoặc Số Điện Thoại')}
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('team.email_placeholder')}
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder={t('team.identifier_placeholder', 'Nhập email hoặc số điện thoại...')}
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '13px', boxSizing: 'border-box' }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none transition-colors"
                 required

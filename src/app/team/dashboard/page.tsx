@@ -525,13 +525,16 @@ export default function TeamDashboardPage() {
 
               {/* Email */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Email Liên Hệ *</label>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                  <span>Email Liên Hệ</span>
+                  <span className="text-[10px] text-slate-400 font-normal normal-case">(Tùy chọn)</span>
+                </label>
                 <input
                   type="email"
                   value={editForm.email}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="truongdoan@gmail.com (không bắt buộc)"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:border-accent focus:outline-none"
-                  required
                 />
               </div>
             </div>

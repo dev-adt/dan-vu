@@ -18,32 +18,73 @@ function generateRandomPassword(): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email, phone, newEmail } = body;
 
-    if (!email) {
-      return NextResponse.json({ error: 'Vui lòng nhập địa chỉ Email đăng ký.' }, { status: 400 });
+    const trimmedEmail = email && typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const trimmedPhone = phone && typeof phone === 'string' ? phone.trim() : '';
+    const trimmedNewEmail = newEmail && typeof newEmail === 'string' ? newEmail.trim().toLowerCase() : '';
+
+    if (!trimmedEmail && !trimmedPhone) {
+      return NextResponse.json({ error: 'Vui lòng nhập Email hoặc Số điện thoại đăng ký.' }, { status: 400 });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    let team: any = null;
 
-    // Query team by email
-    const { data: team, error } = await supabaseAdmin
-      .from('teams')
-      .select('*')
-      .eq('email', trimmedEmail)
-      .maybeSingle();
+    if (trimmedPhone) {
+      // Lookup team by phone
+      const phoneRes = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('phone', trimmedPhone)
+        .maybeSingle();
 
-    if (error || !team) {
-      return NextResponse.json({ error: 'Không tìm thấy hồ sơ đội thi tương ứng với email này.' }, { status: 404 });
+      if (phoneRes.data) {
+        team = phoneRes.data;
+      }
+    } else if (trimmedEmail) {
+      // Lookup team by email
+      const emailRes = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
+
+      if (emailRes.data) {
+        team = emailRes.data;
+      }
+    }
+
+    if (!team) {
+      return NextResponse.json({
+        error: trimmedPhone
+          ? 'Không tìm thấy hồ sơ đội thi tương ứng với số điện thoại này.'
+          : 'Không tìm thấy hồ sơ đội thi tương ứng với email này.'
+      }, { status: 404 });
+    }
+
+    // Determine target recipient email
+    const recipientEmail = trimmedNewEmail || trimmedEmail || team.email;
+
+    if (!recipientEmail) {
+      return NextResponse.json({
+        error: 'Tài khoản này chưa có Email liên hệ. Vui lòng nhập thêm Email nhận mật khẩu mới.',
+        requireEmail: true
+      }, { status: 400 });
     }
 
     // Generate new random password
     const newPassword = generateRandomPassword();
 
-    // Update password in database
+    // Update password (and link new email if updated) in database
+    const updatePayload: any = { password: newPassword };
+    if (trimmedNewEmail || (!team.email && recipientEmail)) {
+      updatePayload.email = recipientEmail;
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from('teams')
-      .update({ password: newPassword })
+      .update(updatePayload)
       .eq('id', team.id);
 
     if (updateError) {
@@ -65,7 +106,7 @@ export async function POST(req: NextRequest) {
 
       const mailOptions = {
         from: process.env.SMTP_FROM || `"Festival Dân Ca Dân Vũ 2026" <${process.env.SMTP_USER}>`,
-        to: trimmedEmail,
+        to: recipientEmail,
         subject: `[Festival 2026] Cấp lại Mật khẩu Đăng nhập Cổng Đội Thi - ${team.team_name}`,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
@@ -105,7 +146,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Mật khẩu ngẫu nhiên mới đã được gửi thành công đến hòm thư email của bạn.',
+      message: `Mật khẩu ngẫu nhiên mới đã được gửi thành công đến hòm thư ${recipientEmail}.`,
     });
   } catch (err: any) {
     console.error('Forgot password processing error:', err);
